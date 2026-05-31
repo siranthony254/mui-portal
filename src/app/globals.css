@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@layer components {
+  .portal-sidebar {
+    width: 14rem;
+    min-height: 100vh;
+    background: white;
+    border-right: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.15s;
+  }
+  .nav-item:hover { background-color: #f9fafb; }
+  .nav-item-active { background-color: #e1f5ee; color: #0f6e56; font-weight: 500; }
+  .card { background: white; border-radius: 0.75rem; border: 1px solid #f3f4f6; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .btn-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: white;
+    background-color: #0f6e56; border-radius: 0.5rem; transition: background-color 0.15s;
+  }
+  .btn-primary:hover { background-color: #085041; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: #374151;
+    background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: background-color 0.15s;
+  }
+  .btn-secondary:hover { background-color: #f9fafb; }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .input {
+    width: 100%; padding: 0.5rem 0.75rem; font-size: 0.875rem;
+    border: 1px solid #e5e7eb; border-radius: 0.5rem; background: white;
+    transition: box-shadow 0.15s;
+  }
+  .input:focus { outline: none; box-shadow: 0 0 0 2px #0f6e56; border-color: transparent; }
+  .input::placeholder { color: #9ca3af; }
+  .textarea {
+    width: 100%; padding: 0.5rem 0.75rem; font-size: 0.875rem;
+    border: 1px solid #e5e7eb; border-radius: 0.5rem; background: white;
+    transition: box-shadow 0.15s; resize: none;
+  }
+  .textarea:focus { outline: none; box-shadow: 0 0 0 2px #0f6e56; border-color: transparent; }
+  .textarea::placeholder { color: #9ca3af; }
+  .select {
+    width: 100%; padding: 0.5rem 0.75rem; font-size: 0.875rem;
+    border: 1px solid #e5e7eb; border-radius: 0.5rem; background: white;
+  }
+  .select:focus { outline: none; box-shadow: 0 0 0 2px #0f6e56; }
+  .badge { display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+  .badge-teal { background: #e1f5ee; color: #085041; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #374151; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .progress-bar { height: 0.375rem; background: #f3f4f6; border-radius: 9999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #0f6e56; border-radius: 9999px; transition: width 0.3s; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .page-title { font-size: 1.25rem; font-weight: 600; color: #111827; }
+  .section-title { font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+  .chat-bubble-in { background: #f3f4f6; color: #111827; border-radius: 1rem; border-bottom-left-radius: 0.25rem; }
+  .chat-bubble-out { background: #0f6e56; color: white; border-radius: 1rem; border-bottom-right-radius: 0.25rem; }
+}
+
+* { box-sizing: border-box; }
+::selection { background-color: #e1f5ee; color: #0f6e56; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+body { -webkit-font-smoothing: antialiased; font-family: system-ui, -apple-system, sans-serif; }
