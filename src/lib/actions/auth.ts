@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/auth/admin-emails'
+import { getAuthCallbackUrl } from '@/lib/app-url'
 
 export async function signInWithEmail(formData: FormData) {
   const email = String(formData.get('email') || '').trim().toLowerCase()
@@ -40,7 +41,7 @@ export async function signInWithEmail(formData: FormData) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: getAuthCallbackUrl(),
       shouldCreateUser: false,
     },
   })
@@ -64,7 +65,7 @@ export async function signUpStudent(formData: FormData) {
     password: crypto.randomUUID(),
     options: {
       data: { full_name: fullName, role: 'student' },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: getAuthCallbackUrl(),
     },
   })
   if (error) return { error: error.message }
@@ -96,7 +97,7 @@ export async function signUpMentor(formData: FormData) {
     password: crypto.randomUUID(),
     options: {
       data: { full_name: fullName, role: 'mentor' },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: getAuthCallbackUrl(),
     },
   })
   if (error) return { error: error.message }
