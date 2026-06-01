@@ -1,0 +1,28 @@
+project_id = "mui-portal"
+
+[auth]
+site_url = "https://portal.micdupinitiative.site"
+additional_redirect_urls = ["https://portal.micdupinitiative.site/auth/callback"]
+
+[auth.email.smtp]
+sender_name = "Mic'd Up Initiative Portal"
+
+[auth.email.template.confirmation]
+subject = "Confirm your Mic'd Up Initiative Portal account"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Sign in to Mic'd Up Initiative Portal"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Mic'd Up Initiative Portal password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.invite]
+subject = "You have been invited to Mic'd Up Initiative Portal"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your Mic'd Up Initiative Portal email change"
+content_path = "./supabase/templates/email-change.html"

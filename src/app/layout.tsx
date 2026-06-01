@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: { default: "MUI Portal", template: "%s | MUI Portal" },
+  title: { default: "Mic'd Up Initiative Portal", template: "%s | Mic'd Up Initiative Portal" },
   description: "Form your voice. Shape culture.",
 }
 
