@@ -13,3 +13,4 @@ export function getAppUrl() {
 export function getAuthCallbackUrl() {
   return `${getAppUrl()}/auth/callback`
 }
+

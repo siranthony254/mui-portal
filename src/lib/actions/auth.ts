@@ -12,6 +12,10 @@ export async function signInWithEmail(formData: FormData) {
   const supabase = await createClient()
   const admin = await createAdminClient()
 
+  // 1. Check if email matches admin email
+  const isEmailAdmin = isAdminEmail(email)
+
+  // 2. Look up profile
   const { data: profile, error: profileError } = await admin
     .from('profiles')
     .select('id,role,approved')
@@ -20,9 +24,11 @@ export async function signInWithEmail(formData: FormData) {
     .maybeSingle()
 
   if (profileError) return { error: 'Could not verify access. Please try again.' }
-  if (!profile) return { error: 'Access denied. Use the email from your cohort application, mentor application, or admin account.' }
+  if (!profile && !isEmailAdmin) {
+    return { error: 'Access denied. Use the email from your cohort application, mentor application, or admin account.' }
+  }
 
-  if (isAdminEmail(email) && (profile.role !== 'admin' || !profile.approved)) {
+  if (isEmailAdmin && profile && (profile.role !== 'admin' || !profile.approved)) {
     const { error: promoteError } = await admin
       .from('profiles')
       .update({ role: 'admin', approved: true })
@@ -31,86 +37,95 @@ export async function signInWithEmail(formData: FormData) {
     if (promoteError) return { error: 'Could not activate admin access. Please try again.' }
   }
 
-  const { data: authUser, error: authError } = await admin.auth.admin.getUserById(profile.id)
-  if (authError) return { error: 'Could not verify your login account. Please try again.' }
-
-  if (authUser.user.email?.toLowerCase() !== email) {
-    return { error: 'Access denied. This email is in the portal database but does not have a Supabase Auth account yet.' }
-  }
-
+  const callbackUrl = `${getAuthCallbackUrl()}?next=/auth/login`
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: getAuthCallbackUrl(),
-      shouldCreateUser: false,
+      emailRedirectTo: callbackUrl,
+      shouldCreateUser: true,
     },
   })
 
   if (error) return { error: error.message }
-  return { success: 'Check your email for the sign-in link.' }
+  return { success: 'Sign-in link sent! Check your email for your link to sign in.' }
 }
 
 export async function signUpStudent(formData: FormData) {
-  const email = formData.get('email') as string
-  const fullName = formData.get('full_name') as string
-  const institution = formData.get('institution') as string
-  const institutionType = formData.get('institution_type') as string
-  const yearOfStudy = formData.get('year_of_study') as string
-  const county = formData.get('county') as string
-  const phone = formData.get('phone') as string
+  const email = String(formData.get('email') || '').trim().toLowerCase()
+  const fullName = String(formData.get('full_name') || '').trim()
+  const institution = String(formData.get('institution') || '').trim()
+  const institutionType = String(formData.get('institution_type') || '').trim()
+  const yearOfStudy = String(formData.get('year_of_study') || '').trim()
+  const county = String(formData.get('county') || '').trim()
+  const phone = String(formData.get('phone') || '').trim()
+
+  if (!email || !fullName) return { error: 'Email and full name are required.' }
 
   const supabase = await createClient()
+  const callbackUrl = `${getAuthCallbackUrl()}?next=/auth/login&signup=true`
+
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password: crypto.randomUUID(),
     options: {
       data: { full_name: fullName, role: 'student' },
-      emailRedirectTo: getAuthCallbackUrl(),
+      emailRedirectTo: callbackUrl,
     },
   })
   if (error) return { error: error.message }
 
-  // Update profile with extra fields if user was created
   if (signUpData.user?.id) {
     const admin = await createAdminClient()
-    await admin.from('profiles').update({
+    await admin.from('profiles').upsert({
+      id: signUpData.user.id,
+      email,
+      full_name: fullName,
+      role: isAdminEmail(email) ? 'admin' : 'student',
+      approved: isAdminEmail(email),
       institution,
       institution_type: institutionType,
       year_of_study: yearOfStudy,
       county,
       phone,
-      ...(isAdminEmail(email) ? { role: 'admin', approved: true } : {}),
-    }).eq('id', signUpData.user.id)
+    }, { onConflict: 'id' })
   }
 
-  return { success: 'Account created. Check your email to confirm.' }
+  return { success: 'Application submitted! A sign up link has been sent to your email. Check your inbox to confirm and sign in.' }
 }
 
 export async function signUpMentor(formData: FormData) {
-  const email = formData.get('email') as string
-  const fullName = formData.get('full_name') as string
-  const bio = formData.get('bio') as string
+  const email = String(formData.get('email') || '').trim().toLowerCase()
+  const fullName = String(formData.get('full_name') || '').trim()
+  const bio = String(formData.get('bio') || '').trim()
+
+  if (!email || !fullName) return { error: 'Email and full name are required.' }
 
   const supabase = await createClient()
+  const callbackUrl = `${getAuthCallbackUrl()}?next=/auth/login&signup=true`
+
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password: crypto.randomUUID(),
     options: {
       data: { full_name: fullName, role: 'mentor' },
-      emailRedirectTo: getAuthCallbackUrl(),
+      emailRedirectTo: callbackUrl,
     },
   })
   if (error) return { error: error.message }
 
   if (signUpData.user?.id) {
     const admin = await createAdminClient()
-    await admin.from('profiles').update({
+    await admin.from('profiles').upsert({
+      id: signUpData.user.id,
+      email,
+      full_name: fullName,
+      role: isAdminEmail(email) ? 'admin' : 'mentor',
+      approved: isAdminEmail(email),
       bio,
-      ...(isAdminEmail(email) ? { role: 'admin', approved: true } : {}),
-    }).eq('id', signUpData.user.id)
+    }, { onConflict: 'id' })
   }
 
-  return { success: 'Mentor application submitted. You will be notified when approved.' }
+  return { success: 'Mentor application submitted! A sign up link has been sent to your email. Check your inbox to confirm and sign in.' }
 }
 
 export async function signOut() {

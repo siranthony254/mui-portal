@@ -3,9 +3,16 @@
 import { useState } from 'react'
 import { signInWithEmail } from '@/lib/actions/auth'
 
-export function LoginForm() {
+interface LoginFormProps {
+  isConfirmed?: boolean
+  initialError?: string
+}
+
+export function LoginForm({ isConfirmed, initialError }: LoginFormProps) {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<{ error?: string; success?: string } | null>(null)
+  const [result, setResult] = useState<{ error?: string; success?: string } | null>(
+    initialError ? { error: initialError === 'auth_failed' ? 'Sign in link invalid or expired. Please request a new link below.' : initialError } : null
+  )
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -18,6 +25,11 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {isConfirmed && !result && (
+        <div className="p-3 bg-teal-50 border border-teal-100 rounded-lg text-sm text-teal-700 font-medium">
+          Email confirmed! Your account is active. Enter your email below to receive your sign-in link.
+        </div>
+      )}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
           Email address
@@ -36,8 +48,9 @@ export function LoginForm() {
         </div>
       )}
       <button type="submit" disabled={loading} className="btn-primary w-full">
-        {loading ? 'Signing in...' : 'Sign in'}
+        {loading ? 'Sending link...' : 'Send Sign-In Link'}
       </button>
     </form>
   )
 }
+

@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { ensureAdminProfile } from '@/lib/auth/admin-profile'
+import { getAppUrl } from '@/lib/app-url'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
+  const next = searchParams.get('next')
+  const baseUrl = getAppUrl()
+
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
@@ -16,8 +20,12 @@ export async function GET(request: Request) {
         await ensureAdminProfile(admin, user)
       }
 
-      return NextResponse.redirect(`${origin}/`)
+      if (next && next !== '/auth/login') {
+        return NextResponse.redirect(`${baseUrl}${next}`)
+      }
+      return NextResponse.redirect(`${baseUrl}/auth/login?confirmed=true`)
     }
   }
-  return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
+  return NextResponse.redirect(`${baseUrl}/auth/login?error=auth_failed`)
 }
+

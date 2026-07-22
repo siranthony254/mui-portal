@@ -1,11 +1,28 @@
 import { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { LoginForm } from '@/components/auth/LoginForm'
 
-export const metadata: Metadata = { title: 'Sign In' }
+export const metadata: Metadata = { title: 'Sign In — MUI Portal' }
 
-export default function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined }
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const resolvedSearchParams = await Promise.resolve(searchParams)
+  const isConfirmed = resolvedSearchParams?.confirmed === 'true'
+  const urlError = resolvedSearchParams?.error
+
+  if (user) {
+    redirect('/')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -20,8 +37,8 @@ export default function LoginPage() {
         </div>
         <div className="card p-6">
           <h1 className="text-xl font-semibold text-gray-900 mb-1">Welcome back</h1>
-          <p className="text-sm text-gray-500 mb-6">Enter your email to continue.</p>
-          <LoginForm />
+          <p className="text-sm text-gray-500 mb-6">Enter your email to receive a sign-in link.</p>
+          <LoginForm isConfirmed={isConfirmed} initialError={urlError as string | undefined} />
         </div>
         <div className="text-center mt-4 space-y-2">
           <p className="text-sm text-gray-500">
@@ -35,3 +52,4 @@ export default function LoginPage() {
     </div>
   )
 }
+
