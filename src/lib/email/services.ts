@@ -15,13 +15,17 @@ export async function sendStudentApplicationEmail(to: string, fullName: string, 
 
   try {
     const html = getStudentApplicationTemplate({ fullName, loginUrl })
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
       subject: 'Welcome to MUI Portal - Confirm Application',
       html,
     })
+    if (error) {
+      console.error('Resend API error sending student application email:', error)
+      return { success: false, error: error.message || error }
+    }
     return { success: true, data }
   } catch (error) {
     console.error('Error sending student application email via Resend:', error)
@@ -37,13 +41,17 @@ export async function sendMentorApplicationEmail(to: string, fullName: string) {
 
   try {
     const html = getMentorApplicationTemplate({ fullName })
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
       subject: 'Mentor Application Received - MUI Portal',
       html,
     })
+    if (error) {
+      console.error('Resend API error sending mentor application email:', error)
+      return { success: false, error: error.message || error }
+    }
     return { success: true, data }
   } catch (error) {
     console.error('Error sending mentor application email via Resend:', error)
@@ -59,13 +67,17 @@ export async function sendSignInLinkEmail(to: string, magicLink: string, fullNam
 
   try {
     const html = getSignInMagicLinkTemplate({ fullName, magicLink })
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
       subject: 'Sign in to your MUI Portal Account',
       html,
     })
+    if (error) {
+      console.error('Resend API error sending sign-in link email:', error)
+      return { success: false, error: error.message || error }
+    }
     return { success: true, data }
   } catch (error) {
     console.error('Error sending sign-in link email via Resend:', error)
@@ -82,13 +94,17 @@ export async function sendMentorApprovalNotification(to: string, fullName: strin
   try {
     const html = getMentorStatusTemplate({ fullName, approved, loginUrl })
     const subject = approved ? 'Congratulations! Mentor Application Approved - MUI Portal' : 'Mentor Application Update - MUI Portal'
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
       subject,
       html,
     })
+    if (error) {
+      console.error('Resend API error sending mentor approval email:', error)
+      return { success: false, error: error.message || error }
+    }
     return { success: true, data }
   } catch (error) {
     console.error('Error sending mentor approval email via Resend:', error)
@@ -104,13 +120,17 @@ export async function sendStudentAdmissionNotification(to: string, fullName: str
 
   try {
     const html = getStudentAdmissionTemplate({ fullName, cohortName, dashboardUrl })
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
       subject: `Congratulations! Admitted to ${cohortName} - MUI Portal`,
       html,
     })
+    if (error) {
+      console.error('Resend API error sending student admission email:', error)
+      return { success: false, error: error.message || error }
+    }
     return { success: true, data }
   } catch (error) {
     console.error('Error sending student admission email via Resend:', error)

@@ -54,8 +54,11 @@ export async function signInWithEmail(formData: FormData) {
     })
 
     if (!linkError && linkData?.properties?.action_link) {
-      await sendSignInLinkEmail(email, linkData.properties.action_link, profile?.full_name || undefined)
-      return { success: 'Sign-in link sent via Resend! Check your email for your link to sign in.' }
+      const emailRes = await sendSignInLinkEmail(email, linkData.properties.action_link, profile?.full_name || undefined)
+      if (emailRes.success) {
+        return { success: 'Sign-in link sent via Resend! Check your email for your link to sign in.' }
+      }
+      console.warn('Resend email delivery failed, falling back to Supabase auth:', emailRes.error)
     }
   } catch (err) {
     console.warn('Fallback to standard OTP due to link generation error:', err)
