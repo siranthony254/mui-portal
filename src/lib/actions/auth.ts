@@ -5,6 +5,12 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/auth/admin-emails'
 import { getAuthCallbackUrl } from '@/lib/app-url'
 
+import {
+  sendStudentApplicationEmail,
+  sendMentorApplicationEmail,
+  sendSignInLinkEmail,
+} from '@/lib/email/services'
+
 export async function signInWithEmail(formData: FormData) {
   const email = String(formData.get('email') || '').trim().toLowerCase()
   if (!email) return { error: 'Enter your email address.' }
@@ -18,7 +24,7 @@ export async function signInWithEmail(formData: FormData) {
   // 2. Look up profile
   const { data: profile, error: profileError } = await admin
     .from('profiles')
-    .select('id,role,approved')
+    .select('id,role,approved,full_name')
     .ilike('email', email)
     .in('role', ['admin', 'mentor', 'student'])
     .maybeSingle()
@@ -38,6 +44,24 @@ export async function signInWithEmail(formData: FormData) {
   }
 
   const callbackUrl = `${getAuthCallbackUrl()}?next=/auth/login`
+
+  // Attempt custom Resend sign-in email if link generation is available
+  try {
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: { redirectTo: callbackUrl },
+    })
+
+    if (!linkError && linkData?.properties?.action_link) {
+      await sendSignInLinkEmail(email, linkData.properties.action_link, profile?.full_name || undefined)
+      return { success: 'Sign-in link sent via Resend! Check your email for your link to sign in.' }
+    }
+  } catch (err) {
+    console.warn('Fallback to standard OTP due to link generation error:', err)
+  }
+
+  // Fallback to standard Supabase Auth OTP
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -90,7 +114,10 @@ export async function signUpStudent(formData: FormData) {
     }, { onConflict: 'id' })
   }
 
-  return { success: 'Application submitted! A sign up link has been sent to your email. Check your inbox to confirm and sign in.' }
+  // Send application confirmation email via Resend
+  await sendStudentApplicationEmail(email, fullName, callbackUrl)
+
+  return { success: 'Application submitted! A sign up confirmation email has been sent to your inbox.' }
 }
 
 export async function signUpMentor(formData: FormData) {
@@ -125,7 +152,10 @@ export async function signUpMentor(formData: FormData) {
     }, { onConflict: 'id' })
   }
 
-  return { success: 'Mentor application submitted! A sign up link has been sent to your email. Check your inbox to confirm and sign in.' }
+  // Send mentor application received email via Resend
+  await sendMentorApplicationEmail(email, fullName)
+
+  return { success: 'Mentor application submitted! A confirmation email has been sent to your inbox.' }
 }
 
 export async function signOut() {

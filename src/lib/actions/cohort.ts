@@ -2,6 +2,12 @@
 
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getAppUrl } from '@/lib/app-url'
+import {
+  sendMentorApprovalNotification,
+  sendStudentAdmissionNotification,
+} from '@/lib/email/services'
+
 
 export async function openCohort(cohortId: string) {
   const admin = await createAdminClient()
@@ -97,14 +103,32 @@ export async function activateVisionClub(clubId: string) {
   revalidatePath('/admin/vision-clubs')
   return { success: 'Vision club activated.' }
 }
-
 export async function approveMentor(mentorId: string, approved: boolean) {
   const admin = await createAdminClient()
+
+  const { data: mentorProfile } = await admin
+    .from('profiles')
+    .select('email, full_name')
+    .eq('id', mentorId)
+    .single()
+
   const { error } = await admin.from('profiles')
     .update({ approved })
     .eq('id', mentorId)
     .eq('role', 'mentor')
+
   if (error) return { error: error.message }
+
+  if (mentorProfile?.email) {
+    const loginUrl = `${getAppUrl()}/auth/login`
+    await sendMentorApprovalNotification(
+      mentorProfile.email,
+      mentorProfile.full_name || 'Mentor',
+      approved,
+      loginUrl
+    )
+  }
+
   revalidatePath('/admin/mentors')
   return { success: approved ? 'Mentor approved.' : 'Mentor rejected.' }
 }
@@ -115,8 +139,34 @@ export async function admitStudent(waitlistId: string, cohortId: string, student
     cohort_id: cohortId, student_id: studentId,
     status: 'enrolled', current_pillar: 1, current_week: 1,
   }, { onConflict: 'cohort_id,student_id' })
+
   if (enroll) return { error: enroll.message }
   await admin.from('waitlist').update({ status: 'admitted' }).eq('id', waitlistId)
+
+  // Fetch student profile and cohort name to send notification email
+  const { data: studentProfile } = await admin
+    .from('profiles')
+    .select('email, full_name')
+    .eq('id', studentId)
+    .single()
+
+  const { data: cohortData } = await admin
+    .from('cohorts')
+    .select('name')
+    .eq('id', cohortId)
+    .single()
+
+  if (studentProfile?.email) {
+    const dashboardUrl = `${getAppUrl()}/dashboard`
+    const cohortName = cohortData?.name || 'Cohort Program'
+    await sendStudentAdmissionNotification(
+      studentProfile.email,
+      studentProfile.full_name || 'Student',
+      cohortName,
+      dashboardUrl
+    )
+  }
+
   revalidatePath('/admin/waitlist')
   return { success: 'Student admitted.' }
 }
