@@ -20,7 +20,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const urlError = resolvedSearchParams?.error
 
   if (user) {
-    redirect('/')
+    redirect('/dashboard')
   }
 
   return (
@@ -37,7 +37,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
         <div className="card p-6">
           <h1 className="text-xl font-semibold text-gray-900 mb-1">Welcome back</h1>
-          <p className="text-sm text-gray-500 mb-6">Enter your email to receive a sign-in link.</p>
+          <p className="text-sm text-gray-500 mb-6">Enter your credentials to sign in to your dashboard.</p>
           <LoginForm isConfirmed={isConfirmed} initialError={urlError as string | undefined} />
         </div>
         <div className="text-center mt-4 space-y-2">

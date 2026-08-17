@@ -1,15 +1,16 @@
-'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn, getInitials } from '@/lib/utils'
 import type { Profile } from '@/types'
-import { LayoutDashboard, Users, BookOpen, MessageSquare, Settings, BarChart2, Flag, Award, Mic2, ClipboardList, Bell, UserCheck, Lightbulb } from '@/components/icons'
+import { LayoutDashboard, Users, BookOpen, MessageSquare, Settings, BarChart2, Flag, Award, Mic2, ClipboardList, Bell, UserCheck, Lightbulb, Calendar, FileText, CloudOff } from '@/components/icons'
 
 function getNav(role: string, base: string) {
   if (role === 'admin') return [
     { title:'Overview', items:[
       {id:'dashboard',label:'Dashboard',href:`${base}`,icon:LayoutDashboard},
       {id:'cohorts',label:'Cohorts',href:`${base}/cohorts`,icon:Award},
+      {id:'sessions',label:'Sessions',href:`${base}/sessions`,icon:Calendar},
       {id:'waitlist',label:'Waitlist',href:`${base}/waitlist`,icon:ClipboardList},
       {id:'analytics',label:'Analytics',href:`${base}/analytics`,icon:BarChart2},
     ]},
@@ -34,6 +35,7 @@ function getNav(role: string, base: string) {
       {id:'dashboard',label:'Dashboard',href:`${base}`,icon:LayoutDashboard},
       {id:'students',label:'My Students',href:`${base}/students`,icon:Users},
       {id:'tasks',label:'Task Reviews',href:`${base}/tasks`,icon:ClipboardList},
+      {id:'sessions',label:'Sessions',href:`${base}/sessions`,icon:Calendar},
     ]},
     { title:'Comms', items:[
       {id:'messages',label:'Messages',href:`${base}/messages`,icon:MessageSquare},
@@ -42,8 +44,11 @@ function getNav(role: string, base: string) {
   return [
     { title:'My Journey', items:[
       {id:'dashboard',label:'Dashboard',href:`${base}`,icon:LayoutDashboard},
+      {id:'content',label:'Pillar Content',href:`${base}/content`,icon:BookOpen},
       {id:'cohort',label:'My Cohort',href:`${base}/cohort`,icon:Award},
+      {id:'journal',label:'My Journal',href:`${base}/journal`,icon:FileText},
       {id:'tasks',label:'Weekly Tasks',href:`${base}/tasks`,icon:ClipboardList},
+      {id:'sessions',label:'Monthly Sessions',href:`${base}/sessions`,icon:Calendar},
       {id:'capstone',label:'Capstone',href:`${base}/capstone`,icon:Mic2},
     ]},
     { title:'Learn', items:[
@@ -70,6 +75,19 @@ export function Sidebar({ profile }: { profile: Profile }) {
   const pathname = usePathname()
   const base = getBase(profile.role)
   const nav = getNav(profile.role, base)
+  const [isOnline, setIsOnline] = useState(true)
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine)
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   return (
     <aside className="portal-sidebar">
@@ -80,6 +98,11 @@ export function Sidebar({ profile }: { profile: Profile }) {
           </div>
           <span className="font-semibold text-gray-900 text-sm">MUI Portal</span>
         </div>
+        {!isOnline && (
+          <div className="mt-2 flex items-center gap-1.5 text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded-md w-fit">
+            <CloudOff className="w-3 h-3" /> Offline
+          </div>
+        )}
       </div>
       <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
         {nav.map(section => (

@@ -103,6 +103,23 @@ export async function activateVisionClub(clubId: string) {
   revalidatePath('/admin/vision-clubs')
   return { success: 'Vision club activated.' }
 }
+
+export async function joinVisionClub(clubId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { error } = await supabase.from('vision_club_members').insert({
+    club_id: clubId,
+    student_id: user.id,
+    role: 'member'
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/vision-clubs')
+  return { success: 'Joined Vision Club successfully.' }
+}
+
 export async function approveMentor(mentorId: string, approved: boolean) {
   const admin = await createAdminClient()
 
@@ -206,6 +223,84 @@ export async function reviewTask(taskId: string, feedback: string, approved: boo
   if (error) return { error: error.message }
   revalidatePath('/mentor/tasks')
   return { success: 'Review saved.' }
+}
+
+export async function saveJournalEntry(week: number, pillar: number, content: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { error } = await supabase.from('journals').upsert({
+    student_id: user.id,
+    week_number: week,
+    pillar_number: pillar,
+    content,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'student_id,week_number' })
+
+  if (error) return { error: error.message }
+  return { success: 'Journal saved.' }
+}
+
+export async function toggleJournalSharing(journalId: string, isShared: boolean) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { error } = await supabase.from('journals')
+    .update({ is_shared: isShared })
+    .eq('id', journalId)
+    .eq('student_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/journal')
+  return { success: isShared ? 'Shared with mentor.' : 'Private again.' }
+}
+
+export async function logPeerCheckIn(partnershipId: string, reflection?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const now = new Date().toISOString()
+
+  const { error: logError } = await supabase.from('check_in_logs').insert({
+    partnership_id: partnershipId,
+    student_id: user.id,
+    reflection,
+    check_in_date: now.split('T')[0]
+  })
+
+  if (logError) return { error: logError.message }
+
+  const { error: updateError } = await supabase.from('accountability_partnerships')
+    .update({ last_check_in_at: now })
+    .eq('id', partnershipId)
+
+  if (updateError) return { error: updateError.message }
+
+  revalidatePath('/dashboard')
+  return { success: 'Check-in logged.' }
+}
+
+export async function toggleHomeworkCompletion(sessionId: string, completed: boolean) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  if (completed) {
+    await supabase.from('session_homework_completions').upsert({
+      session_id: sessionId,
+      student_id: user.id
+    })
+  } else {
+    await supabase.from('session_homework_completions').delete()
+      .eq('session_id', sessionId)
+      .eq('student_id', user.id)
+  }
+
+  revalidatePath('/dashboard/sessions')
+  return { success: 'Homework status updated.' }
 }
 
 function getTaskTitle(pillar: number, week: number): string {

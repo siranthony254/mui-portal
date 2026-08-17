@@ -1,27 +1,75 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { submitTask } from '@/lib/actions/cohort'
 import { useRouter } from 'next/navigation'
+import { CloudOff, CheckCircle } from '@/components/icons'
 
 export function TaskSubmitForm({ taskId }: { taskId: string }) {
   const [submission, setSubmission] = useState('')
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
+  const [isOnline, setIsOnline] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine)
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    // Load draft from localStorage
+    const savedDraft = localStorage.getItem(`task_draft_${taskId}`)
+    if (savedDraft) {
+      const { text, url: savedUrl } = JSON.parse(savedDraft)
+      setSubmission(text)
+      setUrl(savedUrl)
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [taskId])
+
+  // Save draft as user types
+  useEffect(() => {
+    if (submission || url) {
+      localStorage.setItem(`task_draft_${taskId}`, JSON.stringify({ text: submission, url }))
+    }
+  }, [submission, url, taskId])
+
   const wordCount = submission.trim().split(/\s+/).filter(Boolean).length
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!submission.trim()) return
+
+    if (!navigator.onLine) {
+      setResult({ error: 'You are offline. Your response has been saved as a draft locally and will be ready to submit once you are back online.' })
+      return
+    }
+
     setLoading(true)
     const res = await submitTask(taskId, submission, url || undefined)
-    setResult(res); setLoading(false)
-    if (res.success) setTimeout(() => router.refresh(), 1000)
+    setResult(res)
+    setLoading(false)
+    if (res.success) {
+      localStorage.removeItem(`task_draft_${taskId}`)
+      setTimeout(() => router.refresh(), 1000)
+    }
   }
 
   return (
-    <div className="card p-5">
+    <div className="card p-5 relative overflow-hidden">
+      {!isOnline && (
+        <div className="absolute top-0 right-0 p-2">
+          <span className="flex items-center gap-1 text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded-bl-xl border-l border-b border-amber-100">
+            <CloudOff className="w-3 h-3" /> Offline Mode
+          </span>
+        </div>
+      )}
       <p className="section-title">Your response</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

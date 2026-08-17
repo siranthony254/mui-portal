@@ -4,12 +4,13 @@ import { getInitials } from '@/lib/utils'
 import { getPillarColor } from '@/types'
 import { PILLARS } from '@/types'
 import type { Profile, Enrollment, Task } from '@/types'
-import { CheckCircle, Clock, Circle, ChevronRight, MessageSquare } from '@/components/icons'
+import { CheckCircle, Clock, Circle, ChevronRight, MessageSquare, FileText, Users, ArrowRight } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { PeerAccountabilityCard } from './PeerAccountabilityCard'
 
-interface Props { enrollment: any; tasks: Task[]; profile: Profile }
+interface Props { enrollment: any; tasks: Task[]; profile: Profile; partnership?: any }
 
-export function StudentDashboard({ enrollment, tasks, profile }: Props) {
+export function StudentDashboard({ enrollment, tasks, profile, partnership }: Props) {
   const cohort = enrollment.cohort
   const mentor = enrollment.mentor
   const currentPillar = PILLARS[enrollment.current_pillar - 1]
@@ -28,15 +29,15 @@ export function StudentDashboard({ enrollment, tasks, profile }: Props) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card p-5">
+        <div className="card p-4 md:p-5">
           <p className="section-title">Your journey</p>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-1.5 md:gap-2 mb-4">
             {PILLARS.map((p, i) => {
               const done = i + 1 < enrollment.current_pillar
               const active = i + 1 === enrollment.current_pillar
               return (
                 <div key={p.number} className="flex items-center gap-1 flex-1">
-                  <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0',
+                  <div className={cn('w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-[10px] md:text-xs font-semibold flex-shrink-0',
                     done ? 'bg-teal-700 text-white' : active ? 'bg-teal-50 text-teal-700 ring-2 ring-teal-700' : 'bg-gray-100 text-gray-400')}>
                     {done ? '✓' : p.number}
                   </div>
@@ -46,35 +47,40 @@ export function StudentDashboard({ enrollment, tasks, profile }: Props) {
             })}
           </div>
           <div className="mb-3">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <div className="flex justify-between text-[10px] md:text-xs text-gray-400 mb-1">
               <span>Week {enrollment.current_week} of 12</span><span>{progress}%</span>
             </div>
             <div className="progress-bar"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
           </div>
-          <span className={cn('badge text-xs', getPillarColor(enrollment.current_pillar))}>
+          <span className={cn('badge text-[10px] md:text-xs', getPillarColor(enrollment.current_pillar))}>
             Pillar {enrollment.current_pillar}: {currentPillar?.name}
           </span>
         </div>
 
-        <div className="card p-5">
+        <div className="card p-4 md:p-5">
           <p className="section-title">Current focus</p>
-          <h3 className="font-semibold text-gray-900 mb-1">{currentPillar?.name}</h3>
-          <p className="text-xs text-gray-500 mb-3">{currentPillar?.subtitle}</p>
+          <h3 className="font-semibold text-gray-900 mb-1 text-sm md:text-base">{currentPillar?.name}</h3>
+          <p className="text-[10px] md:text-xs text-gray-500 mb-3">{currentPillar?.subtitle}</p>
           <div className="bg-teal-50 rounded-lg p-3 mb-3">
-            <p className="text-xs font-medium text-teal-800 mb-1">Goal</p>
+            <p className="text-[10px] font-medium text-teal-800 mb-1">Goal</p>
             <p className="text-xs text-teal-700">{currentPillar?.goal}</p>
           </div>
-          <Link href="/dashboard/cohort" className="flex items-center gap-1 text-xs text-teal-700 hover:underline">
-            View pillar content <ChevronRight className="w-3 h-3" />
+          <Link href="/dashboard/content" className="flex items-center gap-1 text-[10px] md:text-xs text-teal-700 hover:underline font-medium">
+            Read this week's content <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card p-5 md:col-span-2">
-          <div className="flex items-center justify-between mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="card p-4 md:p-5 lg:col-span-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <p className="section-title mb-0">Week {enrollment.current_week} tasks</p>
-            <Link href="/dashboard/tasks" className="text-xs text-teal-700 hover:underline">View all</Link>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Link href="/dashboard/journal" className="text-[10px] md:text-xs text-teal-700 hover:underline font-medium flex items-center gap-1">
+                <FileText className="w-3 h-3" /> Open Journal
+              </Link>
+              <Link href="/dashboard/tasks" className="text-[10px] md:text-xs text-teal-700 hover:underline">View all tasks</Link>
+            </div>
           </div>
           {tasks.length === 0 ? (
             <p className="text-sm text-gray-400 py-4 text-center">No tasks yet for this week.</p>
@@ -131,9 +137,13 @@ export function StudentDashboard({ enrollment, tasks, profile }: Props) {
           )}
           <div className="mt-4 pt-4 border-t border-gray-50">
             <p className="text-xs font-medium text-gray-500 mb-1">Next session</p>
-            <p className="text-xs text-gray-400">Check your email for the monthly closed cohort session link.</p>
+            <Link href="/dashboard/sessions" className="text-xs text-teal-700 hover:underline">
+              View monthly session schedule & join links
+            </Link>
           </div>
         </div>
+
+        <PeerAccountabilityCard partnership={partnership} />
       </div>
     </div>
   )

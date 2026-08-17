@@ -125,6 +125,32 @@ export interface Task {
   created_at: string
 }
 
+export interface JournalEntry {
+  id: string
+  student_id: string
+  pillar_number: number
+  week_number: number
+  content: string
+  is_shared: boolean
+  created_at: string
+  updated_at: string
+}
+
+export const JOURNAL_PROMPTS: Record<number, string> = {
+  1: "Who or what has been the loudest voice in your head this week? Whose expectations are you trying to meet?",
+  2: "What is one thing you believed as a child that you no longer believe? What changed?",
+  3: "Reflect on your current education: Are you being trained to follow, or formed to lead? Where is the friction?",
+  4: "When was the last time you admitted you didn't understand something you were supposed to know? How did it feel?",
+  5: "What is one 'small' problem you see every day that everyone else seems to have accepted as normal?",
+  6: "If you had to explain the problem you identified to someone who has never been to your campus, what would you say?",
+  7: "How much of your frustration with your community is 'complaint' and how much is 'grief'? What is the difference?",
+  8: "What would it cost you personally to be part of the solution you proposed? Are you willing to pay it?",
+  9: "If you could only say one thing to your generation and be certain they would hear it, what would it be?",
+  10: "Where did you feel the most resistance when drafting your talk? Why is that part hard to say?",
+  11: "Look back at your Week 1 journal. How has your definition of 'responsibility' changed since then?",
+  12: "The cohort is ending, but the work is beginning. What is the one thing you are taking with you that cannot be taken away?",
+}
+
 export type ContentType = 'video' | 'article' | 'audio' | 'pdf' | 'image'
 
 export interface ContentBlock {
@@ -162,8 +188,35 @@ export interface Course {
 export interface CourseModule {
   _key: string
   title: string
-  description: string
-  contentBlocks: ContentBlock[]
+  description?: string
+  sessions: CourseSession[]
+}
+
+export interface CourseSession {
+  _key: string
+  title: string
+  contentBlocks: Array<VideoBlock | TextBlock | ImageBlock>
+}
+
+export interface VideoBlock {
+  _key: string
+  _type: 'videoBlock'
+  title?: string
+  url: string
+  description?: string
+}
+
+export interface TextBlock {
+  _key: string
+  _type: 'textBlock'
+  body: any[]
+}
+
+export interface ImageBlock {
+  _key: string
+  _type: 'imageBlock'
+  image: any
+  caption?: string
 }
 
 export interface VisionClub {
@@ -197,6 +250,25 @@ export interface Message {
   read_by: string[]
   created_at: string
   sender?: Profile
+}
+
+export interface AccountabilityPartnership {
+  id: string
+  cohort_id: string
+  student_id_1: string
+  student_id_2: string
+  last_check_in_at?: string
+  created_at: string
+  partner?: Profile
+}
+
+export interface CheckInLog {
+  id: string
+  partnership_id: string
+  student_id: string
+  reflection?: string
+  check_in_date: string
+  created_at: string
 }
 
 export function getPillarColor(pillar: number): string {

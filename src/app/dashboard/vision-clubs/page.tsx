@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { Lock, Lightbulb } from '@/components/icons'
+import { joinVisionClub } from '@/lib/actions/cohort'
 import { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Vision Clubs' }
 
@@ -65,7 +66,7 @@ export default async function VisionClubsStudentPage() {
                   </div>
                 )}
                 {!isMember && !myMembership && (
-                  <JoinClubButton clubId={club.id} studentId={user.id} />
+                  <JoinClubButton clubId={club.id} />
                 )}
               </div>
             )
@@ -76,15 +77,10 @@ export default async function VisionClubsStudentPage() {
   )
 }
 
-function JoinClubButton({ clubId, studentId }: { clubId: string; studentId: string }) {
-  async function joinClub() {
-    'use server'
-    const { createAdminClient } = await import('@/lib/supabase/server')
-    const admin = await createAdminClient()
-    await admin.from('vision_club_members').insert({ club_id: clubId, student_id: studentId, role: 'member' })
-  }
+function JoinClubButton({ clubId }: { clubId: string }) {
+  const joinClubWithId = joinVisionClub.bind(null, clubId)
   return (
-    <form action={joinClub}>
+    <form action={joinClubWithId}>
       <button type="submit" className="btn-secondary text-xs">Request to join</button>
     </form>
   )

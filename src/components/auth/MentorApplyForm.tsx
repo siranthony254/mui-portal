@@ -26,6 +26,7 @@ export function MentorApplyForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div><label className="block text-sm font-medium text-gray-700 mb-1">Full name *</label><input name="full_name" type="text" required className="input" placeholder="Your full name" /></div>
       <div><label className="block text-sm font-medium text-gray-700 mb-1">Email *</label><input name="email" type="email" required className="input" placeholder="you@example.com" /></div>
+      <div><label className="block text-sm font-medium text-gray-700 mb-1">Create Password *</label><input name="password" type="password" required className="input" placeholder="••••••••" minLength={6} /></div>
       <div><label className="block text-sm font-medium text-gray-700 mb-1">Professional background & expertise *</label><textarea name="bio" required rows={4} className="textarea" placeholder="Your background, expertise, and what you can offer MUI students..." /></div>
       {result?.error && <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">{result.error}</div>}
       <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Submitting...' : 'Submit mentor application'}</button>

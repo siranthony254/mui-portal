@@ -50,6 +50,10 @@ export function RegisterForm() {
         <input name="email" type="email" required className="input" placeholder="you@example.com" />
       </div>
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Create Password *</label>
+        <input name="password" type="password" required className="input" placeholder="••••••••" minLength={6} />
+      </div>
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
         <input name="phone" type="tel" className="input" placeholder="07XX XXX XXX" />
       </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { saveJournalEntry, toggleJournalSharing } from '@/lib/actions/cohort'
 import { JOURNAL_PROMPTS, getPillarColor } from '@/types'
-import { Lock, Unlock, Check, Save, ChevronLeft, ChevronRight, Share2 } from '@/components/icons'
+import { Lock, Unlock, Check, Save, ChevronLeft, ChevronRight, Share2, Globe, CloudOff } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import type { JournalEntry } from '@/types'
 
@@ -21,14 +21,35 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isShared, setIsShared] = useState(false)
   const [activeJournalId, setActiveJournalId] = useState<string | null>(null)
-
-  const currentEntry = entries.find(e => e.week_number === selectedWeek)
-  const pillarNum = Math.min(Math.ceil(selectedWeek / 2.4), 5)
-  const prompt = JOURNAL_PROMPTS[selectedWeek]
+  const [isOnline, setIsOnline] = useState(true)
+  const [hasUnsyncedChanges, setHasUnsyncedChanges] = useState(false)
 
   useEffect(() => {
+    setIsOnline(navigator.onLine)
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
+  // Load from LocalStorage if available (Offline-first)
+  useEffect(() => {
     const entry = entries.find(e => e.week_number === selectedWeek)
-    setContent(entry?.content || '')
+    const localKey = `journal_w${selectedWeek}`
+    const localContent = localStorage.getItem(localKey)
+
+    if (localContent !== null) {
+      setContent(localContent)
+      setHasUnsyncedChanges(localContent !== entry?.content)
+    } else {
+      setContent(entry?.content || '')
+      setHasUnsyncedChanges(false)
+    }
+
     setIsShared(entry?.is_shared || false)
     setActiveJournalId(entry?.id || null)
   }, [selectedWeek, entries])
@@ -36,27 +57,43 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
   const handleSave = useCallback(async () => {
     if (saving) return
     setSaving(true)
-    const res = await saveJournalEntry(selectedWeek, pillarNum, content)
-    if (res.success) {
-      setLastSaved(new Date())
-      // Update local state if it's a new entry
-      if (!currentEntry) {
-         // In a real app we'd fetch the new entry to get the ID,
-         // but for now we'll just rely on the next refresh or re-query
+
+    // Always save to LocalStorage first
+    const localKey = `journal_w${selectedWeek}`
+    localStorage.setItem(localKey, content)
+
+    if (navigator.onLine) {
+      const res = await saveJournalEntry(selectedWeek, pillarNum, content)
+      if (res.success) {
+        setLastSaved(new Date())
+        setHasUnsyncedChanges(false)
+      } else {
+        setHasUnsyncedChanges(true)
       }
+    } else {
+      setHasUnsyncedChanges(true)
     }
     setSaving(false)
-  }, [selectedWeek, pillarNum, content, saving, currentEntry])
+  }, [selectedWeek, content, saving])
 
-  // Auto-save every 30 seconds if content changed
+  // Sync logic when coming back online
+  useEffect(() => {
+    if (isOnline && hasUnsyncedChanges) {
+      handleSave()
+    }
+  }, [isOnline])
+
+  // Auto-save every 10 seconds if content changed (more aggressive for offline safety)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (currentEntry?.content !== content) {
+      const localKey = `journal_w${selectedWeek}`
+      const lastLocal = localStorage.getItem(localKey)
+      if (lastLocal !== content) {
         handleSave()
       }
-    }, 30000)
+    }, 10000)
     return () => clearTimeout(timer)
-  }, [content, handleSave, currentEntry])
+  }, [content, handleSave, selectedWeek])
 
   async function handleToggleShare() {
     if (!activeJournalId) return
@@ -66,11 +103,11 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
   }
 
   return (
-    <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <div className="lg:col-span-1 space-y-4">
+    <div className="max-w-4xl mx-auto flex flex-col lg:flex-row gap-6">
+      <div className="w-full lg:w-64 space-y-4 flex-shrink-0">
         <div className="card p-4">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Timeline</p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-6 lg:grid-cols-4 gap-2">
             {Array.from({ length: 12 }, (_, i) => i + 1).map(w => {
               const hasEntry = entries.some(e => e.week_number === w && e.content?.length > 0)
               const isCurrent = w === currentWeek
@@ -112,9 +149,19 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
             <span className={cn('badge text-[10px]', getPillarColor(pillarNum))}>Pillar {pillarNum}</span>
           </div>
           <div className="flex items-center gap-4">
-            {lastSaved && (
+            {!isOnline && (
+              <span className="flex items-center gap-1 text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded-md">
+                <CloudOff className="w-3 h-3" /> Offline Mode
+              </span>
+            )}
+            {hasUnsyncedChanges && (
+              <span className="text-[10px] text-blue-600 font-medium italic animate-pulse">
+                Unsynced changes
+              </span>
+            )}
+            {lastSaved && !hasUnsyncedChanges && (
               <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                <Check className="w-3 h-3" /> Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <Check className="w-3 h-3" /> {isOnline ? 'Synced' : 'Saved Locally'} {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
             <button

@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation'
 export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
-import { Calendar, Video, ExternalLink, FileText } from '@/components/icons'
+import { Calendar, Video, FileText } from '@/components/icons'
+import { SessionHomework } from '@/components/cohort/SessionHomework'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Monthly Sessions' }
@@ -15,7 +16,7 @@ export default async function SessionsPage() {
   const { data: enrollment } = await supabase.from('enrollments').select('cohort_id,cohort:cohorts(name)').eq('student_id', user.id).in('status', ['enrolled', 'active', 'completed']).single()
   if (!enrollment) redirect('/dashboard')
 
-  const { data: sessions } = await supabase.from('cohort_sessions').select('*').eq('cohort_id', enrollment.cohort_id).order('date', { ascending: false })
+  const { data: sessions } = await supabase.from('cohort_sessions').select('*, completions:session_homework_completions(student_id)').eq('cohort_id', enrollment.cohort_id).order('date', { ascending: false })
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -28,6 +29,7 @@ export default async function SessionsPage() {
         <div className="space-y-4">
           {sessions.map((session) => {
             const isPast = new Date(session.date) < new Date()
+            const isCompleted = session.completions?.some((c: any) => c.student_id === user.id) || false
             return (
               <div key={session.id} className="card overflow-hidden">
                 <div className={`px-5 py-4 border-b border-gray-100 flex items-center justify-between ${!isPast ? 'bg-teal-50' : 'bg-gray-50'}`}>
@@ -53,6 +55,14 @@ export default async function SessionsPage() {
 
                   {session.description && (
                     <p className="text-sm text-gray-600 leading-relaxed">{session.description}</p>
+                  )}
+
+                  {!isPast && session.homework && (
+                    <SessionHomework
+                      sessionId={session.id}
+                      homework={session.homework}
+                      isCompleted={isCompleted}
+                    />
                   )}
 
                   <div className="flex flex-wrap gap-3 pt-2">

@@ -47,8 +47,8 @@ export default async function MentorStudentsPage() {
                     <div className="mt-3 progress-bar"><div className="progress-fill" style={{width:`${progress}%`}} /></div>
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
+                    <Link href={`/mentor/students/${s.id}`} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1">View Details <ChevronRight className="w-3.5 h-3.5" /></Link>
                     <Link href="/mentor/messages" className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5" />Message</Link>
-                    <Link href={`/mentor/tasks?student=${s.id}`} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1">Tasks<ChevronRight className="w-3.5 h-3.5" /></Link>
                   </div>
                 </div>
               </div>

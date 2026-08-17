@@ -150,6 +150,67 @@ CREATE TABLE messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- JOURNAL ENTRIES
+CREATE TABLE journals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  pillar_number INTEGER NOT NULL CHECK (pillar_number BETWEEN 1 AND 5),
+  week_number INTEGER NOT NULL CHECK (week_number BETWEEN 1 AND 12),
+  content TEXT,
+  is_shared BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(student_id, week_number)
+);
+CREATE TRIGGER journals_updated_at BEFORE UPDATE ON journals FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- COHORT SESSIONS
+CREATE TABLE cohort_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  cohort_id UUID NOT NULL REFERENCES cohorts(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  date DATE NOT NULL,
+  time TEXT NOT NULL,
+  theme TEXT,
+  join_url TEXT,
+  notes TEXT,
+  homework TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TRIGGER cohort_sessions_updated_at BEFORE UPDATE ON cohort_sessions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TABLE session_homework_completions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id UUID NOT NULL REFERENCES cohort_sessions(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(session_id, student_id)
+);
+
+-- ACCOUNTABILITY PARTNERS
+CREATE TABLE accountability_partnerships (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  cohort_id UUID NOT NULL REFERENCES cohorts(id) ON DELETE CASCADE,
+  student_id_1 UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  student_id_2 UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  last_check_in_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(student_id_1, cohort_id),
+  UNIQUE(student_id_2, cohort_id),
+  CHECK (student_id_1 < student_id_2)
+);
+
+CREATE TABLE check_in_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  partnership_id UUID NOT NULL REFERENCES accountability_partnerships(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  reflection TEXT,
+  check_in_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE OR REPLACE FUNCTION update_conversation_last_message() RETURNS TRIGGER AS $$
 BEGIN UPDATE conversations SET last_message=NEW.content, last_message_at=NEW.created_at WHERE id=NEW.conversation_id; RETURN NEW; END;
 $$ LANGUAGE plpgsql;
@@ -165,6 +226,10 @@ ALTER TABLE vision_clubs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vision_club_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cohort_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE session_homework_completions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE accountability_partnerships ENABLE ROW LEVEL SECURITY;
+ALTER TABLE check_in_logs ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
 CREATE POLICY "profiles_self" ON profiles FOR ALL USING (auth.uid()=id);
@@ -190,6 +255,7 @@ CREATE POLICY "conversations_participants" ON conversations FOR ALL USING (auth.
 -- Vision clubs
 CREATE POLICY "vision_clubs_enrolled" ON vision_clubs FOR SELECT USING (EXISTS(SELECT 1 FROM enrollments e WHERE e.cohort_id=vision_clubs.cohort_id AND e.student_id=auth.uid() AND e.status IN ('enrolled','active','completed')) OR EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role IN ('admin','mentor')));
 CREATE POLICY "vision_clubs_admin" ON vision_clubs FOR ALL USING (EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
+-- Vision club members
 CREATE POLICY "vision_club_members_read" ON vision_club_members FOR SELECT USING (
   EXISTS(
     SELECT 1
@@ -208,6 +274,32 @@ CREATE POLICY "vision_club_members_read" ON vision_club_members FOR SELECT USING
 );
 CREATE POLICY "vision_club_members_admin" ON vision_club_members FOR ALL USING (EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
 CREATE POLICY "vision_club_members_self" ON vision_club_members FOR ALL USING (student_id=auth.uid()) WITH CHECK (student_id=auth.uid());
+-- Sessions
+CREATE POLICY "cohort_sessions_read" ON cohort_sessions FOR SELECT USING (EXISTS(SELECT 1 FROM enrollments e WHERE e.cohort_id=cohort_sessions.cohort_id AND e.student_id=auth.uid() AND e.status IN ('enrolled','active','completed')) OR EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role IN ('admin','mentor')));
+CREATE POLICY "cohort_sessions_admin" ON cohort_sessions FOR ALL USING (EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
+
+-- Session Homework
+CREATE POLICY "session_homework_completions_owner" ON session_homework_completions FOR ALL USING (student_id=auth.uid());
+CREATE POLICY "session_homework_completions_admin" ON session_homework_completions FOR SELECT USING (EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
+
+-- Accountability
+CREATE POLICY "accountability_partnerships_read" ON accountability_partnerships FOR SELECT USING (auth.uid() = student_id_1 OR auth.uid() = student_id_2 OR EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
+CREATE POLICY "accountability_partnerships_admin" ON accountability_partnerships FOR ALL USING (EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
+CREATE POLICY "check_in_logs_read" ON check_in_logs FOR SELECT USING (EXISTS(SELECT 1 FROM accountability_partnerships ap WHERE ap.id = check_in_logs.partnership_id AND (auth.uid() = ap.student_id_1 OR auth.uid() = ap.student_id_2)) OR EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
+CREATE POLICY "check_in_logs_insert" ON check_in_logs FOR INSERT WITH CHECK (EXISTS(SELECT 1 FROM accountability_partnerships ap WHERE ap.id = check_in_logs.partnership_id AND (auth.uid() = ap.student_id_1 OR auth.uid() = ap.student_id_2)));
+
+-- Journals
+ALTER TABLE journals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "journals_owner" ON journals FOR ALL USING (student_id=auth.uid());
+CREATE POLICY "journals_mentor_shared" ON journals FOR SELECT USING (
+  is_shared = true AND
+  EXISTS(
+    SELECT 1 FROM enrollments e
+    WHERE e.student_id = journals.student_id
+    AND e.mentor_id = auth.uid()
+  )
+);
+CREATE POLICY "journals_admin" ON journals FOR SELECT USING (EXISTS(SELECT 1 FROM profiles WHERE id=auth.uid() AND role='admin'));
 
 -- INDEXES
 CREATE INDEX idx_enrollments_cohort ON enrollments(cohort_id);
@@ -222,6 +314,12 @@ CREATE INDEX idx_waitlist_cohort ON waitlist(cohort_id);
 CREATE INDEX idx_vision_clubs_cohort ON vision_clubs(cohort_id);
 CREATE INDEX idx_vision_club_members_club ON vision_club_members(club_id);
 CREATE INDEX idx_vision_club_members_student ON vision_club_members(student_id);
+CREATE INDEX idx_cohort_sessions_cohort ON cohort_sessions(cohort_id);
+CREATE INDEX idx_accountability_partnerships_cohort ON accountability_partnerships(cohort_id);
+CREATE INDEX idx_accountability_partnerships_students ON accountability_partnerships(student_id_1, student_id_2);
+CREATE INDEX idx_check_in_logs_partnership ON check_in_logs(partnership_id);
+CREATE INDEX idx_journals_student ON journals(student_id);
+CREATE INDEX idx_journals_week ON journals(week_number);
 
 -- REALTIME
 ALTER PUBLICATION supabase_realtime ADD TABLE messages;

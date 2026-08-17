@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toggleHomeworkCompletion } from '@/lib/actions/cohort'
 import { CheckCircle, Circle, ClipboardList } from '@/components/icons'
 import { cn } from '@/lib/utils'
@@ -14,15 +14,56 @@ interface Props {
 export function SessionHomework({ sessionId, homework, isCompleted }: Props) {
   const [completed, setCompleted] = useState(isCompleted)
   const [loading, setLoading] = useState(false)
+  const [isOnline, setIsOnline] = useState(true)
 
-  async function handleToggle() {
+  useEffect(() => {
+    setIsOnline(navigator.onLine)
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    // Sync if status changed while offline
+    const localStatus = localStorage.getItem(`homework_${sessionId}`)
+    if (localStatus !== null) {
+      const isLocalCompleted = localStatus === 'true'
+      if (isLocalCompleted !== isCompleted && navigator.onLine) {
+        syncStatus(isLocalCompleted)
+      } else {
+        setCompleted(isLocalCompleted)
+      }
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [sessionId, isCompleted])
+
+  async function syncStatus(status: boolean) {
     setLoading(true)
-    const newStatus = !completed
-    const res = await toggleHomeworkCompletion(sessionId, newStatus)
+    const res = await toggleHomeworkCompletion(sessionId, status)
     if (res.success) {
-      setCompleted(newStatus)
+      setCompleted(status)
+      localStorage.removeItem(`homework_${sessionId}`)
     }
     setLoading(false)
+  }
+
+  async function handleToggle() {
+    const newStatus = !completed
+    setCompleted(newStatus)
+
+    if (navigator.onLine) {
+      setLoading(true)
+      const res = await toggleHomeworkCompletion(sessionId, newStatus)
+      setLoading(false)
+      if (!res.success) {
+        localStorage.setItem(`homework_${sessionId}`, String(newStatus))
+      }
+    } else {
+      localStorage.setItem(`homework_${sessionId}`, String(newStatus))
+    }
   }
 
   return (

@@ -3,162 +3,125 @@
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/auth/admin-emails'
-import { getAuthCallbackUrl } from '@/lib/app-url'
-
 import {
-  sendStudentApplicationEmail,
-  sendMentorApplicationEmail,
-  sendSignInLinkEmail,
+  sendStudentWaitlistEmail,
+  sendMentorRequestReceivedEmail,
 } from '@/lib/email/services'
 
-export async function signInWithEmail(formData: FormData) {
+export async function signInWithPassword(formData: FormData) {
   const email = String(formData.get('email') || '').trim().toLowerCase()
-  if (!email) return { error: 'Enter your email address.' }
+  const password = String(formData.get('password') || '')
+
+  if (!email || !password) return { error: 'Enter your email and password.' }
 
   const supabase = await createClient()
-  const admin = await createAdminClient()
-
-  // 1. Check if email matches admin email
-  const isEmailAdmin = isAdminEmail(email)
-
-  // 2. Look up profile
-  const { data: profile, error: profileError } = await admin
-    .from('profiles')
-    .select('id,role,approved,full_name')
-    .ilike('email', email)
-    .in('role', ['admin', 'mentor', 'student'])
-    .maybeSingle()
-
-  if (profileError) return { error: 'Could not verify access. Please try again.' }
-  if (!profile && !isEmailAdmin) {
-    return { error: 'Access denied. Use the email from your cohort application, mentor application, or admin account.' }
-  }
-
-  if (isEmailAdmin && profile && (profile.role !== 'admin' || !profile.approved)) {
-    const { error: promoteError } = await admin
-      .from('profiles')
-      .update({ role: 'admin', approved: true })
-      .eq('id', profile.id)
-
-    if (promoteError) return { error: 'Could not activate admin access. Please try again.' }
-  }
-
-  const callbackUrl = `${getAuthCallbackUrl()}?next=/auth/login`
-
-  // Attempt custom Resend sign-in email if link generation is available
-  try {
-    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
-      options: { redirectTo: callbackUrl },
-    })
-
-    if (!linkError && linkData?.properties?.action_link) {
-      const emailRes = await sendSignInLinkEmail(email, linkData.properties.action_link, profile?.full_name || undefined)
-      if (emailRes.success) {
-        return { success: 'Sign-in link sent via Resend! Check your email for your link to sign in.' }
-      }
-      console.warn('Resend email delivery failed, falling back to Supabase auth:', emailRes.error)
-    }
-  } catch (err) {
-    console.warn('Fallback to standard OTP due to link generation error:', err)
-  }
-
-  // Fallback to standard Supabase Auth OTP
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: callbackUrl,
-      shouldCreateUser: true,
-    },
-  })
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) return { error: error.message }
-  return { success: 'Sign-in link sent! Check your email for your link to sign in.' }
+
+  // Revalidate and redirect will be handled by the client or middleware
+  return { success: true }
 }
 
 export async function signUpStudent(formData: FormData) {
   const email = String(formData.get('email') || '').trim().toLowerCase()
   const fullName = String(formData.get('full_name') || '').trim()
+  const password = String(formData.get('password') || '')
   const institution = String(formData.get('institution') || '').trim()
   const institutionType = String(formData.get('institution_type') || '').trim()
   const yearOfStudy = String(formData.get('year_of_study') || '').trim()
   const county = String(formData.get('county') || '').trim()
   const phone = String(formData.get('phone') || '').trim()
 
-  if (!email || !fullName) return { error: 'Email and full name are required.' }
+  if (!email || !fullName || !password) return { error: 'All starred fields are required.' }
 
   const supabase = await createClient()
-  const callbackUrl = `${getAuthCallbackUrl()}?next=/auth/login&signup=true`
 
-  const { data: signUpData, error } = await supabase.auth.signUp({
+  // Sign up with Supabase
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
-    password: crypto.randomUUID(),
+    password,
     options: {
       data: { full_name: fullName, role: 'student' },
-      emailRedirectTo: callbackUrl,
     },
   })
-  if (error) return { error: error.message }
+
+  if (signUpError) return { error: signUpError.message }
 
   if (signUpData.user?.id) {
     const admin = await createAdminClient()
+    const isEmailAdmin = isAdminEmail(email)
+
     await admin.from('profiles').upsert({
       id: signUpData.user.id,
       email,
       full_name: fullName,
-      role: isAdminEmail(email) ? 'admin' : 'student',
-      approved: isAdminEmail(email),
+      role: isEmailAdmin ? 'admin' : 'student',
+      approved: isEmailAdmin,
       institution,
       institution_type: institutionType,
       year_of_study: yearOfStudy,
       county,
       phone,
     }, { onConflict: 'id' })
+
+    // Automatically add to waitlist if a cohort is open
+    if (!isEmailAdmin) {
+      const { data: openCohort } = await admin.from('cohorts').select('id').eq('applications_open', true).limit(1).maybeSingle()
+      if (openCohort) {
+        await admin.from('waitlist').upsert({
+          cohort_id: openCohort.id,
+          student_id: signUpData.user.id,
+          status: 'waiting'
+        }, { onConflict: 'cohort_id,student_id' })
+      }
+    }
+
+    // Send application confirmation email via Resend (Student specific)
+    await sendStudentWaitlistEmail(email, fullName)
   }
 
-  // Send application confirmation email via Resend
-  await sendStudentApplicationEmail(email, fullName, callbackUrl)
-
-  return { success: 'Application submitted! A sign up confirmation email has been sent to your inbox.' }
+  return { success: 'Your application has been received! Check your email for next steps.' }
 }
 
 export async function signUpMentor(formData: FormData) {
   const email = String(formData.get('email') || '').trim().toLowerCase()
   const fullName = String(formData.get('full_name') || '').trim()
+  const password = String(formData.get('password') || '')
   const bio = String(formData.get('bio') || '').trim()
 
-  if (!email || !fullName) return { error: 'Email and full name are required.' }
+  if (!email || !fullName || !password) return { error: 'All starred fields are required.' }
 
   const supabase = await createClient()
-  const callbackUrl = `${getAuthCallbackUrl()}?next=/auth/login&signup=true`
 
-  const { data: signUpData, error } = await supabase.auth.signUp({
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
-    password: crypto.randomUUID(),
+    password,
     options: {
       data: { full_name: fullName, role: 'mentor' },
-      emailRedirectTo: callbackUrl,
     },
   })
-  if (error) return { error: error.message }
+
+  if (signUpError) return { error: signUpError.message }
 
   if (signUpData.user?.id) {
     const admin = await createAdminClient()
+    const isEmailAdmin = isAdminEmail(email)
+
     await admin.from('profiles').upsert({
       id: signUpData.user.id,
       email,
       full_name: fullName,
-      role: isAdminEmail(email) ? 'admin' : 'mentor',
-      approved: isAdminEmail(email),
+      role: isEmailAdmin ? 'admin' : 'mentor',
+      approved: isEmailAdmin,
       bio,
     }, { onConflict: 'id' })
+
+    // Send mentor application received email via Resend
+    await sendMentorRequestReceivedEmail(email, fullName)
   }
 
-  // Send mentor application received email via Resend
-  await sendMentorApplicationEmail(email, fullName)
-
-  return { success: 'Mentor application submitted! A confirmation email has been sent to your inbox.' }
+  return { success: 'Mentor application submitted! Check your email for next steps.' }
 }
 
 export async function signOut() {

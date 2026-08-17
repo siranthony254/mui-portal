@@ -3,15 +3,25 @@ import { useState } from 'react'
 import { signOut } from '@/lib/actions/auth'
 import { getInitials } from '@/lib/utils'
 import type { Profile } from '@/types'
-import { Bell, LogOut, ChevronDown } from '@/components/icons'
+import { Bell, LogOut, ChevronDown, Menu } from '@/components/icons'
 
-export function Topbar({ profile }: { profile: Profile }) {
+export function Topbar({ profile, onMenuClick }: { profile: Profile; onMenuClick?: () => void }) {
   const [open, setOpen] = useState(false)
   return (
-    <header className="h-14 bg-white border-b border-gray-100 px-6 flex items-center justify-between flex-shrink-0">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
-        <span>MUI Portal</span><span className="text-gray-200">/</span>
-        <span className="font-medium text-gray-700 capitalize">{profile.role}</span>
+    <header className="h-16 bg-white border-b border-gray-100 px-4 md:px-6 flex items-center justify-between flex-shrink-0">
+      <div className="flex items-center gap-3">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <span className="hidden sm:inline">MUI Portal</span><span className="text-gray-200 hidden sm:inline">/</span>
+          <span className="font-medium text-gray-700 capitalize">{profile.role}</span>
+        </div>
       </div>
       <div className="flex items-center gap-3">
         <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">

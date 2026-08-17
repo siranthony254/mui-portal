@@ -39,11 +39,11 @@ export function CoursePlayer({ course }: Props) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-120px)] bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-120px)] bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
       {/* Sidebar */}
       <div className={cn(
         "bg-gray-50 border-r border-gray-100 transition-all duration-300 overflow-y-auto flex flex-col",
-        sidebarOpen ? "w-80" : "w-0 opacity-0"
+        sidebarOpen ? "w-full lg:w-80 h-[50vh] lg:h-auto" : "w-0 h-0 lg:h-auto opacity-0"
       )}>
         <div className="p-4 border-b border-gray-200 bg-white">
           <h2 className="font-bold text-gray-900 truncate">{course.title}</h2>

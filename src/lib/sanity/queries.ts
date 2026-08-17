@@ -30,7 +30,18 @@ export async function getAllCourses(): Promise<Course[]> {
 }
 
 export async function getCourseBySlug(slug: string): Promise<Course | null> {
-  return sanityFetchOne(`*[_type=="course"&&slug.current==$slug][0]{_id,title,"slug":slug.current,description,category,isCoreCurriculum,thumbnail,totalDurationMinutes,publishedAt,modules[]{_key,title,description,contentBlocks[]->{_id,title,description,contentType,url,youtubeId,durationMinutes,isRequired}}}`,{slug})
+  return sanityFetchOne(`*[_type=="course"&&slug.current==$slug][0]{
+    _id, title, "slug": slug.current, description, category, isCoreCurriculum, thumbnail, totalDurationMinutes, publishedAt,
+    modules[]{
+      _key, title, description,
+      sessions[]{
+        _key, title,
+        contentBlocks[]{
+          _key, _type, title, url, description, body, image, caption
+        }
+      }
+    }
+  }`,{slug})
 }
 
 export async function getAnnouncements(role: string, cohortId?: string): Promise<any[]> {
