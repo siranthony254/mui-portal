@@ -78,7 +78,10 @@ export default async function VisionClubsStudentPage() {
 }
 
 function JoinClubButton({ clubId }: { clubId: string }) {
-  const joinClubWithId = joinVisionClub.bind(null, clubId)
+  const joinClubWithId = async (_formData: FormData) => {
+    'use server'
+    await joinVisionClub(clubId)
+  }
   return (
     <form action={joinClubWithId}>
       <button type="submit" className="btn-secondary text-xs">Request to join</button>

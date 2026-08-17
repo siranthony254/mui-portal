@@ -54,6 +54,9 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
     setActiveJournalId(entry?.id || null)
   }, [selectedWeek, entries])
 
+  const pillarNum = Math.ceil(selectedWeek / 3)
+  const prompt = JOURNAL_PROMPTS[selectedWeek as keyof typeof JOURNAL_PROMPTS]
+
   const handleSave = useCallback(async () => {
     if (saving) return
     setSaving(true)

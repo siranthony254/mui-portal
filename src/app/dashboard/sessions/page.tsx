@@ -16,13 +16,16 @@ export default async function SessionsPage() {
   const { data: enrollment } = await supabase.from('enrollments').select('cohort_id,cohort:cohorts(name)').eq('student_id', user.id).in('status', ['enrolled', 'active', 'completed']).single()
   if (!enrollment) redirect('/dashboard')
 
+  // Type assertion for Supabase's joined query result
+  const cohort = enrollment.cohort as unknown as { name: string } | null;
+
   const { data: sessions } = await supabase.from('cohort_sessions').select('*, completions:session_homework_completions(student_id)').eq('cohort_id', enrollment.cohort_id).order('date', { ascending: false })
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="page-header">
         <h1 className="page-title">Monthly Sessions</h1>
-        <p className="text-sm text-gray-500">{enrollment.cohort?.name} · Closed Cohort Sessions</p>
+        <p className="text-sm text-gray-500">{cohort?.name} · Closed Cohort Sessions</p>
       </div>
 
       {sessions && sessions.length > 0 ? (
