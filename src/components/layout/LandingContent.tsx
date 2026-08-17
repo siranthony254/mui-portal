@@ -87,7 +87,7 @@ export function LandingContent() {
             </div>
             <h1 className="text-5xl md:text-8xl font-black text-gray-900 leading-[0.95] tracking-tighter animate-reveal [animation-delay:200ms]">
               Voices that <span className="text-emerald-700">Shape</span> <br/>
-              <span className="italic text-emerald-900/10 stroke-emerald-900">Culture.</span>
+              <span className="italic animate-culture-hero">Culture.</span>
             </h1>
             <p className="text-lg md:text-2xl text-gray-500 font-medium leading-relaxed max-w-2xl mx-auto animate-reveal [animation-delay:400ms]">
               Real problems will be solved by bold people who were heard, formed, and trusted even while they were still in school.
@@ -192,58 +192,49 @@ export function LandingContent() {
         </div>
       </section>
 
-      {/* Section 4: The 12-Week Experience */}
-      <section className="py-24 md:py-40 bg-emerald-50 relative px-6 sm:px-6 lg:px-8 rounded-[3rem] md:rounded-[5rem] mx-4 mb-24 overflow-hidden">
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-24 space-y-4">
-            <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.3em]">The Curriculum</h2>
-            <p className="text-4xl md:text-7xl font-black text-gray-900 tracking-tighter">12 Weeks of Formation.</p>
-          </div>
+      {/* Section 4: Why This Matters Now */}
+      <section className="py-24 md:py-40 bg-emerald-900 relative px-6 sm:px-6 lg:px-8 rounded-[3rem] md:rounded-[5rem] mx-4 mb-24 overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-emerald-800/20 rounded-full blur-[120px] -z-0" />
+        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-emerald-950 rounded-full blur-[80px] -z-0" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-               {[
-                 { title: 'Identity & Self', desc: 'Understanding the belief systems that have shaped you.', week: 'W1-2' },
-                 { title: 'Critical Thinking', desc: 'Distinguishing information from wisdom.', week: 'W3-4' },
-                 { title: 'Awareness', desc: 'Identifying real, specific problems around you.', week: 'W5-6' },
-                 { title: 'The Capstone', desc: 'Expressing your voice and owning your ideas.', week: 'W9-12' },
-               ].map((feat) => (
-                 <div key={feat.title} className="p-10 bg-white rounded-[2.5rem] shadow-sm border border-emerald-100 hover:border-emerald-300 transition-all group">
-                   <div className="text-[10px] font-black text-emerald-600 mb-4 uppercase tracking-[0.2em]">{feat.week}</div>
-                   <h3 className="text-xl font-black text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors">{feat.title}</h3>
-                   <p className="text-sm text-gray-500 leading-relaxed font-medium">{feat.desc}</p>
-                 </div>
-               ))}
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Content */}
+            <div className="lg:col-span-5 space-y-6">
+              <h2 className="text-xs font-black text-emerald-400 uppercase tracking-[0.3em]">The Urgency</h2>
+              <p className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-[0.95]">
+                Why This <br /> Matters Now.
+              </p>
+              <div className="w-20 h-1.5 bg-emerald-500 rounded-full" />
             </div>
 
-            <div className="bg-emerald-900 rounded-[3rem] p-10 md:p-12 text-white flex flex-col justify-between group overflow-hidden relative shadow-2xl">
-               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                  <ShieldCheck className="w-40 h-40" />
-               </div>
-               <div className="relative z-10">
-                 <h3 className="text-2xl font-black mb-8">Selective & <br/> Intensive.</h3>
-                 <ul className="space-y-6">
-                   {[
-                     'Aligned with MUI values',
-                     'Emerging student leaders',
-                     'Weekly personal tasks',
-                     'Strict accountability',
-                   ].map((req, i) => (
-                     <li key={i} className="flex gap-4 text-sm font-bold text-emerald-100/70">
-                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2" />
-                       <span>{req}</span>
-                     </li>
-                   ))}
-                 </ul>
-               </div>
-               <div className="mt-12 relative z-10">
-                 <Link href="/auth/register" className="inline-flex items-center gap-4 group/btn">
-                   <span className="text-lg font-black uppercase tracking-widest">Apply Now</span>
-                   <div className="w-12 h-12 rounded-full bg-emerald-400 text-emerald-950 flex items-center justify-center group-hover/btn:bg-white transition-colors shadow-lg">
-                     <ArrowRight className="w-6 h-6" />
-                   </div>
-                 </Link>
-               </div>
+            {/* Right Card */}
+            <div className="lg:col-span-7">
+              <div className="bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+                  <Globe className="w-64 h-64 text-emerald-900" />
+                </div>
+
+                <div className="relative z-10 space-y-10">
+                  <p className="text-xl md:text-2xl text-gray-600 font-medium leading-relaxed">
+                    Africa has the youngest population on earth — more than <span className="text-emerald-700 font-bold">400 million</span> people between 15 and 35. By 2050, that number will exceed <span className="text-emerald-700 font-bold">830 million</span>. This is either the greatest resource in human history, or the greatest unmanaged risk — depending entirely on what happens to those young people during their formation years.
+                  </p>
+
+                  <div className="pt-8 border-t border-emerald-50">
+                    <p className="text-2xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+                      Campuses are <span className="text-emerald-600">formation ground</span>. And right now, formation is broken. We are not waiting for governments to fix it. <span className="underline decoration-emerald-500 decoration-4 underline-offset-8">We are building the fix from inside.</span>
+                    </p>
+                  </div>
+
+                  <div className="pt-4">
+                    <Link href="/auth/register" className="inline-flex items-center gap-4 group/btn bg-emerald-700 text-white px-8 py-4 rounded-2xl hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/20">
+                      <span className="text-sm font-black uppercase tracking-widest">Apply Now</span>
+                      <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

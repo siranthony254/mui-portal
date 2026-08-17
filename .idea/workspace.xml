@@ -5,52 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8bb94af-4cee-458b-ad48-2a180ac85ea8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/public/sw.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/admin/sessions/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/dashboard/content/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/dashboard/courses/[slug]/learn/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/dashboard/journal/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/dashboard/sessions/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/manifest.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/app/mentor/students/[id]/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/auth/MentorPendingScreen.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/cohort/JournalClient.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/cohort/PeerAccountabilityCard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/cohort/SessionHomework.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/cohort/TaskList.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/content/CoursePlayer.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/layout/DashboardShell.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/layout/LandingContent.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/sanity/image.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sanity/schemas/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/sanity/schemas/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/auth/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/auth/login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/courses/[slug]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/courses/[slug]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/tasks/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/tasks/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/vision-clubs/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/vision-clubs/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/mentor/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/mentor/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/mentor/students/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/mentor/students/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/auth/LoginForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/auth/LoginForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/auth/MentorApplyForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/auth/MentorApplyForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/auth/RegisterForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/auth/RegisterForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/cohort/StudentDashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/StudentDashboard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/cohort/TaskSubmitForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/TaskSubmitForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/icons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/icons.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/Sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/Topbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/Topbar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/actions/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/actions/cohort.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/cohort.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/email/services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/email/services.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/email/templates.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/email/templates.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/sanity/queries.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/sanity/queries.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/middleware.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/schema.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/LandingContent.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/LandingContent.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

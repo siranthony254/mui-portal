@@ -91,6 +91,38 @@
   }
 }
 
+/* Custom Hero Animation for "Culture." */
+.animate-culture-hero {
+  display: inline-block !important;
+  background: linear-gradient(
+    90deg,
+    rgba(6, 78, 59, 0.08) 0%,
+    rgba(6, 78, 59, 0.08) 40%,
+    rgba(6, 78, 59, 0.4) 50%,
+    rgba(6, 78, 59, 0.08) 60%,
+    rgba(6, 78, 59, 0.08) 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-stroke: 1px rgba(6, 78, 59, 0.8) !important;
+  animation:
+    culture-zoom 12s ease-in-out infinite,
+    culture-wave 8s linear infinite !important;
+  transform-origin: center;
+}
+
+@keyframes culture-zoom {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes culture-wave {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 * { box-sizing: border-box; }
 ::selection { background-color: #e1f5ee; color: #0f6e56; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
