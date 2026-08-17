@@ -1,0 +1,188 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { saveJournalEntry, toggleJournalSharing } from '@/lib/actions/cohort'
+import { JOURNAL_PROMPTS, getPillarColor } from '@/types'
+import { Lock, Unlock, Check, Save, ChevronLeft, ChevronRight, Share2 } from '@/components/icons'
+import { cn } from '@/lib/utils'
+import type { JournalEntry } from '@/types'
+
+interface Props {
+  initialEntries: JournalEntry[]
+  currentWeek: number
+  currentPillar: number
+}
+
+export function JournalClient({ initialEntries, currentWeek, currentPillar }: Props) {
+  const [selectedWeek, setSelectedWeek] = useState(currentWeek)
+  const [entries, setEntries] = useState(initialEntries)
+  const [content, setContent] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [isShared, setIsShared] = useState(false)
+  const [activeJournalId, setActiveJournalId] = useState<string | null>(null)
+
+  const currentEntry = entries.find(e => e.week_number === selectedWeek)
+  const pillarNum = Math.min(Math.ceil(selectedWeek / 2.4), 5)
+  const prompt = JOURNAL_PROMPTS[selectedWeek]
+
+  useEffect(() => {
+    const entry = entries.find(e => e.week_number === selectedWeek)
+    setContent(entry?.content || '')
+    setIsShared(entry?.is_shared || false)
+    setActiveJournalId(entry?.id || null)
+  }, [selectedWeek, entries])
+
+  const handleSave = useCallback(async () => {
+    if (saving) return
+    setSaving(true)
+    const res = await saveJournalEntry(selectedWeek, pillarNum, content)
+    if (res.success) {
+      setLastSaved(new Date())
+      // Update local state if it's a new entry
+      if (!currentEntry) {
+         // In a real app we'd fetch the new entry to get the ID,
+         // but for now we'll just rely on the next refresh or re-query
+      }
+    }
+    setSaving(false)
+  }, [selectedWeek, pillarNum, content, saving, currentEntry])
+
+  // Auto-save every 30 seconds if content changed
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentEntry?.content !== content) {
+        handleSave()
+      }
+    }, 30000)
+    return () => clearTimeout(timer)
+  }, [content, handleSave, currentEntry])
+
+  async function handleToggleShare() {
+    if (!activeJournalId) return
+    const newShared = !isShared
+    const res = await toggleJournalSharing(activeJournalId, newShared)
+    if (res.success) setIsShared(newShared)
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="lg:col-span-1 space-y-4">
+        <div className="card p-4">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Timeline</p>
+          <div className="grid grid-cols-4 gap-2">
+            {Array.from({ length: 12 }, (_, i) => i + 1).map(w => {
+              const hasEntry = entries.some(e => e.week_number === w && e.content?.length > 0)
+              const isCurrent = w === currentWeek
+              const isSelected = w === selectedWeek
+              return (
+                <button
+                  key={w}
+                  onClick={() => setSelectedWeek(w)}
+                  className={cn(
+                    'aspect-square rounded-lg text-xs font-medium flex items-center justify-center border transition-all',
+                    isSelected ? 'border-teal-600 bg-teal-50 text-teal-700 ring-1 ring-teal-600' :
+                    isCurrent ? 'border-teal-200 bg-white text-teal-600' :
+                    hasEntry ? 'border-gray-200 bg-gray-50 text-gray-600' :
+                    'border-gray-100 bg-white text-gray-300'
+                  )}
+                >
+                  {w}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="card p-4 bg-gray-50 border-none shadow-none">
+          <div className="flex items-center gap-2 mb-2 text-gray-500">
+            <Lock className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-semibold uppercase tracking-widest">Privacy Policy</span>
+          </div>
+          <p className="text-[11px] text-gray-500 leading-relaxed">
+            Your journal is private. Mentors and admins cannot see these entries unless you explicitly choose to share a specific week's entry for feedback.
+          </p>
+        </div>
+      </div>
+
+      <div className="lg:col-span-3 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-gray-900">Week {selectedWeek} Journal</h1>
+            <span className={cn('badge text-[10px]', getPillarColor(pillarNum))}>Pillar {pillarNum}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {lastSaved && (
+              <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                <Check className="w-3 h-3" /> Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary py-1.5 px-3 text-xs flex items-center gap-2"
+            >
+              <Save className="w-3.5 h-3.5" /> {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+
+        <div className="card overflow-hidden">
+          <div className="px-5 py-4 bg-teal-50/50 border-b border-gray-100">
+            <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest mb-1">Weekly Prompt</p>
+            <p className="text-sm text-teal-900 font-medium leading-relaxed italic">
+              "{prompt || 'Free writing week. What is on your mind regarding your formation?'}"
+            </p>
+          </div>
+
+          <div className="relative">
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Start writing here... Your thoughts, observations, and reflections."
+              className="w-full min-h-[400px] p-6 text-sm text-gray-800 border-none focus:ring-0 resize-none leading-relaxed placeholder:text-gray-300"
+            />
+          </div>
+
+          <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+             <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                   {isShared ? <Unlock className="w-3.5 h-3.5 text-amber-500" /> : <Lock className="w-3.5 h-3.5 text-teal-600" />}
+                   {isShared ? 'Shared with your mentor' : 'Private to you'}
+                </div>
+             </div>
+             {activeJournalId && (
+               <button
+                onClick={handleToggleShare}
+                className={cn(
+                  "flex items-center gap-2 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors",
+                  isShared ? "bg-amber-50 text-amber-700 hover:bg-amber-100" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                )}
+               >
+                 <Share2 className="w-3.5 h-3.5" />
+                 {isShared ? 'Make Private' : 'Share with Mentor'}
+               </button>
+             )}
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center px-1">
+          <button
+            onClick={() => setSelectedWeek(s => Math.max(1, s - 1))}
+            disabled={selectedWeek === 1}
+            className="text-xs text-gray-500 flex items-center gap-1 hover:text-teal-700 disabled:opacity-30"
+          >
+            <ChevronLeft className="w-4 h-4" /> Week {selectedWeek - 1}
+          </button>
+          <button
+            onClick={() => setSelectedWeek(s => Math.min(12, s + 1))}
+            disabled={selectedWeek === 12}
+            className="text-xs text-gray-500 flex items-center gap-1 hover:text-teal-700 disabled:opacity-30"
+          >
+            Week {selectedWeek + 1} <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
