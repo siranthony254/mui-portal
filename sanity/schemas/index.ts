@@ -1,4 +1,26 @@
 import { defineType, defineField } from 'sanity'
+export { curriculumSchema, videoBlock, fileBlock } from './curriculum'
+
+export const textBlock = defineType({
+  name: 'textBlock',
+  title: 'Text Content',
+  type: 'object',
+  fields: [
+    defineField({ name: 'body', title: 'Text content', type: 'array', of: [{ type: 'block' }] })
+  ],
+  preview: { prepare: () => ({ title: 'Text Block' }) }
+})
+
+export const imageBlock = defineType({
+  name: 'imageBlock',
+  title: 'Image',
+  type: 'object',
+  fields: [
+    defineField({ name: 'image', title: 'Image', type: 'image', options: { hotspot: true }, validation: r => r.required() }),
+    defineField({ name: 'caption', title: 'Caption', type: 'string' })
+  ],
+  preview: { select: { media: 'image', title: 'caption' }, prepare: ({ media, title }) => ({ title: title || 'Image Block', media }) }
+})
 
 export const contentSchema = defineType({
   name:'content', title:'Standalone Content', type:'document',

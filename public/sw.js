@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mui-portal-v1';
+const CACHE_NAME = 'mui-forge-v1';
 const OFFLINE_URL = '/offline';
 
 const URLS_TO_CACHE = [

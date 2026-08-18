@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @layer components {
-  .portal-sidebar {
+  .forge-sidebar {
     height: 100%;
     background: white;
     border-right: 1px solid #f3f4f6;

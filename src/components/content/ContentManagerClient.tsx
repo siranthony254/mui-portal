@@ -6,7 +6,7 @@ import { PILLARS } from '@/types'
 import { cn } from '@/lib/utils'
 import { Search } from '@/components/icons'
 
-export function ContentManagerClient({ content }: { content: ContentBlock[] }) {
+export function ContentManagerClient({ content, isAdmin=false }: { content: ContentBlock[]; isAdmin?: boolean }) {
   const [pillarFilter, setPillarFilter] = useState<number|null>(null)
   const [typeFilter, setTypeFilter] = useState<string|null>(null)
   const [search, setSearch] = useState('')
@@ -40,7 +40,7 @@ export function ContentManagerClient({ content }: { content: ContentBlock[] }) {
       </div>
 
       {pillarFilter ? (
-        <div className="space-y-3">{filtered.map(c=><ContentCard key={c._id} content={c} compact />)}</div>
+        <div className="space-y-3">{filtered.map(c=><ContentCard key={c._id} content={c} compact isAdmin={isAdmin} />)}</div>
       ) : (
         PILLARS.map(pillar => {
           const items = filtered.filter(c=>c.pillarNumber===pillar.number)
@@ -51,7 +51,7 @@ export function ContentManagerClient({ content }: { content: ContentBlock[] }) {
                 <div><p className="text-sm font-semibold text-gray-900">Pillar {pillar.number}: {pillar.name}</p><p className="text-xs text-gray-400">{pillar.weeks}</p></div>
                 <span className="badge badge-gray text-xs">{items.length} items</span>
               </div>
-              <div className="p-4 space-y-2">{items.map(c=><ContentCard key={c._id} content={c} compact />)}</div>
+              <div className="p-4 space-y-2">{items.map(c=><ContentCard key={c._id} content={c} compact isAdmin={isAdmin} />)}</div>
             </div>
           )
         })

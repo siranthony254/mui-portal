@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Mic'd Up Initiative Portal",
-    short_name: 'MUI Portal',
+    name: "Mic'd Up Initiative Forge",
+    short_name: 'MUI Forge',
     description: 'Form your voice. Shape culture.',
     start_url: '/',
     display: 'standalone',

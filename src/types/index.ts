@@ -281,3 +281,13 @@ export function getPillarColor(pillar: number): string {
   }
   return colors[pillar] || 'bg-gray-100 text-gray-700'
 }
+
+export const COUNTIES = [
+  'Nairobi','Mombasa','Kisumu','Nakuru','Eldoret','Thika','Kitui','Machakos',
+  'Meru','Nyeri','Muranga','Kiambu','Kajiado','Makueni','Kilifi','Kwale',
+  'Garissa','Wajir','Mandera','Marsabit','Isiolo','Samburu','Laikipia',
+  'Nyandarua','Kirinyaga','Embu','Tharaka Nithi','Siaya','Kisii','Nyamira',
+  'Migori','Homabay','Bomet','Kericho','Baringo','Uasin Gishu','Nandi',
+  'Trans Nzoia','Turkana','West Pokot','Bungoma','Busia','Vihiga','Kakamega','Other',
+]
+

@@ -22,3 +22,12 @@ export async function markAsRead(id: string) {
   await supabase.from('notifications').update({ read: true }).eq('id', id)
   revalidatePath('/dashboard')
 }
+
+export async function clearAllNotifications() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase.from('notifications').update({ read: true }).eq('user_id', user.id)
+  revalidatePath('/dashboard')
+}

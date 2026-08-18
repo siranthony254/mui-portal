@@ -7,6 +7,7 @@ import type { Profile, Enrollment, Task } from '@/types'
 import { CheckCircle, Clock, Circle, ChevronRight, MessageSquare, FileText, Users, ArrowRight } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { PeerAccountabilityCard } from './PeerAccountabilityCard'
+import { MentorAssignmentBanner } from './MentorAssignmentBanner'
 
 interface Props { enrollment: any; tasks: Task[]; profile: Profile; partnership?: any }
 
@@ -20,6 +21,8 @@ export function StudentDashboard({ enrollment, tasks, profile, partnership }: Pr
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {mentor && <MentorAssignmentBanner mentor={mentor} />}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Welcome back, {profile.full_name.split(' ')[0]}</h1>

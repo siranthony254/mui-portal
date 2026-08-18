@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { ShieldCheck, Phone, ArrowRight, CheckCircle, Zap } from '@/components/icons'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function ActivatePage() {
+function ActivateContent() {
   const [step, setStep] = useState(1) // 1: Phone, 2: OTP
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
@@ -38,7 +38,7 @@ export default function ActivatePage() {
     // Simulate verification
     // In production: await supabase.auth.verifyOtp({ phone, token: otpString, type: 'sms' })
     setTimeout(() => {
-      router.push('/dashboard')
+      window.location.href = '/dashboard'
       setLoading(false)
     }, 1500)
   }
@@ -137,5 +137,13 @@ export default function ActivatePage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function ActivatePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading activation...</div>}>
+      <ActivateContent />
+    </Suspense>
   )
 }

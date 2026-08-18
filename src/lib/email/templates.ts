@@ -20,7 +20,7 @@ function getEmailLayout({ title, content }: { title: string; content: string }) 
           <tr>
             <td style="padding: 40px; background-color: #0f6e56; text-align: center;">
               <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff;">
-                MUI Portal
+                MUI Forge
               </h1>
               <p style="margin: 4px 0 0 0; font-size: 12px; color: #e1f5ee; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
                 Formation. Voice. Culture.
@@ -39,7 +39,7 @@ function getEmailLayout({ title, content }: { title: string; content: string }) 
           <tr>
             <td style="padding: 24px 40px; background-color: #f1f5f9; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
               <p style="margin: 0 0 8px 0;">&copy; ${new Date().getFullYear()} Micdup Initiative (MUI). All rights reserved.</p>
-              <p style="margin: 0;">This is an automated notification from your MUI Portal account.</p>
+              <p style="margin: 0;">This is an automated notification from your MUI Forge account.</p>
             </td>
           </tr>
         </table>

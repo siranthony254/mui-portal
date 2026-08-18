@@ -18,7 +18,7 @@ export function LandingContent() {
               <div className="w-10 h-10 rounded-2xl bg-emerald-700 flex items-center justify-center transition-transform group-hover:rotate-12 group-active:scale-95 shadow-lg shadow-emerald-700/20">
                 <div className="w-4 h-4 rounded-full bg-white" />
               </div>
-              <span className="text-xl font-black text-gray-900 tracking-tighter uppercase">MUI Portal</span>
+              <span className="text-xl font-black text-gray-900 tracking-tighter uppercase">MUI Forge</span>
             </div>
 
             {/* Desktop Nav */}
@@ -267,7 +267,7 @@ export function LandingContent() {
               <div className="w-6 h-6 rounded-lg bg-gray-900 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white" />
               </div>
-              <span className="text-xs font-black text-gray-900 uppercase tracking-widest">MUI Portal</span>
+              <span className="text-xs font-black text-gray-900 uppercase tracking-widest">MUI Forge</span>
             </div>
             <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">
               &copy; {new Date().getFullYear()} Micdup Initiative. All rights reserved.

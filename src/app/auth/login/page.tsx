@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LoginForm } from '@/components/auth/LoginForm'
 
-export const metadata: Metadata = { title: 'Sign In — MUI Portal' }
+export const metadata: Metadata = { title: 'Sign In — MUI Forge' }
 
 interface LoginPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined }
@@ -31,7 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <div className="w-8 h-8 rounded-full bg-teal-700 flex items-center justify-center">
               <div className="w-3 h-3 rounded-full bg-white" />
             </div>
-            <span className="text-lg font-semibold text-gray-900">MUI Portal</span>
+            <span className="text-lg font-semibold text-gray-900">MUI Forge</span>
           </div>
           <p className="text-sm text-gray-500">Form your voice. Shape culture.</p>
         </div>

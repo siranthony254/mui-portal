@@ -4,14 +4,14 @@ import { useState } from 'react'
 import { Plus, Zap } from '@/components/icons'
 import { AddContentForm } from './AddContentForm'
 
-export function AdminContentActions() {
+export function AdminContentActions({ cohorts }: { cohorts: any[] }) {
   const [showForm, setShowShowForm] = useState(false)
 
   if (showForm) {
     return (
       <div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-md flex items-center justify-center p-6 overflow-y-auto">
-        <div className="max-w-3xl w-full">
-          <AddContentForm onClose={() => setShowShowForm(false)} />
+        <div className="max-w-4xl w-full">
+          <AddContentForm cohorts={cohorts} onClose={() => setShowShowForm(false)} />
         </div>
       </div>
     )

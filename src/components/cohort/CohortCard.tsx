@@ -1,15 +1,17 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { openCohort, toggleCohortFeature, advanceCohortWeek } from '@/lib/actions/cohort'
+import { openCohort, toggleCohortFeature, advanceCohortWeek, deleteCohort } from '@/lib/actions/cohort'
 import { formatDate, cn } from '@/lib/utils'
 import { PILLARS } from '@/types'
-import { Users, FileText, Lightbulb, Play, MessageSquare } from '@/components/icons'
+import { Users, FileText, Lightbulb, Play, MessageSquare, Trash2 } from '@/components/icons'
+import { useRouter } from 'next/navigation'
 
 export function CohortCard({ cohort, enrolledCount }: { cohort: any; enrolledCount: number }) {
   const [loading, setLoading] = useState<string|null>(null)
   const [msg, setMsg] = useState<string|null>(null)
   const [local, setLocal] = useState(cohort)
+  const router = useRouter()
 
   async function handleOpen() {
     if (!confirm(`Open "${cohort.name}" and admit all waitlisted students?`)) return
@@ -33,6 +35,19 @@ export function CohortCard({ cohort, enrolledCount }: { cohort: any; enrolledCou
     const res = await advanceCohortWeek(cohort.id)
     setMsg(res.success||res.error||null)
     if (res.success) setLocal((p:any) => ({...p, current_week:p.current_week+1}))
+    setLoading(null)
+  }
+
+  async function handleDelete() {
+    if (!confirm(`PERMANENTLY DELETE cohort "${local.name}"? This will remove all enrollments and progress.`)) return
+    setLoading('delete')
+    const res = await deleteCohort(cohort.id)
+    if (res.success) {
+      router.push('/admin/cohorts')
+      router.refresh()
+    } else {
+      setMsg(res.error || 'Failed to delete cohort.')
+    }
     setLoading(null)
   }
 
@@ -129,10 +144,20 @@ export function CohortCard({ cohort, enrolledCount }: { cohort: any; enrolledCou
 
       {msg && <div className="mx-5 mb-4 p-3 bg-teal-50 border border-teal-100 rounded-lg text-sm text-teal-700">{msg}</div>}
 
-      <div className="px-5 pb-4 flex items-center gap-2">
-        <Link href={`/admin/cohorts/${cohort.id}`} className="btn-secondary text-xs">Full settings</Link>
-        <Link href={`/admin/students?cohort=${cohort.id}`} className="btn-secondary text-xs"><Users className="w-3.5 h-3.5" />Students ({enrolledCount})</Link>
-        <Link href={`/admin/analytics?cohort=${cohort.id}`} className="btn-secondary text-xs">Analytics</Link>
+      <div className="px-5 pb-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/cohorts/${cohort.id}`} className="btn-secondary text-xs">Full settings</Link>
+          <Link href={`/admin/students?cohort=${cohort.id}`} className="btn-secondary text-xs"><Users className="w-3.5 h-3.5" />Students ({enrolledCount})</Link>
+          <Link href={`/admin/analytics?cohort=${cohort.id}`} className="btn-secondary text-xs">Analytics</Link>
+        </div>
+        <button
+          onClick={handleDelete}
+          disabled={loading === 'delete'}
+          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+          title="Delete Cohort"
+        >
+          {loading === 'delete' ? '...' : <Trash2 className="w-4 h-4" />}
+        </button>
       </div>
     </div>
   )

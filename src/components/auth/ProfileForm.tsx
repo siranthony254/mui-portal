@@ -2,9 +2,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
+import { COUNTIES } from '@/types'
 import { useRouter } from 'next/navigation'
-
-const COUNTIES = ['Nairobi','Mombasa','Kisumu','Nakuru','Eldoret','Muranga','Kiambu','Meru','Nyeri','Kisii','Kakamega','Bungoma','Nakuru','Uasin Gishu','Nandi','Kericho','Bomet','Migori','Homabay','Siaya','Vihiga','Busia','Kilifi','Mombasa','Kwale','Taita Taveta','Other']
 
 export function ProfileForm({ profile }: { profile: Profile }) {
   const [loading, setLoading] = useState(false)

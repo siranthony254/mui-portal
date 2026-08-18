@@ -27,16 +27,20 @@ export function SealedLetterManager({ cohortId }: { cohortId: string }) {
       .in('status', ['active', 'completed'])
 
     if (enrollments) {
-        const studentIds = enrollments.map(e => e.student.id)
+        const studentIds = enrollments.map(e => (e.student as any).id)
         const { data: notes } = await supabase.from('mentor_notes')
             .select('*')
             .in('student_id', studentIds)
             .eq('is_sealed_letter', true)
 
         const mapped = enrollments.map(e => {
-            const letter = notes?.find(n => n.student_id === e.student.id && n.mentor_id === e.mentor?.id)
+            const student = e.student as any
+            const mentor = e.mentor as any
+            const letter = notes?.find(n => n.student_id === student.id && n.mentor_id === mentor?.id)
             return {
                 ...e,
+                student,
+                mentor,
                 letter
             }
         })

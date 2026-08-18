@@ -27,7 +27,7 @@ export function MentorOnboarding({ mentorName, mentees }: Props) {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
-      router.refresh()
+      window.location.reload()
     }
   }
 

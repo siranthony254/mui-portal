@@ -15,7 +15,9 @@ export async function ensureAdminProfile(admin: SupabaseClient, user: AuthUser) 
   const email = user.email!.trim().toLowerCase()
   const fullName = user.user_metadata?.full_name || email
 
-  const { data, error } = await admin
+  // Use a more resilient upsert that doesn't select '*' immediately
+  // to avoid potential missing column issues in the return type
+  const { data: upsertData, error: upsertError } = await admin
     .from('profiles')
     .upsert(
       {
@@ -25,11 +27,15 @@ export async function ensureAdminProfile(admin: SupabaseClient, user: AuthUser) 
         role: 'admin',
         approved: true,
       },
-      { onConflict: 'id' },
+      { onConflict: 'id' }
     )
-    .select('*')
-    .single()
+    .select()
 
-  if (error) throw error
-  return data
+  if (upsertError) {
+    console.error('[ensureAdminProfile] Upsert error:', upsertError)
+    // If it's a "column doesn't exist" error, we need to know
+    throw new Error(`Admin profile sync failed: ${upsertError.message} (${upsertError.code})`)
+  }
+
+  return upsertData?.[0] || null
 }

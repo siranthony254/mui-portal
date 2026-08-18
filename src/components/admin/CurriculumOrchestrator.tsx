@@ -1,13 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { client } from '@/lib/sanity/client'
 import { getCohortCurriculum } from '@/lib/sanity/queries'
-import { updateCohortCurriculum } from '@/lib/actions/sanity'
+import {
+    updateCohortCurriculum,
+    deleteCurriculumSession,
+    deleteCurriculumPillar,
+    updateCurriculumPillar
+} from '@/lib/actions/sanity'
 import {
     Layers, Zap, Calendar, Play, ChevronRight,
     ArrowLeft, Plus, MessageSquare, BookOpen,
-    FileText, Video, Headphones, FileDown, X, CheckCircle, Search
+    FileText, Video, Headphones, FileDown, X, CheckCircle, Search, Trash2, Edit3, Save
 } from '@/components/icons'
 import { cn, parseYouTubeEmbed } from '@/lib/utils'
 
@@ -28,6 +32,7 @@ export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
     const [curriculum, setCurriculum] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [activePillar, setActivePillar] = useState<number | null>(null)
+    const [editingPillar, setEditingPillar] = useState<Pillar | null>(null)
     const [activeSession, setActiveSession] = useState<any>(null)
 
     const selectedCohort = cohorts.find(c => c.id === selectedCohortId)
@@ -43,10 +48,23 @@ export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
 
     async function fetchCurriculum() {
         setLoading(true)
-        // Using a direct query helper or just standard query
         const data = await getCohortCurriculum(selectedCohortId)
         setCurriculum(data)
         setLoading(false)
+    }
+
+    const handleDeletePillar = async (pillarNum: number) => {
+        if (!confirm(`Are you sure you want to delete Pillar ${pillarNum} and all its content?`)) return
+        setLoading(true)
+        await deleteCurriculumPillar(selectedCohortId, pillarNum)
+        await fetchCurriculum()
+    }
+
+    const handleDeleteSession = async (pillarNum: number, weekNum: number, dayNum: number) => {
+        if (!confirm(`Delete Session for Day ${dayNum}?`)) return
+        setLoading(true)
+        await deleteCurriculumSession(selectedCohortId, pillarNum, weekNum, dayNum)
+        await fetchCurriculum()
     }
 
     if (!selectedCohortId) {
@@ -96,6 +114,16 @@ export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
                     <div className="w-8 h-8 border-4 border-emerald-700 border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading Infrastructure...</p>
                 </div>
+            ) : editingPillar ? (
+                <PillarEditor
+                    pillar={editingPillar}
+                    cohortId={selectedCohortId}
+                    onUpdate={() => {
+                        fetchCurriculum()
+                        setEditingPillar(null)
+                    }}
+                    onClose={() => setEditingPillar(null)}
+                />
             ) : activeSession ? (
                 <SessionEditor
                     session={activeSession}
@@ -111,19 +139,22 @@ export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
                     pillar={selectedCohort?.pillars_config.find(p => p.number === activePillar)!}
                     curriculum={curriculum}
                     onOpenSession={(s: any) => setActiveSession(s)}
+                    onDeleteSession={handleDeleteSession}
                 />
             ) : (
                 <PillarSelectionGrid
                     pillars={selectedCohort?.pillars_config || []}
                     curriculum={curriculum}
                     onSelect={(num) => setActivePillar(num)}
+                    onEditPillar={(p) => setEditingPillar(p)}
+                    onDeletePillar={handleDeletePillar}
                 />
             )}
         </div>
     )
 }
 
-function PillarSelectionGrid({ pillars, curriculum, onSelect }: { pillars: Pillar[], curriculum: any, onSelect: (num: number) => void }) {
+function PillarSelectionGrid({ pillars, curriculum, onSelect, onEditPillar, onDeletePillar }: { pillars: Pillar[], curriculum: any, onSelect: (num: number) => void, onEditPillar: (p: Pillar) => void, onDeletePillar: (num: number) => void }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pillars.map(p => {
@@ -131,28 +162,43 @@ function PillarSelectionGrid({ pillars, curriculum, onSelect }: { pillars: Pilla
                 const sessionCount = sanityPillar?.modules?.reduce((acc: number, m: any) => acc + (m.sessions?.length || 0), 0) || 0
 
                 return (
-                    <button
-                        key={p.number}
-                        onClick={() => onSelect(p.number)}
-                        className="card p-8 text-left group hover:border-emerald-600 transition-all hover:shadow-2xl relative overflow-hidden"
-                    >
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                            <Layers className="w-20 h-20" />
+                    <div key={p.number} className="relative group">
+                        <button
+                            onClick={() => onSelect(p.number)}
+                            className="w-full card p-8 text-left group hover:border-emerald-600 transition-all hover:shadow-2xl relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                                <Layers className="w-20 h-20" />
+                            </div>
+                            <div className="relative z-10 space-y-4">
+                                <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black group-hover:bg-emerald-700 group-hover:text-white transition-colors shadow-lg shadow-teal-700/10">
+                                    {p.number}
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-gray-900 group-hover:text-emerald-900 transition-colors uppercase tracking-tight">{p.name}</h3>
+                                    <p className="text-xs text-gray-400 mt-1 font-medium leading-relaxed line-clamp-2">{p.description || "Formation foundation for this pillar."}</p>
+                                </div>
+                                <div className="pt-4 flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{sessionCount} Sessions Designed</span>
+                                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
+                                </div>
+                            </div>
+                        </button>
+                        <div className="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onEditPillar(p) }}
+                                className="p-2 bg-white/80 backdrop-blur rounded-lg text-gray-400 hover:text-emerald-600 shadow-sm"
+                            >
+                                <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDeletePillar(p.number) }}
+                                className="p-2 bg-white/80 backdrop-blur rounded-lg text-red-400 hover:text-red-600 shadow-sm"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
                         </div>
-                        <div className="relative z-10 space-y-4">
-                            <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black group-hover:bg-emerald-700 group-hover:text-white transition-colors shadow-lg shadow-teal-700/10">
-                                {p.number}
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-black text-gray-900 group-hover:text-emerald-900 transition-colors uppercase tracking-tight">{p.name}</h3>
-                                <p className="text-xs text-gray-400 mt-1 font-medium leading-relaxed line-clamp-2">{p.description || "Formation foundation for this pillar."}</p>
-                            </div>
-                            <div className="pt-4 flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{sessionCount} Sessions Designed</span>
-                                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
-                            </div>
-                        </div>
-                    </button>
+                    </div>
                 )
             })}
             <div className="card p-8 border-dashed border-2 border-gray-200 flex flex-col items-center justify-center text-center opacity-40 hover:opacity-100 transition-opacity">
@@ -164,7 +210,51 @@ function PillarSelectionGrid({ pillars, curriculum, onSelect }: { pillars: Pilla
     )
 }
 
-function PillarModuleView({ pillar, curriculum, onOpenSession }: { pillar: Pillar, curriculum: any, onOpenSession: (s: any) => void }) {
+function PillarEditor({ pillar, cohortId, onUpdate, onClose }: { pillar: Pillar, cohortId: string, onUpdate: () => void, onClose: () => void }) {
+    const [loading, setLoading] = useState(false)
+    const [name, setName] = useState(pillar.name)
+    const [description, setDescription] = useState(pillar.description || '')
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+        const res = await updateCurriculumPillar({
+            cohortId,
+            pillarNumber: pillar.number,
+            name,
+            description
+        })
+        if (res.success) onUpdate()
+        setLoading(false)
+    }
+
+    return (
+        <div className="card p-10 bg-white shadow-2xl animate-reveal">
+            <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">Edit Pillar {pillar.number}</h3>
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
+            </div>
+            <form onSubmit={handleSave} className="space-y-6">
+                <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Pillar Name</label>
+                    <input value={name} onChange={e => setName(e.target.value)} required className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 font-bold" />
+                </div>
+                <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Description</label>
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm font-medium" />
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                    <button type="button" onClick={onClose} className="px-6 py-3 text-xs font-black uppercase text-gray-400">Cancel</button>
+                    <button type="submit" disabled={loading} className="bg-emerald-700 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest flex items-center gap-2 shadow-lg">
+                        {loading ? 'Saving...' : 'Save Changes'} <Save className="w-4 h-4" />
+                    </button>
+                </div>
+            </form>
+        </div>
+    )
+}
+
+function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }: { pillar: Pillar, curriculum: any, onOpenSession: (s: any) => void, onDeleteSession: (p: number, w: number, d: number) => void }) {
     const weeks = [(pillar.number * 2) - 1, (pillar.number * 2)]
     const sanityPillar = curriculum?.pillars?.find((p: any) => p.number === pillar.number)
 
@@ -191,34 +281,46 @@ function PillarModuleView({ pillar, curriculum, onOpenSession }: { pillar: Pilla
                                 {[1, 2, 3, 4, 5, 6].map(day => {
                                     const session = module?.sessions?.find((s: any) => s.dayNumber === day)
                                     return (
-                                        <button
-                                            key={day}
-                                            onClick={() => onOpenSession({ ...session, dayNumber: day, weekNumber: week, pillarNumber: pillar.number })}
-                                            className={cn(
-                                                "w-full flex items-center justify-between p-5 rounded-[1.5rem] border-2 transition-all group",
-                                                session
-                                                    ? "bg-white border-emerald-100 hover:border-emerald-600 hover:shadow-xl"
-                                                    : "bg-gray-50 border-gray-100 border-dashed hover:border-gray-300"
+                                        <div key={day} className="relative group">
+                                            <button
+                                                onClick={() => onOpenSession({ ...session, dayNumber: day, weekNumber: week, pillarNumber: pillar.number })}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between p-5 rounded-[1.5rem] border-2 transition-all group",
+                                                    session
+                                                        ? "bg-white border-emerald-100 hover:border-emerald-600 hover:shadow-xl"
+                                                        : "bg-gray-50 border-gray-100 border-dashed hover:border-gray-300"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-4 text-left">
+                                                    <div className={cn(
+                                                        "w-10 h-10 rounded-2xl flex items-center justify-center transition-colors font-black text-sm",
+                                                        session ? "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white" : "bg-white text-gray-300 shadow-sm"
+                                                    )}>
+                                                        {day}
+                                                    </div>
+                                                    <div>
+                                                        <p className={cn("text-[10px] font-black uppercase tracking-widest", session ? "text-emerald-600" : "text-gray-400")}>Day {day} Session</p>
+                                                        <p className="text-sm font-bold text-gray-900">{session?.title || 'Not yet designed'}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    {session?.journalPrompt && <span title="Journal prompt included"><MessageSquare className="w-4 h-4 text-blue-400" /></span>}
+                                                    {session?.contentBlocks?.length > 0 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                                                    <div className="p-2 rounded-lg bg-gray-50 text-gray-400 group-hover:text-emerald-700 transition-colors">
+                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
+                                                </div>
+                                            </button>
+                                            {session && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onDeleteSession(pillar.number, week, day) }}
+                                                    className="absolute -top-2 -right-2 z-20 p-2 bg-white rounded-full text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all shadow-md border border-gray-100"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
                                             )}
-                                        >
-                                            <div className="flex items-center gap-4 text-left">
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-2xl flex items-center justify-center transition-colors font-black text-sm",
-                                                    session ? "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white" : "bg-white text-gray-300 shadow-sm"
-                                                )}>
-                                                    {day}
-                                                </div>
-                                                <div>
-                                                    <p className={cn("text-[10px] font-black uppercase tracking-widest", session ? "text-emerald-600" : "text-gray-400")}>Day {day} Session</p>
-                                                    <p className="text-sm font-bold text-gray-900">{session?.title || 'Not yet designed'}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                {session?.journalPrompt && <MessageSquare className="w-4 h-4 text-blue-400" title="Journal prompt included" />}
-                                                {session?.contentBlocks?.length > 0 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
-                                                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
-                                            </div>
-                                        </button>
+                                        </div>
                                     )
                                 })}
                             </div>
@@ -242,7 +344,7 @@ function SessionEditor({ session, cohortId, onUpdate, onClose }: { session: any,
         setLoading(true)
 
         let contentBlock: any = {
-            _type: contentType === 'video' ? 'videoBlock' : 'textBlock',
+            _type: contentType === 'video' ? 'videoBlock' : contentType === 'article' ? 'textBlock' : 'fileBlock',
             title: title // Using session title as default for content block
         }
 

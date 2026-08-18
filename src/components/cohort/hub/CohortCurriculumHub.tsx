@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function CohortCurriculumHub({ curriculum, completions, enrollment }: Props) {
-  const [activeSession, setActiveConvo] = useState<any>(null)
+  const [activeSession, setActiveSession] = useState<any>(null)
 
   if (!curriculum) {
     return (
@@ -45,9 +45,11 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
       {activeSession && (
           <SessionPlayer
             session={activeSession}
-            onClose={() => setActiveConvo(null)}
+            onClose={() => setActiveSession(null)}
+            onSwitch={(s: any) => setActiveSession(s)}
             isCompleted={completions.includes(activeSession._key)}
             cohortId={enrollment.cohort_id}
+            allSessions={allSessions}
           />
       )}
 
@@ -113,7 +115,7 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
                                         <button
                                             key={session._key}
                                             disabled={isLocked}
-                                            onClick={() => setActiveConvo({ ...session, pillar, module })}
+                                            onClick={() => setActiveSession({ ...session, pillar, module })}
                                             className={cn(
                                                 "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group",
                                                 isLocked

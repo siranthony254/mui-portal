@@ -2,7 +2,8 @@
 import { useState } from 'react'
 import { getYouTubeEmbed, getYouTubeThumbnail, cn } from '@/lib/utils'
 import type { ContentBlock } from '@/types'
-import { Play, FileText, Headphones, FileImage, ExternalLink, Clock, Star } from '@/components/icons'
+import { Play, FileText, Headphones, FileImage, ExternalLink, Clock, Star, Trash2 } from '@/components/icons'
+import { deleteSanityDocument } from '@/lib/actions/sanity'
 
 const typeIcons: Record<string,any> = { video:Play, article:FileText, audio:Headphones, pdf:FileImage, image:FileImage }
 const typeColors: Record<string,string> = { video:'bg-blue-100 text-blue-700', article:'bg-teal-100 text-teal-700', audio:'bg-purple-100 text-purple-700', pdf:'bg-amber-100 text-amber-700', image:'bg-pink-100 text-pink-700' }
@@ -12,14 +13,22 @@ function extractYouTubeId(url: string) {
   return m ? m[1] : null
 }
 
-export function ContentCard({ content, compact=false }: { content: ContentBlock; compact?: boolean }) {
+export function ContentCard({ content, compact=false, isAdmin=false }: { content: ContentBlock; compact?: boolean; isAdmin?: boolean }) {
   const [playing, setPlaying] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const Icon = typeIcons[content.contentType] || FileText
   const colorClass = typeColors[content.contentType] || 'bg-gray-100 text-gray-600'
   const youtubeId = content.youtubeId || (content.url ? extractYouTubeId(content.url) : null)
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this content?')) return
+    setDeleting(true)
+    await deleteSanityDocument(content._id)
+    setDeleting(false)
+  }
+
   if (compact) return (
-    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group">
       <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0', colorClass)}><Icon className="w-3.5 h-3.5" /></div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">{content.title}</p>
@@ -28,6 +37,15 @@ export function ContentCard({ content, compact=false }: { content: ContentBlock;
       <div className="flex items-center gap-2 flex-shrink-0">
         {content.isRequired && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />}
         <span className={cn('badge text-xs capitalize', colorClass)}>{content.contentType}</span>
+        {isAdmin && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     </div>
   )
@@ -57,9 +75,20 @@ export function ContentCard({ content, compact=false }: { content: ContentBlock;
             <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5', colorClass)}><Icon className="w-4 h-4" /></div>
           )}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h3 className="text-sm font-semibold text-gray-900">{content.title}</h3>
-              {content.isRequired && <span className="badge badge-amber text-xs">Required</span>}
+            <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-gray-900">{content.title}</h3>
+                {content.isRequired && <span className="badge badge-amber text-xs">Required</span>}
+              </div>
+              {isAdmin && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
             {content.description && <p className="text-xs text-gray-500 leading-relaxed mb-3">{content.description}</p>}
             <div className="flex items-center gap-3 flex-wrap">

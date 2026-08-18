@@ -7,7 +7,7 @@ import { Topbar } from './Topbar'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types'
 
-export function DashboardShell({ children, profile }: { children: React.ReactNode; profile: Profile }) {
+export function DashboardShell({ children, profile, notifications = [] }: { children: React.ReactNode; profile: Profile; notifications?: any[] }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
@@ -36,7 +36,7 @@ export function DashboardShell({ children, profile }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <Topbar profile={profile} onMenuClick={() => setSidebarOpen(true)} />
+        <Topbar profile={profile} onMenuClick={() => setSidebarOpen(true)} initialNotifications={notifications} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {children}

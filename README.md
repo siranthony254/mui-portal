@@ -1,12 +1,12 @@
-# MUI Portal — The Mic’d Up Initiative
+# MUI Forge — The Mic'd Up Initiative
 
-MUI Portal is a high-performance, role-based educational management platform built to facilitate the transformation of African campus cultures. It streamlines the journey from student application to leadership formation and real-world problem-solving.
+MUI Forge is a high-performance, role-based educational management platform built to facilitate the transformation of African campus cultures. It streamlines the journey from student application to leadership formation and real-world problem-solving.
 
 ## 🌍 Why This Matters Now
 
 Africa has the youngest population on earth — more than **400 million** people between 15 and 35. By 2050, that number will exceed **830 million**. This is either the greatest resource in human history or the greatest unmanaged risk.
 
-**Campuses are formation ground.** Currently, that formation is often broken. The MUI Portal is the digital infrastructure for a movement that isn't waiting for governments to fix it — we are building the fix from the inside, shaping voices that shape culture.
+**Campuses are formation ground.** Currently, that formation is often broken. The MUI Forge is the digital infrastructure for a movement that isn't waiting for governments to fix it — we are building the fix from the inside, shaping voices that shape culture.
 
 ---
 
@@ -37,7 +37,7 @@ Africa has the youngest population on earth — more than **400 million** people
 ### 🛡️ For Admins
 - **Cohort Management**: Automated workflow for opening applications, admitting students, and advancing weeks.
 - **Analytics Dashboard**: Real-time insights into campus impact and student engagement.
-- **Content Orchestration**: Full control over portal announcements and resources.
+- **Content Orchestration**: Full control over forge announcements and resources.
 
 ---
 
@@ -50,8 +50,8 @@ Africa has the youngest population on earth — more than **400 million** people
 
 ### 2. Installation
 ```bash
-git clone https://github.com/your-repo/mui-portal.git
-cd mui-portal
+git clone https://github.com/your-repo/mui-forge.git
+cd mui-forge
 npm install
 ```
 

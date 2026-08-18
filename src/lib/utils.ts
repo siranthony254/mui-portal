@@ -27,6 +27,21 @@ export function getYouTubeThumbnail(urlOrId: string): string {
   return `https://img.youtube.com/vi/${id}/hqdefault.jpg`
 }
 
+export function parseYouTubeEmbed(input: string): string | null {
+  // If it's just an ID or URL, use standard extraction
+  const directId = getYouTubeId(input)
+  if (directId) return directId
+
+  // If it's a full iframe tag, extract the src
+  const srcMatch = input.match(/src=["']([^"']+)["']/)
+  if (srcMatch) {
+    const url = srcMatch[1]
+    return getYouTubeId(url)
+  }
+
+  return null
+}
+
 export function formatDate(date: string | Date): string {
   return new Intl.DateTimeFormat('en-KE', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date))
 }

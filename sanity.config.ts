@@ -1,7 +1,17 @@
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
 import { visionTool } from '@sanity/vision'
-import { contentSchema, courseSchema, announcementSchema, taskPromptSchema } from './sanity/schemas'
+import {
+  contentSchema,
+  courseSchema,
+  announcementSchema,
+  taskPromptSchema,
+  curriculumSchema,
+  videoBlock,
+  fileBlock,
+  textBlock,
+  imageBlock
+} from './sanity/schemas'
 
 const projectId =
   process.env.SANITY_STUDIO_PROJECT_ID ||
@@ -14,17 +24,28 @@ const dataset =
   'production'
 
 export default defineConfig({
-  name:'mui-portal', title:'MUI Portal CMS',
+  name:'mui-forge', title:'MUI Forge CMS',
   projectId,
   dataset,
   plugins:[
     structureTool({structure:(S)=>S.list().title('MUI Content').items([
-      S.listItem().title('Content Blocks').child(S.documentTypeList('content').title('All Content')),
+      S.listItem().title('Cohort Curriculums').child(S.documentTypeList('curriculum').title('All Curriculums')),
+      S.listItem().title('Legacy Content Blocks').child(S.documentTypeList('content').title('All Content')),
       S.listItem().title('Courses').child(S.documentTypeList('course').title('All Courses')),
       S.listItem().title('Task Prompts').child(S.documentTypeList('taskPrompt').title('Task Prompts')),
       S.listItem().title('Announcements').child(S.documentTypeList('announcement').title('Announcements')),
     ])}),
     visionTool(),
   ],
-  schema:{ types:[contentSchema,courseSchema,announcementSchema,taskPromptSchema] },
+  schema:{ types:[
+    contentSchema,
+    courseSchema,
+    announcementSchema,
+    taskPromptSchema,
+    curriculumSchema,
+    videoBlock,
+    fileBlock,
+    textBlock,
+    imageBlock
+  ] },
 })

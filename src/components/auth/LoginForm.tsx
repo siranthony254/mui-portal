@@ -21,12 +21,13 @@ export function LoginForm({ isConfirmed, initialError }: LoginFormProps) {
     setLoading(true)
     setResult(null)
     const res = await signInWithPassword(new FormData(e.currentTarget))
-    if (res.success) {
-      router.push('/dashboard')
-      router.refresh()
-    } else {
+    if (res.error) {
       setResult({ error: res.error })
       setLoading(false)
+    } else if (res.success) {
+      // Delay to ensure session cookie is set before redirect
+      await new Promise(resolve => setTimeout(resolve, 500))
+      router.push('/dashboard')
     }
   }
 

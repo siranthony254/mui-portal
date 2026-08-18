@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { WaitlistScreen } from '@/components/cohort/WaitlistScreen'
 import { StudentDashboard } from '@/components/cohort/StudentDashboard'
 import { MentorPendingScreen } from '@/components/auth/MentorPendingScreen'
+import { StudentOnboarding } from '@/components/cohort/StudentOnboarding'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Dashboard' }
@@ -14,14 +15,31 @@ export default async function DashboardPage() {
   if (!user) redirect('/auth/login')
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (!profile) redirect('/auth/login')
+
+  if (!profile) {
+    // If authenticated but no profile, this is an edge case (e.g. failed signup sync)
+    // We should allow them to sign out or contact support, not loop them.
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+        <div className="max-w-md">
+          <h1 className="text-2xl font-bold mb-4">Profile Not Found</h1>
+          <p className="text-gray-500 mb-6">We couldn't find your profile data. Please try signing out and in again.</p>
+          <form action="/auth/login"><button className="btn-primary">Back to Login</button></form>
+        </div>
+      </div>
+    )
+  }
 
   // 1. Admin bypass
-  if (profile.role === 'admin') redirect('/admin')
+  if (profile.role === 'admin') {
+    redirect('/admin')
+  }
 
   // 2. Mentor handling
   if (profile.role === 'mentor') {
-    if (!profile.approved) return <MentorPendingScreen profile={profile} />
+    if (!profile.approved) {
+      return <MentorPendingScreen profile={profile} />
+    }
     redirect('/mentor')
   }
 
@@ -33,6 +51,13 @@ export default async function DashboardPage() {
     .order('enrolled_at',{ascending:false})
     .limit(1)
     .single()
+
+  // Student Onboarding Check
+  if (profile.role === 'student' && enrollment) {
+    if (!profile.onboarded || !profile.welcome_screen_shown) {
+      return <StudentOnboarding profile={profile} cohort={enrollment.cohort} />
+    }
+  }
 
   if (enrollment) {
     const { data: tasks } = await supabase.from('tasks')

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { saveJournalEntry, toggleJournalSharing } from '@/lib/actions/cohort'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { saveJournalEntry, toggleJournalSharing, deleteJournalEntry } from '@/lib/actions/cohort'
 import { JOURNAL_PROMPTS, getPillarColor } from '@/types'
-import { Lock, Unlock, Check, Save, ChevronLeft, ChevronRight, Share2, Globe, CloudOff } from '@/components/icons'
+import { Lock, Unlock, Check, Save, ChevronLeft, ChevronRight, Share2, Globe, CloudOff, Trash2 } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import type { JournalEntry } from '@/types'
+import { useSearchParams } from 'next/navigation'
 
 interface Props {
   initialEntries: JournalEntry[]
@@ -13,7 +14,7 @@ interface Props {
   currentPillar: number
 }
 
-export function JournalClient({ initialEntries, currentWeek, currentPillar }: Props) {
+function JournalContent({ initialEntries, currentWeek, currentPillar }: Props) {
   const [selectedWeek, setSelectedWeek] = useState(currentWeek)
   const [entries, setEntries] = useState(initialEntries)
   const [content, setContent] = useState('')
@@ -23,6 +24,8 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
   const [activeJournalId, setActiveJournalId] = useState<string | null>(null)
   const [isOnline, setIsOnline] = useState(true)
   const [hasUnsyncedChanges, setHasUnsyncedChanges] = useState(false)
+  const searchParams = useSearchParams()
+  const externalPrompt = searchParams.get('prompt')
 
   useEffect(() => {
     setIsOnline(navigator.onLine)
@@ -55,7 +58,8 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
   }, [selectedWeek, entries])
 
   const pillarNum = Math.ceil(selectedWeek / 3)
-  const prompt = JOURNAL_PROMPTS[selectedWeek as keyof typeof JOURNAL_PROMPTS]
+  const defaultPrompt = JOURNAL_PROMPTS[selectedWeek as keyof typeof JOURNAL_PROMPTS]
+  const prompt = (selectedWeek === currentWeek && externalPrompt) ? externalPrompt : defaultPrompt
 
   const handleSave = useCallback(async () => {
     if (saving) return
@@ -77,14 +81,14 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
       setHasUnsyncedChanges(true)
     }
     setSaving(false)
-  }, [selectedWeek, content, saving])
+  }, [selectedWeek, content, saving, pillarNum])
 
   // Sync logic when coming back online
   useEffect(() => {
     if (isOnline && hasUnsyncedChanges) {
       handleSave()
     }
-  }, [isOnline])
+  }, [isOnline, hasUnsyncedChanges, handleSave])
 
   // Auto-save every 10 seconds if content changed (more aggressive for offline safety)
   useEffect(() => {
@@ -103,6 +107,19 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
     const newShared = !isShared
     const res = await toggleJournalSharing(activeJournalId, newShared)
     if (res.success) setIsShared(newShared)
+  }
+
+  async function handleDelete() {
+    if (!confirm('Permanently delete this week\'s journal entry?')) return
+    setSaving(true)
+    const res = await deleteJournalEntry(selectedWeek)
+    if (res.success) {
+        localStorage.removeItem(`journal_w${selectedWeek}`)
+        setContent('')
+        setHasUnsyncedChanges(false)
+        setLastSaved(null)
+    }
+    setSaving(false)
   }
 
   return (
@@ -174,6 +191,16 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
             >
               <Save className="w-3.5 h-3.5" /> {saving ? 'Saving...' : 'Save'}
             </button>
+            {content.trim() && (
+                <button
+                    onClick={handleDelete}
+                    disabled={saving}
+                    className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                    title="Clear Entry"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                </button>
+            )}
           </div>
         </div>
 
@@ -236,3 +263,12 @@ export function JournalClient({ initialEntries, currentWeek, currentPillar }: Pr
     </div>
   )
 }
+
+export function JournalClient(props: Props) {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-gray-400">Loading journal infrastructure...</div>}>
+      <JournalContent {...props} />
+    </Suspense>
+  )
+}
+

@@ -18,7 +18,7 @@ export async function sendStudentWaitlistEmail(to: string, fullName: string) {
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
-      subject: 'Application Received - MUI Portal',
+      subject: 'Application Received - MUI Forge',
       html,
     })
     if (error) return { success: false, error: error.message || error }
@@ -40,7 +40,7 @@ export async function sendMentorRequestReceivedEmail(to: string, fullName: strin
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
-      subject: 'Mentor Request Received - MUI Portal',
+      subject: 'Mentor Request Received - MUI Forge',
       html,
     })
     if (error) return { success: false, error: error.message || error }
@@ -62,7 +62,7 @@ export async function sendMentorApprovalNotification(to: string, fullName: strin
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
-      subject: 'Mentor Access Activated! - MUI Portal',
+      subject: 'Mentor Access Activated! - MUI Forge',
       html,
     })
     if (error) return { success: false, error: error.message || error }
@@ -84,7 +84,7 @@ export async function sendStudentAdmissionNotification(to: string, fullName: str
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
       to: [to],
-      subject: `Admission Confirmed: ${cohortName} - MUI Portal`,
+      subject: `Admission Confirmed: ${cohortName} - MUI Forge`,
       html,
     })
     if (error) return { success: false, error: error.message || error }

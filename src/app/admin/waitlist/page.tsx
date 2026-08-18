@@ -55,7 +55,7 @@ export default async function WaitlistPage() {
                 <div className="col-span-1"><p className="text-xs text-gray-600">{s.year_of_study}</p></div>
                 <div className="col-span-2"><p className="text-xs text-gray-600 truncate">{s.county}</p></div>
                 <div className="col-span-1"><p className="text-xs text-gray-400">{formatDate(entry.applied_at)}</p></div>
-                <div className="col-span-1"><WaitlistActions waitlistId={entry.id} cohortId={entry.cohort_id} studentId={s.id} single /></div>
+                <div className="col-span-1"><WaitlistActions waitlistId={entry.id} cohortId={entry.cohort_id} studentId={s.id} student={s} single /></div>
               </div>
             )
           })}

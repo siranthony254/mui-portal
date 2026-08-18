@@ -15,11 +15,16 @@ export async function signInWithPassword(formData: FormData) {
   if (!email || !password) return { error: 'Enter your email and password.' }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) return { error: error.message }
 
-  // Revalidate and redirect will be handled by the client or middleware
+  // Update last login timestamp
+  if (data.user) {
+    const admin = await createAdminClient()
+    await admin.from('profiles').update({ last_login_at: new Date().toISOString() }).eq('id', data.user.id)
+  }
+
   return { success: true }
 }
 
@@ -52,7 +57,7 @@ export async function signUpStudent(formData: FormData) {
     const admin = await createAdminClient()
     const isEmailAdmin = isAdminEmail(email)
 
-    await admin.from('profiles').upsert({
+    const { error: profileError } = await admin.from('profiles').upsert({
       id: signUpData.user.id,
       email,
       full_name: fullName,
@@ -65,20 +70,33 @@ export async function signUpStudent(formData: FormData) {
       phone,
     }, { onConflict: 'id' })
 
+    if (profileError) {
+      console.error('Error updating profile:', profileError)
+      return { error: 'Failed to update user profile. Please try again.' }
+    }
+
     // Automatically add to waitlist if a cohort is open
     if (!isEmailAdmin) {
       const { data: openCohort } = await admin.from('cohorts').select('id').eq('applications_open', true).limit(1).maybeSingle()
       if (openCohort) {
-        await admin.from('waitlist').upsert({
+        const { error: waitlistError } = await admin.from('waitlist').upsert({
           cohort_id: openCohort.id,
           student_id: signUpData.user.id,
           status: 'waiting'
         }, { onConflict: 'cohort_id,student_id' })
+
+        if (waitlistError) {
+          console.error('Error adding to waitlist:', waitlistError)
+        }
       }
     }
 
     // Send application confirmation email via Resend (Student specific)
-    await sendStudentWaitlistEmail(email, fullName)
+    try {
+      await sendStudentWaitlistEmail(email, fullName)
+    } catch (e) {
+      console.error('Failed to send email:', e)
+    }
   }
 
   return { success: 'Your application has been received! Check your email for next steps.' }
@@ -108,7 +126,7 @@ export async function signUpMentor(formData: FormData) {
     const admin = await createAdminClient()
     const isEmailAdmin = isAdminEmail(email)
 
-    await admin.from('profiles').upsert({
+    const { error: profileError } = await admin.from('profiles').upsert({
       id: signUpData.user.id,
       email,
       full_name: fullName,
@@ -117,8 +135,17 @@ export async function signUpMentor(formData: FormData) {
       bio,
     }, { onConflict: 'id' })
 
+    if (profileError) {
+      console.error('Error updating mentor profile:', profileError)
+      return { error: 'Failed to update mentor profile. Please try again.' }
+    }
+
     // Send mentor application received email via Resend
-    await sendMentorRequestReceivedEmail(email, fullName)
+    try {
+      await sendMentorRequestReceivedEmail(email, fullName)
+    } catch (e) {
+      console.error('Failed to send mentor email:', e)
+    }
   }
 
   return { success: 'Mentor application submitted! Check your email for next steps.' }
@@ -136,4 +163,49 @@ export async function getProfile() {
   if (!user) return null
   const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   return data
+}
+
+export async function generateAndSendAdminPIN() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user || !isAdminEmail(user.email)) return { error: 'Unauthorized' }
+
+  // Generate 4-digit PIN
+  const pin = Math.floor(1000 + Math.random() * 9000).toString()
+
+  const admin = await createAdminClient()
+  await admin.from('profiles').update({ security_pin: pin }).eq('id', user.id)
+
+  // FOR TESTING: Log to console
+  console.log('---------------------------------')
+  console.log(`ADMIN SECURITY PIN FOR ${user.email}: ${pin}`)
+  console.log('---------------------------------')
+
+  // TODO: Connect Resend here to send email
+  /*
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL!,
+    to: user.email!,
+    subject: 'Your Admin Security PIN',
+    text: `Your 4-digit security PIN is: ${pin}. Use this to verify your session.`
+  })
+  */
+
+  return { success: true }
+}
+
+export async function verifyAdminPIN(pin: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data: profile } = await supabase.from('profiles').select('security_pin').eq('id', user.id).single()
+
+  if (profile?.security_pin === pin) {
+    return { success: true }
+  }
+
+  return { error: 'Invalid security PIN' }
 }

@@ -1,16 +1,31 @@
 'use client'
 
-import { useState } from 'react'
-import { ShieldCheck, Lock, ArrowRight, AlertCircle } from '@/components/icons'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect } from 'react'
+import { ShieldCheck, Lock, ArrowRight, AlertCircle, CheckCircle } from '@/components/icons'
+import { generateAndSendAdminPIN, verifyAdminPIN } from '@/lib/actions/auth'
 import { useRouter } from 'next/navigation'
 
 export function VerifyAdminPIN() {
   const [pin, setPin] = useState(['', '', '', ''])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [requesting, setRequesting] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
+
+  // Generate PIN on mount
+  useEffect(() => {
+    handleRequestPIN()
+  }, [])
+
+  const handleRequestPIN = async () => {
+    setRequesting(true)
+    setError('')
+    const res = await generateAndSendAdminPIN()
+    if (res.error) {
+      setError('Failed to generate PIN. Please try refreshing.')
+    }
+    setRequesting(false)
+  }
 
   const handleInput = (index: number, value: string) => {
     if (isNaN(Number(value))) return
@@ -33,28 +48,15 @@ export function VerifyAdminPIN() {
     setLoading(true)
     setError('')
 
-    // V1 Logic: Simple check against profile.security_pin
-    // In a real app, we'd use a server action to verify and set a secure cookie
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data: profile } = await supabase.from('profiles').select('security_pin').eq('id', user.id).single()
+    const res = await verifyAdminPIN(pinString)
 
-      // If PIN is not set yet (first time), let them set one
-      if (!profile?.security_pin) {
-         await supabase.from('profiles').update({ security_pin: pinString }).eq('id', user.id)
-         sessionStorage.setItem('admin_verified', 'true')
-         router.refresh()
-         return
-      }
-
-      if (profile.security_pin === pinString) {
-        sessionStorage.setItem('admin_verified', 'true')
-        router.refresh()
-      } else {
-        setError('Invalid security PIN. Please try again.')
-        setPin(['', '', '', ''])
-        document.getElementById('pin-0')?.focus()
-      }
+    if (res.success) {
+      sessionStorage.setItem('admin_verified', 'true')
+      window.location.reload()
+    } else {
+      setError(res.error || 'Invalid security PIN. Please try again.')
+      setPin(['', '', '', ''])
+      document.getElementById('pin-0')?.focus()
     }
     setLoading(false)
   }
@@ -67,43 +69,60 @@ export function VerifyAdminPIN() {
             <Lock className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Security Verification</h1>
-          <p className="text-sm text-gray-500 mt-2 font-medium">Please enter your 4-digit security PIN to access the operational layer.</p>
+          <p className="text-sm text-gray-500 mt-2 font-medium">A security PIN has been sent to your registered admin email.</p>
         </div>
 
         <div className="card p-8 shadow-2xl border-red-50">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex justify-between gap-3">
-              {pin.map((digit, i) => (
-                <input
-                  key={i}
-                  id={`pin-${i}`}
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleInput(i, e.target.value)}
-                  className="w-16 h-20 text-center text-3xl font-black bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-red-500 focus:ring-red-500 transition-all"
-                  required
-                />
-              ))}
+          {requesting ? (
+            <div className="py-12 text-center space-y-4">
+               <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto" />
+               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Generating Secure PIN...</p>
             </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-xl text-xs font-bold animate-shake">
-                <AlertCircle className="w-4 h-4" />
-                {error}
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="flex justify-between gap-3">
+                {pin.map((digit, i) => (
+                  <input
+                    key={i}
+                    id={`pin-${i}`}
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleInput(i, e.target.value)}
+                    className="w-16 h-20 text-center text-3xl font-black bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-red-500 focus:ring-red-500 transition-all"
+                    required
+                  />
+                ))}
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading || pin.join('').length < 4}
-              className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-800 transition-all shadow-xl shadow-black/20 disabled:opacity-50"
-            >
-              {loading ? 'Verifying...' : 'Verify Access'}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
+              {error && (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-xl text-xs font-bold animate-shake">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <button
+                  type="submit"
+                  disabled={loading || pin.join('').length < 4}
+                  className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-800 transition-all shadow-xl shadow-black/20 disabled:opacity-50"
+                >
+                  {loading ? 'Verifying...' : 'Verify Access'}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRequestPIN}
+                  className="w-full text-[10px] font-black text-gray-400 hover:text-gray-600 uppercase tracking-widest transition-colors"
+                >
+                  Resend PIN
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         <div className="mt-8 text-center">
@@ -115,3 +134,4 @@ export function VerifyAdminPIN() {
     </div>
   )
 }
+

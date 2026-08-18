@@ -1,4 +1,4 @@
-const PRIMARY_APP_URL = 'https://portal.micdupinitiative.site'
+const PRIMARY_APP_URL = 'https://forge.micdupinitiative.site'
 
 export function getAppUrl() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()

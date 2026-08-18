@@ -42,8 +42,8 @@ export function StudentOnboarding({ profile, cohort }: Props) {
   const finishOnboarding = async () => {
     setLoading(true)
     await supabase.from('profiles').update({ welcome_screen_shown: true }).eq('id', profile.id)
-    router.refresh()
     setLoading(false)
+    window.location.reload()
   }
 
   if (step === 1) {

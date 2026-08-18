@@ -4,16 +4,18 @@ import { createClient } from '@/lib/supabase/client'
 import { sendMessage, getOrCreateConversation } from '@/lib/actions/messages'
 import { getInitials, timeAgo, cn } from '@/lib/utils'
 import type { Profile } from '@/types'
-import { Send, Plus, Search } from '@/components/icons'
+import { Send, Plus, Search, ShieldCheck } from '@/components/icons'
 
 interface Props {
   currentUser: Profile
   conversations: any[]
   participantProfiles: any[]
   contactableUsers: any[]
+  compact?: boolean
+  readOnly?: boolean
 }
 
-export function MessagesClient({ currentUser, conversations: initial, participantProfiles, contactableUsers }: Props) {
+export function MessagesClient({ currentUser, conversations: initial, participantProfiles, contactableUsers, compact = false, readOnly = false }: Props) {
   const [conversations, setConversations] = useState(initial)
   const [activeConvoId, setActiveConvoId] = useState<string|null>(initial[0]?.id || null)
   const [messages, setMessages] = useState<any[]>([])
@@ -71,13 +73,17 @@ export function MessagesClient({ currentUser, conversations: initial, participan
   const filteredContacts = contactableUsers.filter((u:any) => u.full_name?.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex gap-4">
-      <div className="w-72 flex-shrink-0 card flex flex-col overflow-hidden">
+    <div className={cn("flex gap-4", compact ? "h-full w-full" : "h-[calc(100vh-8rem)]")}>
+      <div className={cn("flex-shrink-0 card flex flex-col overflow-hidden", compact ? "w-48" : "w-72")}>
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">Messages</h2>
-          <button onClick={() => setShowNew(!showNew)} className="w-7 h-7 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg flex items-center justify-center"><Plus className="w-4 h-4" /></button>
+          {!readOnly && (
+            <button onClick={() => setShowNew(!showNew)} className="w-7 h-7 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg flex items-center justify-center transition-colors">
+              <Plus className="w-4 h-4" />
+            </button>
+          )}
         </div>
-        {showNew && (
+        {showNew && !readOnly && (
           <div className="p-3 border-b border-gray-100 bg-gray-50">
             <p className="text-xs font-medium text-gray-500 mb-2">New conversation</p>
             <div className="relative mb-2">
@@ -150,10 +156,19 @@ export function MessagesClient({ currentUser, conversations: initial, participan
               })}
               <div ref={bottomRef} />
             </div>
-            <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex gap-2">
-              <input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="input flex-1" disabled={sending} />
-              <button type="submit" disabled={sending || !newMessage.trim()} className="btn-primary px-3 py-2"><Send className="w-4 h-4" /></button>
-            </form>
+            {!readOnly && (
+              <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex gap-2">
+                <input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="input flex-1" disabled={sending} />
+                <button type="submit" disabled={sending || !newMessage.trim()} className="btn-primary px-3 py-2 transition-all active:scale-95"><Send className="w-4 h-4" /></button>
+              </form>
+            )}
+            {readOnly && (
+               <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Read-Only Audit Session
+                  </p>
+               </div>
+            )}
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">

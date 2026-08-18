@@ -90,13 +90,13 @@ export function Sidebar({ profile }: { profile: Profile }) {
   }, [])
 
   return (
-    <aside className="portal-sidebar">
+    <aside className="forge-sidebar">
       <div className="px-4 py-5 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center">
             <div className="w-2.5 h-2.5 rounded-full bg-white" />
           </div>
-          <span className="font-semibold text-gray-900 text-sm">MUI Portal</span>
+          <span className="font-semibold text-gray-900 text-sm">MUI Forge</span>
         </div>
         {!isOnline && (
           <div className="mt-2 flex items-center gap-1.5 text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded-md w-fit">

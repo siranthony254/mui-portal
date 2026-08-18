@@ -1,15 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { X, CheckCircle, Zap, Play, FileText, FileDown, Globe, MessageSquare } from '@/components/icons'
+import { X, CheckCircle, Zap, Play, FileText, FileDown, Globe, MessageSquare, ChevronLeft, ChevronRight } from '@/components/icons'
 import { cn, getYouTubeEmbed } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
-export function SessionPlayer({ session, onClose, isCompleted, cohortId }: { session: any, onClose: () => void, isCompleted: boolean, cohortId: string }) {
+export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortId, allSessions = [] }: { session: any, onClose: () => void, onSwitch: (s: any) => void, isCompleted: boolean, cohortId: string, allSessions?: any[] }) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  const sessionIndex = allSessions.findIndex(s => s._key === session._key)
+  const nextSession = sessionIndex < allSessions.length - 1 ? allSessions[sessionIndex + 1] : null
+  const prevSession = sessionIndex > 0 ? allSessions[sessionIndex - 1] : null
 
   const markComplete = async () => {
     setLoading(true)
@@ -22,7 +26,12 @@ export function SessionPlayer({ session, onClose, isCompleted, cohortId }: { ses
         })
         if (!error) {
             router.refresh()
-            onClose()
+            if (session.journalPrompt) {
+                // Trigger Journal with the specific prompt
+                router.push(`/dashboard/journal?prompt=${encodeURIComponent(session.journalPrompt)}`)
+            } else {
+                onClose()
+            }
         }
     }
     setLoading(false)
@@ -73,9 +82,27 @@ export function SessionPlayer({ session, onClose, isCompleted, cohortId }: { ses
 
         {/* Right Side: Details & Actions */}
         <div className="w-full md:w-[450px] bg-white h-full flex flex-col shadow-2xl relative">
-            <button onClick={onClose} className="absolute top-6 right-6 z-50 p-2 hover:bg-gray-100 rounded-xl transition-colors hidden md:block">
-                <X className="w-6 h-6 text-gray-400" />
-            </button>
+            <div className="absolute top-6 right-6 z-50 flex items-center gap-2">
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                        disabled={!prevSession}
+                        onClick={() => prevSession && onSwitch(prevSession)}
+                        className="p-1.5 hover:bg-white rounded-md disabled:opacity-20 transition-all"
+                    >
+                        <ChevronLeft className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                        disabled={!nextSession || (!isCompleted && !allSessions.find(s => s._key === nextSession._key)?.isCompleted)}
+                        onClick={() => nextSession && onSwitch(nextSession)}
+                        className="p-1.5 hover:bg-white rounded-md disabled:opacity-20 transition-all"
+                    >
+                        <ChevronRight className="w-4 h-4 text-gray-600" />
+                    </button>
+                </div>
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors hidden md:block">
+                    <X className="w-6 h-6 text-gray-400" />
+                </button>
+            </div>
 
             <div className="flex-1 overflow-y-auto p-8 pt-20 custom-scrollbar">
                 <div className="space-y-8">
@@ -117,6 +144,24 @@ export function SessionPlayer({ session, onClose, isCompleted, cohortId }: { ses
                             </div>
                         ))}
                     </div>
+
+                    {/* Subsessions (Daily Takes) */}
+                    {session.subsessions?.length > 0 && (
+                        <div className="space-y-4">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Daily Takes</p>
+                            <div className="space-y-3">
+                                {session.subsessions.map((sub: any) => (
+                                    <div key={sub._key} className="p-5 bg-white border border-gray-100 rounded-2xl space-y-2">
+                                        <h4 className="text-sm font-bold text-gray-900">{sub.title}</h4>
+                                        <div className="text-xs text-gray-500 leading-relaxed">
+                                            {/* Subsession content placeholder */}
+                                            <p>Additional guided formation content for this take.</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Journal Prompt */}
                     {session.journalPrompt && (

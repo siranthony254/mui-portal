@@ -46,6 +46,14 @@ export async function openCohort(cohortId: string) {
   return { success: `Cohort opened. ${waitlist.length} students enrolled.` }
 }
 
+export async function deleteCohort(cohortId: string) {
+  const admin = await createAdminClient()
+  const { error } = await admin.from('cohorts').delete().eq('id', cohortId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/cohorts')
+  return { success: 'Cohort deleted successfully.' }
+}
+
 export async function createWeeklyTasks(cohortId: string, pillar: number, week: number) {
   const admin = await createAdminClient()
   const { data: enrollments } = await admin
@@ -69,16 +77,55 @@ export async function createWeeklyTasks(cohortId: string, pillar: number, week: 
 
 export async function advanceCohortWeek(cohortId: string) {
   const admin = await createAdminClient()
-  const { data: cohort } = await admin.from('cohorts').select('current_week').eq('id', cohortId).single()
+  const { data: cohort } = await admin.from('cohorts').select('name, current_week, pillars_config').eq('id', cohortId).single()
   if (!cohort || cohort.current_week >= 12) return { error: 'Already at final week.' }
 
   const newWeek = cohort.current_week + 1
-  const newPillar = Math.min(Math.ceil(newWeek / 2.4), 5)
+  const newPillarNum = Math.ceil(newWeek / 2) // Assuming 2 weeks per pillar
+  const pillarInfo = (cohort.pillars_config as any[])?.find(p => p.number === newPillarNum)
 
+  // 1. Update Cohort
   await admin.from('cohorts').update({ current_week: newWeek }).eq('id', cohortId)
-  await createWeeklyTasks(cohortId, newPillar, newWeek)
+
+  // 2. Update all Enrollments in this cohort
+  await admin.from('enrollments').update({ current_week: newWeek, current_pillar: newPillarNum }).eq('cohort_id', cohortId).in('status', ['enrolled', 'active'])
+
+  // 3. Create Weekly Tasks for everyone
+  await createWeeklyTasks(cohortId, newPillarNum, newWeek)
+
+  // 4. Send Notifications
+  const { data: participants } = await admin.from('enrollments').select('student_id, mentor_id').eq('cohort_id', cohortId).in('status', ['enrolled', 'active'])
+
+  if (participants) {
+    const studentIds = participants.map(p => p.student_id)
+    const mentorIds = [...new Set(participants.map(p => p.mentor_id).filter(Boolean))] as string[]
+
+    const focusText = pillarInfo ? `Focus: ${pillarInfo.name}` : ''
+
+    const notifications = [
+      ...studentIds.map(id => ({
+        user_id: id,
+        title: `Week ${newWeek} is live!`,
+        message: `Welcome to Week ${newWeek} of ${cohort.name}. ${focusText}`,
+        type: 'week_advance',
+        link: '/dashboard'
+      })),
+      ...mentorIds.map(id => ({
+        user_id: id,
+        title: `Cohort Advanced: Week ${newWeek}`,
+        message: `${cohort.name} has moved to Week ${newWeek}. ${focusText}. New tasks are available for review.`,
+        type: 'week_advance',
+        link: '/mentor'
+      }))
+    ]
+
+    await admin.from('notifications').insert(notifications)
+  }
 
   revalidatePath('/admin/cohorts')
+  revalidatePath('/dashboard')
+  revalidatePath('/mentor')
+
   return { success: `Advanced to Week ${newWeek}` }
 }
 
@@ -213,6 +260,22 @@ export async function submitTask(taskId: string, submission: string, submissionU
   return { success: 'Task submitted successfully.' }
 }
 
+export async function reopenTask(taskId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated.' }
+
+    const { error } = await supabase.from('tasks')
+        .update({ status: 'pending' })
+        .eq('id', taskId)
+        .eq('student_id', user.id)
+        .neq('status', 'approved') // Cannot reopen once approved
+
+    if (error) return { error: error.message }
+    revalidatePath('/dashboard/tasks')
+    return { success: true }
+}
+
 export async function reviewTask(taskId: string, feedback: string, approved: boolean) {
   const admin = await createAdminClient()
   const { error } = await admin.from('tasks').update({
@@ -255,6 +318,21 @@ export async function toggleJournalSharing(journalId: string, isShared: boolean)
   if (error) return { error: error.message }
   revalidatePath('/dashboard/journal')
   return { success: isShared ? 'Shared with mentor.' : 'Private again.' }
+}
+
+export async function deleteJournalEntry(week: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { error } = await supabase.from('journals')
+    .delete()
+    .eq('student_id', user.id)
+    .eq('week_number', week)
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/journal')
+  return { success: true }
 }
 
 export async function logPeerCheckIn(partnershipId: string, reflection?: string) {

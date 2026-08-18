@@ -28,7 +28,7 @@ export function MentorPendingScreen({ profile }: { profile: any }) {
             <div>
                <p className="text-sm font-semibold text-gray-900">What happens next?</p>
                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                 Once approved, you will receive an email confirmation. You will then have access to the Mentor Portal to manage students and review tasks.
+                 Once approved, you will receive an email confirmation. You will then have access to the Mentor Forge to manage students and review tasks.
                </p>
             </div>
           </div>

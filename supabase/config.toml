@@ -1,28 +1,28 @@
-project_id = "mui-portal"
+project_id = "mui-forge"
 
 [auth]
-site_url = "https://portal.micdupinitiative.site"
-additional_redirect_urls = ["https://portal.micdupinitiative.site/auth/callback"]
+site_url = "https://forge.micdupinitiative.site"
+additional_redirect_urls = ["https://forge.micdupinitiative.site/auth/callback"]
 
 [auth.email.smtp]
-sender_name = "Mic'd Up Initiative Portal"
+sender_name = "Mic'd Up Initiative Forge"
 
 [auth.email.template.confirmation]
-subject = "Confirm your Mic'd Up Initiative Portal account"
+subject = "Confirm your Mic'd Up Initiative Forge account"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.magic_link]
-subject = "Sign in to Mic'd Up Initiative Portal"
+subject = "Sign in to Mic'd Up Initiative Forge"
 content_path = "./supabase/templates/magic-link.html"
 
 [auth.email.template.recovery]
-subject = "Reset your Mic'd Up Initiative Portal password"
+subject = "Reset your Mic'd Up Initiative Forge password"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.invite]
-subject = "You have been invited to Mic'd Up Initiative Portal"
+subject = "You have been invited to Mic'd Up Initiative Forge"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.email_change]
-subject = "Confirm your Mic'd Up Initiative Portal email change"
+subject = "Confirm your Mic'd Up Initiative Forge email change"
 content_path = "./supabase/templates/email-change.html"

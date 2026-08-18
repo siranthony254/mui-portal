@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: { default: "Mic'd Up Initiative Portal", template: "%s | Mic'd Up Initiative Portal" },
+  title: { default: "Mic'd Up Initiative Forge", template: "%s | Mic'd Up Initiative Forge" },
   description: "Form your voice. Shape culture.",
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: "MUI Portal",
+    title: "MUI Forge",
   },
 }
 

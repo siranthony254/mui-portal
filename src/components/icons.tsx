@@ -48,6 +48,12 @@ import {
   X as LucideX,
   Zap as LucideZap,
   Unlock as LucideUnlock,
+  CircleAlert as LucideCircleAlert,
+  Camera as LucideCamera,
+  Phone as LucidePhone,
+  User as LucideUser,
+  Layers as LucideLayers,
+  Edit3 as LucideEdit3,
 } from 'lucide-react'
 
 type IconProps = SVGProps<SVGSVGElement>
@@ -71,6 +77,7 @@ export function Clock(props: IconProps) { return <LucideClock {...props} /> }
 export function CloudOff(props: IconProps) { return <LucideCloudOff {...props} /> }
 export function ExternalLink(props: IconProps) { return <LucideExternalLink {...props} /> }
 export function FileImage(props: IconProps) { return <LucideFileImage {...props} /> }
+export function FileDown(props: IconProps) { return <LucideFileImage {...props} /> }
 export function FileText(props: IconProps) { return <LucideFileText {...props} /> }
 export function Flag(props: IconProps) { return <LucideFlag {...props} /> }
 export function Globe(props: IconProps) { return <LucideGlobe {...props} /> }
@@ -98,3 +105,12 @@ export function Video(props: IconProps) { return <LucideVideo {...props} /> }
 export function X(props: IconProps) { return <LucideX {...props} /> }
 export function Zap(props: IconProps) { return <LucideZap {...props} /> }
 export function Unlock(props: IconProps) { return <LucideUnlock {...props} /> }
+export function AlertCircle(props: IconProps) { return <LucideCircleAlert {...props} /> }
+export function Camera(props: IconProps) { return <LucideCamera {...props} /> }
+export function Phone(props: IconProps) { return <LucidePhone {...props} /> }
+export function User(props: IconProps) { return <LucideUser {...props} /> }
+export function Layers(props: IconProps) { return <LucideLayers {...props} /> }
+export function Edit3(props: IconProps) { return <LucideEdit3 {...props} /> }
+
+
+
