@@ -1,11 +1,30 @@
 'use client'
-import { Clock, Users, Globe } from '@/components/icons'
+import { Clock, Users, Globe, Trash2 } from '@/components/icons'
+import { leaveWaitlist } from '@/lib/actions/cohort'
+import { useState } from 'react'
 
 export function WaitlistScreen({ waitlistEntry }: { waitlistEntry: any }) {
+  const [loading, setLoading] = useState(false)
   const cohort = waitlistEntry.cohort
+
+  const handleLeave = async () => {
+    if (!confirm('Withdraw your application from this cohort?')) return
+    setLoading(true)
+    await leaveWaitlist(waitlistEntry.id)
+    setLoading(false)
+  }
+
   return (
     <div className="max-w-lg mx-auto py-16">
-      <div className="card p-8 text-center">
+      <div className="card p-8 text-center relative group">
+        <button
+            onClick={handleLeave}
+            disabled={loading}
+            className="absolute top-4 right-4 p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+            title="Withdraw Application"
+        >
+            <Trash2 className="w-4 h-4" />
+        </button>
         <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Clock className="w-8 h-8 text-amber-600" />
         </div>

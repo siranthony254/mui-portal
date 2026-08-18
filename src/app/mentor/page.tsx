@@ -29,8 +29,13 @@ export default async function MentorDashboardPage() {
 
   const { data: enrollments } = await supabase.from('enrollments').select('*,student:profiles!student_id(id,full_name,institution,institution_type,year_of_study),cohort:cohorts(id,name,current_week)').eq('mentor_id',user.id).in('status',['enrolled','active']).order('enrolled_at',{ascending:false})
 
+  const studentIds = enrollments?.map(e=>(e.student as any)?.id).filter(Boolean)||[]
+
   // Fetch completions for all mentees to show granular progress
-  const { data: allCompletions } = await supabase.from('session_completions').select('*').in('student_id', studentIds)
+  const { data: allCompletions } = studentIds.length
+    ? await supabase.from('session_completions').select('*').in('student_id', studentIds)
+    : { data: [] }
+
   const completionsMap = (allCompletions || []).reduce<Record<string, number>>((acc, c) => {
     acc[c.student_id] = (acc[c.student_id] || 0) + 1
     return acc
@@ -48,8 +53,6 @@ export default async function MentorDashboardPage() {
     }) || []
     return <MentorOnboarding mentorName={profile.full_name} mentees={mentees} />
   }
-
-  const studentIds = enrollments?.map(e=>(e.student as any)?.id).filter(Boolean)||[]
 
   // Pending Tasks
   const { data: pendingTasks } = studentIds.length
@@ -122,14 +125,18 @@ export default async function MentorDashboardPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {enrollments.map(enrollment => (
-                <MenteeOverview
-                  key={enrollment.id}
-                  enrollment={enrollment}
-                  overdueTasks={overdueTasksByStudent[(enrollment.student as any).id] || 0}
-                  lastMessageDate={null} // TODO: Implement last message date
-                />
-              ))}
+              {enrollments.map(enrollment => {
+                const studentId = (enrollment.student as any).id
+                return (
+                  <MenteeOverview
+                    key={enrollment.id}
+                    enrollment={enrollment}
+                    overdueTasks={overdueTasksByStudent[studentId] || 0}
+                    sessionsCompleted={completionsMap[studentId] || 0}
+                    lastMessageDate={null} // TODO: Implement last message date
+                  />
+                )
+              })}
             </div>
           )}
         </div>

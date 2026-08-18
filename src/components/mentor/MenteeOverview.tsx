@@ -8,9 +8,10 @@ interface MenteeProps {
   enrollment: any
   lastMessageDate?: string | null
   overdueTasks: number
+  sessionsCompleted?: number
 }
 
-export function MenteeOverview({ enrollment, lastMessageDate, overdueTasks }: MenteeProps) {
+export function MenteeOverview({ enrollment, lastMessageDate, overdueTasks, sessionsCompleted = 0 }: MenteeProps) {
   const s = enrollment.student as any
   const progress = Math.round(((enrollment.current_week - 1) / 12) * 100)
 
@@ -43,7 +44,7 @@ export function MenteeOverview({ enrollment, lastMessageDate, overdueTasks }: Me
           <div>
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
               <span className="text-gray-400">Pillar {enrollment.current_pillar} · Week {enrollment.current_week}</span>
-              <span className="text-teal-700">{progress}% Progress</span>
+              <span className="text-teal-700">{sessionsCompleted} Sessions Done</span>
             </div>
             <div className="progress-bar h-1.5 bg-gray-100">
               <div className="progress-fill bg-teal-600" style={{ width: `${progress}%` }} />

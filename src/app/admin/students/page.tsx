@@ -20,11 +20,18 @@ export default async function StudentsPage() {
     { data: students },
     { data: cohorts },
     { data: mentors },
+    { data: allCompletions }
   ] = await Promise.all([
     supabase.from('profiles').select('*, enrollments:enrollments(*, cohort:cohorts(id, name))').eq('role', 'student').order('created_at', { ascending: false }),
     supabase.from('cohorts').select('id, name').order('year', { ascending: false }),
-    supabase.from('profiles').select('id, full_name').eq('role', 'mentor').eq('approved', true)
+    supabase.from('profiles').select('id, full_name').eq('role', 'mentor').eq('approved', true),
+    supabase.from('session_completions').select('student_id')
   ])
+
+  const completionsMap = (allCompletions || []).reduce<Record<string, number>>((acc, c) => {
+    acc[c.student_id] = (acc[c.student_id] || 0) + 1
+    return acc
+  }, {})
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20">
@@ -99,7 +106,7 @@ export default async function StudentsPage() {
                         <div className="w-32">
                           <div className="flex justify-between text-[9px] font-black uppercase tracking-widest mb-1">
                              <span className="text-gray-400">Week {enrollment.current_week}</span>
-                             <span className="text-teal-700">{pct}%</span>
+                             <span className="text-teal-700">{completionsMap[student.id] || 0} Sessions</span>
                           </div>
                           <div className="progress-bar h-1">
                              <div className="progress-fill" style={{ width: `${pct}%` }} />

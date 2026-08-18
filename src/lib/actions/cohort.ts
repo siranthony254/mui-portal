@@ -247,6 +247,17 @@ export async function joinWaitlist(cohortId: string, essay: string, motivation: 
   return { success: 'You are on the waitlist. We will notify you when the cohort opens.' }
 }
 
+export async function leaveWaitlist(waitlistId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated.' }
+
+    const { error } = await supabase.from('waitlist').delete().eq('id', waitlistId).eq('student_id', user.id)
+    if (error) return { error: error.message }
+    revalidatePath('/dashboard')
+    return { success: true }
+}
+
 export async function submitTask(taskId: string, submission: string, submissionUrl?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
