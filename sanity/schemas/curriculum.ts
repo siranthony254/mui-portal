@@ -1,0 +1,135 @@
+import { defineType, defineField } from 'sanity'
+
+export const curriculumSchema = defineType({
+  name: 'curriculum',
+  title: 'Cohort Curriculum',
+  type: 'document',
+  fields: [
+    defineField({
+      name: 'cohortId',
+      title: 'Cohort ID',
+      type: 'string',
+      description: 'Link this curriculum to a specific cohort ID from Supabase.',
+      validation: r => r.required()
+    }),
+    defineField({
+      name: 'pillars',
+      title: 'Pillars',
+      type: 'array',
+      of: [{
+        type: 'object',
+        name: 'pillar',
+        fields: [
+          defineField({ name: 'number', title: 'Pillar Number', type: 'number', validation: r => r.required() }),
+          defineField({ name: 'name', title: 'Pillar Name', type: 'string', validation: r => r.required() }),
+          defineField({ name: 'description', title: 'Pillar Description', type: 'text', rows: 3 }),
+          defineField({
+            name: 'modules',
+            title: 'Modules (Weeks)',
+            type: 'array',
+            of: [{
+              type: 'object',
+              name: 'module',
+              fields: [
+                defineField({ name: 'weekNumber', title: 'Week Number', type: 'number', validation: r => r.required() }),
+                defineField({ name: 'title', title: 'Module Title', type: 'string' }),
+                defineField({
+                    name: 'introduction',
+                    title: 'Introduction',
+                    type: 'array',
+                    of: [{ type: 'block' }]
+                }),
+                defineField({
+                  name: 'sessions',
+                  title: 'Sessions (Daily)',
+                  type: 'array',
+                  of: [{
+                    type: 'object',
+                    name: 'session',
+                    fields: [
+                      defineField({ name: 'dayNumber', title: 'Day Number (1-6)', type: 'number', validation: r => r.min(1).max(6) }),
+                      defineField({ name: 'title', title: 'Session Title', type: 'string', validation: r => r.required() }),
+                      defineField({
+                        name: 'contentBlocks',
+                        title: 'Content Blocks',
+                        type: 'array',
+                        of: [
+                          { type: 'textBlock' },
+                          { type: 'videoBlock' },
+                          { type: 'imageBlock' },
+                          { type: 'fileBlock', name: 'fileBlock', title: 'File/PDF' }
+                        ]
+                      }),
+                      defineField({
+                        name: 'subsessions',
+                        title: 'Subsessions',
+                        type: 'array',
+                        of: [{
+                          type: 'object',
+                          name: 'subsession',
+                          fields: [
+                            defineField({ name: 'title', title: 'Subsession Title', type: 'string' }),
+                            defineField({ name: 'content', type: 'array', of: [{ type: 'block' }] })
+                          ]
+                        }]
+                      }),
+                      defineField({ name: 'journalPrompt', title: 'Journal Prompt', type: 'text', rows: 3, description: 'Optional prompt triggered after session completion.' })
+                    ]
+                  }]
+                })
+              ]
+            }]
+          })
+        ]
+      }]
+    })
+  ],
+  preview: {
+    select: { title: 'cohortId' },
+    prepare: ({ title }) => ({ title: `Curriculum for ${title}` })
+  }
+})
+
+// Define reusable blocks if not already defined
+export const videoBlock = defineType({
+  name: 'videoBlock',
+  title: 'Video',
+  type: 'object',
+  fields: [
+    defineField({ name: 'title', title: 'Video Title', type: 'string' }),
+    defineField({
+      name: 'videoType',
+      title: 'Video Source',
+      type: 'string',
+      options: { list: ['youtube', 'upload'], layout: 'radio' },
+      initialValue: 'youtube'
+    }),
+    defineField({
+      name: 'youtubeEmbed',
+      title: 'YouTube Embed Code',
+      type: 'text',
+      rows: 4,
+      description: 'Paste the full <iframe> embed code from YouTube.',
+      hidden: ({ parent }) => parent?.videoType !== 'youtube'
+    }),
+    defineField({
+      name: 'videoFile',
+      title: 'Upload Video',
+      type: 'file',
+      options: { accept: 'video/*' },
+      hidden: ({ parent }) => parent?.videoType !== 'upload'
+    }),
+    defineField({ name: 'description', title: 'Video Description', type: 'text', rows: 2 })
+  ]
+})
+
+export const fileBlock = defineType({
+    name: 'fileBlock',
+    title: 'File/PDF',
+    type: 'object',
+    fields: [
+        defineField({ name: 'title', title: 'File Title', type: 'string' }),
+        defineField({ name: 'file', title: 'Upload File', type: 'file' }),
+        defineField({ name: 'externalUrl', title: 'External URL', type: 'url' })
+    ]
+})

@@ -1,0 +1,380 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { client } from '@/lib/sanity/client'
+import { getCohortCurriculum } from '@/lib/sanity/queries'
+import { updateCohortCurriculum } from '@/lib/actions/sanity'
+import {
+    Layers, Zap, Calendar, Play, ChevronRight,
+    ArrowLeft, Plus, MessageSquare, BookOpen,
+    FileText, Video, Headphones, FileDown, X, CheckCircle, Search
+} from '@/components/icons'
+import { cn, parseYouTubeEmbed } from '@/lib/utils'
+
+interface Pillar {
+    number: number
+    name: string
+    description?: string
+}
+
+interface Cohort {
+    id: string
+    name: string
+    pillars_config: Pillar[]
+}
+
+export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
+    const [selectedCohortId, setSelectedCohortId] = useState('')
+    const [curriculum, setCurriculum] = useState<any>(null)
+    const [loading, setLoading] = useState(false)
+    const [activePillar, setActivePillar] = useState<number | null>(null)
+    const [activeSession, setActiveSession] = useState<any>(null)
+
+    const selectedCohort = cohorts.find(c => c.id === selectedCohortId)
+
+    useEffect(() => {
+        if (selectedCohortId) {
+            fetchCurriculum()
+        } else {
+            setCurriculum(null)
+            setActivePillar(null)
+        }
+    }, [selectedCohortId])
+
+    async function fetchCurriculum() {
+        setLoading(true)
+        // Using a direct query helper or just standard query
+        const data = await getCohortCurriculum(selectedCohortId)
+        setCurriculum(data)
+        setLoading(false)
+    }
+
+    if (!selectedCohortId) {
+        return (
+            <div className="card p-12 text-center bg-gray-50 border-dashed border-gray-200">
+                <Layers className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                <h2 className="text-xl font-black text-gray-900">Select a Cohort to Orchestrate</h2>
+                <p className="text-sm text-gray-500 max-w-sm mx-auto mt-2 mb-8 leading-relaxed">
+                    Choose a cohort from the list below to begin designing its unique formation journey.
+                </p>
+                <div className="max-w-xs mx-auto">
+                    <select
+                        value={selectedCohortId}
+                        onChange={(e) => setSelectedCohortId(e.target.value)}
+                        className="w-full px-5 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-emerald-500 focus:ring-0 font-bold text-sm shadow-sm"
+                    >
+                        <option value="">Select Cohort...</option>
+                        {cohorts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-8 animate-reveal">
+            {/* Level Header */}
+            <div className="flex items-center justify-between">
+                <button
+                    onClick={() => {
+                        if (activeSession) setActiveSession(null)
+                        else if (activePillar) setActivePillar(null)
+                        else setSelectedCohortId('')
+                    }}
+                    className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-emerald-700 transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" /> Back {activeSession ? 'to Pillar' : activePillar ? 'to Cohort' : 'to Selection'}
+                </button>
+                <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">Orchestrating</span>
+                    <h2 className="text-sm font-bold text-gray-900">{selectedCohort?.name}</h2>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="py-20 text-center space-y-4">
+                    <div className="w-8 h-8 border-4 border-emerald-700 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading Infrastructure...</p>
+                </div>
+            ) : activeSession ? (
+                <SessionEditor
+                    session={activeSession}
+                    cohortId={selectedCohortId}
+                    onUpdate={() => {
+                        fetchCurriculum()
+                        setActiveSession(null)
+                    }}
+                    onClose={() => setActiveSession(null)}
+                />
+            ) : activePillar ? (
+                <PillarModuleView
+                    pillar={selectedCohort?.pillars_config.find(p => p.number === activePillar)!}
+                    curriculum={curriculum}
+                    onOpenSession={(s: any) => setActiveSession(s)}
+                />
+            ) : (
+                <PillarSelectionGrid
+                    pillars={selectedCohort?.pillars_config || []}
+                    curriculum={curriculum}
+                    onSelect={(num) => setActivePillar(num)}
+                />
+            )}
+        </div>
+    )
+}
+
+function PillarSelectionGrid({ pillars, curriculum, onSelect }: { pillars: Pillar[], curriculum: any, onSelect: (num: number) => void }) {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pillars.map(p => {
+                const sanityPillar = curriculum?.pillars?.find((sp: any) => sp.number === p.number)
+                const sessionCount = sanityPillar?.modules?.reduce((acc: number, m: any) => acc + (m.sessions?.length || 0), 0) || 0
+
+                return (
+                    <button
+                        key={p.number}
+                        onClick={() => onSelect(p.number)}
+                        className="card p-8 text-left group hover:border-emerald-600 transition-all hover:shadow-2xl relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                            <Layers className="w-20 h-20" />
+                        </div>
+                        <div className="relative z-10 space-y-4">
+                            <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black group-hover:bg-emerald-700 group-hover:text-white transition-colors shadow-lg shadow-teal-700/10">
+                                {p.number}
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-gray-900 group-hover:text-emerald-900 transition-colors uppercase tracking-tight">{p.name}</h3>
+                                <p className="text-xs text-gray-400 mt-1 font-medium leading-relaxed line-clamp-2">{p.description || "Formation foundation for this pillar."}</p>
+                            </div>
+                            <div className="pt-4 flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{sessionCount} Sessions Designed</span>
+                                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
+                            </div>
+                        </div>
+                    </button>
+                )
+            })}
+            <div className="card p-8 border-dashed border-2 border-gray-200 flex flex-col items-center justify-center text-center opacity-40 hover:opacity-100 transition-opacity">
+                <Plus className="w-10 h-10 text-gray-300 mb-2" />
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">New Pillar</p>
+                <p className="text-[10px] text-gray-400 font-medium px-4">Update cohort settings to add more pillars.</p>
+            </div>
+        </div>
+    )
+}
+
+function PillarModuleView({ pillar, curriculum, onOpenSession }: { pillar: Pillar, curriculum: any, onOpenSession: (s: any) => void }) {
+    const weeks = [(pillar.number * 2) - 1, (pillar.number * 2)]
+    const sanityPillar = curriculum?.pillars?.find((p: any) => p.number === pillar.number)
+
+    return (
+        <div className="space-y-10 animate-reveal">
+            <div className="space-y-2">
+                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Pillar {pillar.number}: {pillar.name}</h3>
+                <p className="text-sm text-gray-500 font-medium">{pillar.description}</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                {weeks.map(week => {
+                    const module = sanityPillar?.modules?.find((m: any) => m.weekNumber === week)
+                    return (
+                        <div key={week} className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-xs font-black shadow-lg">
+                                    W{week}
+                                </div>
+                                <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Module One: Week {week}</h4>
+                            </div>
+
+                            <div className="space-y-3">
+                                {[1, 2, 3, 4, 5, 6].map(day => {
+                                    const session = module?.sessions?.find((s: any) => s.dayNumber === day)
+                                    return (
+                                        <button
+                                            key={day}
+                                            onClick={() => onOpenSession({ ...session, dayNumber: day, weekNumber: week, pillarNumber: pillar.number })}
+                                            className={cn(
+                                                "w-full flex items-center justify-between p-5 rounded-[1.5rem] border-2 transition-all group",
+                                                session
+                                                    ? "bg-white border-emerald-100 hover:border-emerald-600 hover:shadow-xl"
+                                                    : "bg-gray-50 border-gray-100 border-dashed hover:border-gray-300"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-4 text-left">
+                                                <div className={cn(
+                                                    "w-10 h-10 rounded-2xl flex items-center justify-center transition-colors font-black text-sm",
+                                                    session ? "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white" : "bg-white text-gray-300 shadow-sm"
+                                                )}>
+                                                    {day}
+                                                </div>
+                                                <div>
+                                                    <p className={cn("text-[10px] font-black uppercase tracking-widest", session ? "text-emerald-600" : "text-gray-400")}>Day {day} Session</p>
+                                                    <p className="text-sm font-bold text-gray-900">{session?.title || 'Not yet designed'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                {session?.journalPrompt && <MessageSquare className="w-4 h-4 text-blue-400" title="Journal prompt included" />}
+                                                {session?.contentBlocks?.length > 0 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                                                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
+                                            </div>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
+
+function SessionEditor({ session, cohortId, onUpdate, onClose }: { session: any, cohortId: string, onUpdate: () => void, onClose: () => void }) {
+    const [loading, setLoading] = useState(false)
+    const [title, setTitle] = useState(session?.title || '')
+    const [journalPrompt, setJournalPrompt] = useState(session?.journalPrompt || '')
+    const [contentType, setContentType] = useState('video')
+    const [youtubeInput, setYoutubeInput] = useState('')
+
+    async function handleSave() {
+        if (!title) return
+        setLoading(true)
+
+        let contentBlock: any = {
+            _type: contentType === 'video' ? 'videoBlock' : 'textBlock',
+            title: title // Using session title as default for content block
+        }
+
+        if (contentType === 'video') {
+            const videoId = parseYouTubeEmbed(youtubeInput)
+            if (videoId) {
+                contentBlock.videoType = 'youtube'
+                contentBlock.youtubeEmbed = youtubeInput
+                contentBlock.url = `https://www.youtube.com/watch?v=${videoId}`
+            }
+        }
+
+        const res = await updateCohortCurriculum({
+            cohortId,
+            pillarNumber: session.pillarNumber,
+            weekNumber: session.weekNumber,
+            dayNumber: session.dayNumber,
+            contentBlock,
+            journalPrompt: journalPrompt || undefined
+        })
+
+        if (res.success) {
+            onUpdate()
+        }
+        setLoading(false)
+    }
+
+    return (
+        <div className="card p-10 bg-white border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] animate-reveal">
+            <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-emerald-700/20">
+                        {session.dayNumber}
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-black text-gray-900 leading-tight">Session Orchestrator</h3>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Week {session.weekNumber} · Day {session.dayNumber}</p>
+                    </div>
+                </div>
+                <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                    <X className="w-6 h-6 text-gray-400" />
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Session Title</label>
+                        <input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            required
+                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 font-bold"
+                            placeholder="e.g. Identity and the Inner Voice"
+                        />
+                    </div>
+
+                    <div className="space-y-4">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Initial Content Format</p>
+                        <div className="flex gap-2">
+                            {['video', 'article'].map(type => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => setContentType(type)}
+                                    className={cn(
+                                        "flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border-2 transition-all font-black text-[10px] uppercase tracking-widest",
+                                        contentType === type ? "border-emerald-700 bg-emerald-50 text-emerald-900" : "border-gray-100 text-gray-400"
+                                    )}
+                                >
+                                    {type === 'video' ? <Video className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {contentType === 'video' && (
+                        <div className="animate-reveal space-y-4">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">YouTube Embed Code</label>
+                            <textarea
+                                value={youtubeInput}
+                                onChange={(e) => setYoutubeInput(e.target.value)}
+                                rows={4}
+                                className="w-full px-5 py-4 bg-gray-900 text-emerald-400 border-none rounded-2xl focus:ring-1 focus:ring-emerald-500 font-mono text-xs"
+                                placeholder='Paste <iframe...> from YouTube here'
+                            />
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Reflection Prompt</label>
+                        <textarea
+                            value={journalPrompt}
+                            onChange={(e) => setJournalPrompt(e.target.value)}
+                            rows={4}
+                            className="w-full px-5 py-4 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:border-blue-500 focus:ring-0 text-sm font-medium italic text-blue-900"
+                            placeholder="What is one thing that stood out to you today?"
+                        />
+                        <p className="mt-2 text-[9px] text-gray-400 font-bold uppercase tracking-widest">This prompt is revealed after session content.</p>
+                    </div>
+
+                    <div className="p-6 bg-gray-50 rounded-[2rem] border-2 border-gray-100">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Plus className="w-4 h-4 text-emerald-600" />
+                            <h4 className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Planned: Subsessions</h4>
+                        </div>
+                        <p className="text-[10px] text-gray-400 leading-relaxed font-medium">
+                            Adding multiple content blocks and sub-daily tasks to a single session is currently being optimized for this drill-down UI.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-end gap-3">
+                <button
+                    onClick={onClose}
+                    className="px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={handleSave}
+                    disabled={loading || !title}
+                    className="bg-emerald-700 text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-xl shadow-emerald-700/20 active:scale-95 disabled:opacity-50"
+                >
+                    {loading ? 'Orchestrating...' : 'Push Update'}
+                    <Zap className="w-4 h-4 fill-white" />
+                </button>
+            </div>
+        </div>
+    )
+}

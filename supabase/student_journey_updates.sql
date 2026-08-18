@@ -1,0 +1,3 @@
+-- STUDENT JOURNEY UPDATES
+ALTER TABLE profiles ADD COLUMN preferred_name TEXT;
+ALTER TABLE profiles ADD COLUMN welcome_screen_shown BOOLEAN NOT NULL DEFAULT false;
