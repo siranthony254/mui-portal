@@ -6,11 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f8bb94af-4cee-458b-ad48-2a180ac85ea8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/admin/CohortEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/CohortEditor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/cohort/CohortCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/CohortCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/cohort/CreateCohortForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/CreateCohortForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tailwind.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/tailwind.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
