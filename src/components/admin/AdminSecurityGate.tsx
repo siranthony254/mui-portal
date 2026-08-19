@@ -7,9 +7,8 @@ export function AdminSecurityGate({ children }: { children: React.ReactNode }) {
   const [isVerified, setIsVerified] = useState<boolean | null>(null)
 
   useEffect(() => {
-    // Check session storage for verification status
-    const verified = sessionStorage.getItem('admin_verified') === 'true'
-    setIsVerified(verified)
+    // SECURITY PIN DISABLED: Always verified
+    setIsVerified(true)
   }, [])
 
   if (isVerified === null) return null // Loading state

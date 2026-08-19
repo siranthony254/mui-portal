@@ -30,10 +30,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
   return (
-    <AdminSecurityGate>
-      <DashboardShell profile={profile} notifications={notifications}>
-        {children}
-      </DashboardShell>
-    </AdminSecurityGate>
+    <DashboardShell profile={profile} notifications={notifications}>
+      {children}
+    </DashboardShell>
   )
 }
