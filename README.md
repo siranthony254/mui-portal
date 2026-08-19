@@ -67,6 +67,10 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 # Sanity
 NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
 NEXT_PUBLIC_SANITY_DATASET=production
+
+# SendGrid
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your_verified_sender_email
 ```
 
 ### 4. Database Setup

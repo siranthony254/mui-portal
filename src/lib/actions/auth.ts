@@ -91,7 +91,7 @@ export async function signUpStudent(formData: FormData) {
       }
     }
 
-    // Send application confirmation email via Resend (Student specific)
+    // Send application confirmation email via SendGrid (Student specific)
     try {
       await sendStudentWaitlistEmail(email, fullName)
     } catch (e) {
@@ -140,7 +140,7 @@ export async function signUpMentor(formData: FormData) {
       return { error: 'Failed to update mentor profile. Please try again.' }
     }
 
-    // Send mentor application received email via Resend
+    // Send mentor application received email via SendGrid
     try {
       await sendMentorRequestReceivedEmail(email, fullName)
     } catch (e) {
@@ -182,14 +182,17 @@ export async function generateAndSendAdminPIN() {
   console.log(`ADMIN SECURITY PIN FOR ${user.email}: ${pin}`)
   console.log('---------------------------------')
 
-  // TODO: Connect Resend here to send email
+  // TODO: Connect SendGrid here to send email
   /*
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
-    to: user.email!,
-    subject: 'Your Admin Security PIN',
-    text: `Your 4-digit security PIN is: ${pin}. Use this to verify your session.`
-  })
+  const { sendgrid, getFromEmail } = await import('@/lib/email/sendgrid')
+  if (sendgrid) {
+    await sendgrid.send({
+      from: getFromEmail(),
+      to: user.email!,
+      subject: 'Your Admin Security PIN',
+      text: `Your 4-digit security PIN is: ${pin}. Use this to verify your session.`
+    })
+  }
   */
 
   return { success: true }

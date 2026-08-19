@@ -1,4 +1,4 @@
-import { resend, getFromEmail, getReplyToEmail } from './resend'
+import { sendgrid, getFromEmail, getReplyToEmail } from './sendgrid'
 import {
   getStudentWaitlistTemplate,
   getMentorApplicationReceivedTemplate,
@@ -7,89 +7,89 @@ import {
 } from './templates'
 
 export async function sendStudentWaitlistEmail(to: string, fullName: string) {
-  if (!resend) {
-    console.log(`[Resend Mock] Student waitlist email to ${to}`)
+  if (!sendgrid) {
+    console.log(`[SendGrid Mock] Student waitlist email to ${to}`)
     return { success: true, mocked: true }
   }
 
   try {
     const html = getStudentWaitlistTemplate({ fullName })
-    const { data, error } = await resend.emails.send({
+    await sendgrid.send({
+      to,
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
-      to: [to],
       subject: 'Application Received - MUI Forge',
       html,
     })
-    if (error) return { success: false, error: error.message || error }
-    return { success: true, data }
-  } catch (error) {
-    return { success: false, error }
+    return { success: true }
+  } catch (error: any) {
+    console.error('SendGrid Error:', error.response?.body || error)
+    return { success: false, error: error.message || error }
   }
 }
 
 export async function sendMentorRequestReceivedEmail(to: string, fullName: string) {
-  if (!resend) {
-    console.log(`[Resend Mock] Mentor request email to ${to}`)
+  if (!sendgrid) {
+    console.log(`[SendGrid Mock] Mentor request email to ${to}`)
     return { success: true, mocked: true }
   }
 
   try {
     const html = getMentorApplicationReceivedTemplate({ fullName })
-    const { data, error } = await resend.emails.send({
+    await sendgrid.send({
+      to,
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
-      to: [to],
       subject: 'Mentor Request Received - MUI Forge',
       html,
     })
-    if (error) return { success: false, error: error.message || error }
-    return { success: true, data }
-  } catch (error) {
-    return { success: false, error }
+    return { success: true }
+  } catch (error: any) {
+    console.error('SendGrid Error:', error.response?.body || error)
+    return { success: false, error: error.message || error }
   }
 }
 
 export async function sendMentorApprovalNotification(to: string, fullName: string, approved: boolean, loginUrl: string) {
-  if (!resend || !approved) {
-    console.log(`[Resend Mock] Mentor status email to ${to}`)
+  if (!sendgrid || !approved) {
+    console.log(`[SendGrid Mock] Mentor status email to ${to}`)
     return { success: true, mocked: true }
   }
 
   try {
     const html = getMentorApprovedTemplate({ fullName, loginUrl })
-    const { data, error } = await resend.emails.send({
+    await sendgrid.send({
+      to,
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
-      to: [to],
       subject: 'Mentor Access Activated! - MUI Forge',
       html,
     })
-    if (error) return { success: false, error: error.message || error }
-    return { success: true, data }
-  } catch (error) {
-    return { success: false, error }
+    return { success: true }
+  } catch (error: any) {
+    console.error('SendGrid Error:', error.response?.body || error)
+    return { success: false, error: error.message || error }
   }
 }
 
 export async function sendStudentAdmissionNotification(to: string, fullName: string, cohortName: string, dashboardUrl: string) {
-  if (!resend) {
-    console.log(`[Resend Mock] Student admission email to ${to}`)
+  if (!sendgrid) {
+    console.log(`[SendGrid Mock] Student admission email to ${to}`)
     return { success: true, mocked: true }
   }
 
   try {
     const html = getStudentAdmissionTemplate({ fullName, cohortName, dashboardUrl })
-    const { data, error } = await resend.emails.send({
+    await sendgrid.send({
+      to,
       from: getFromEmail(),
       replyTo: getReplyToEmail(),
-      to: [to],
       subject: `Admission Confirmed: ${cohortName} - MUI Forge`,
       html,
     })
-    if (error) return { success: false, error: error.message || error }
-    return { success: true, data }
-  } catch (error) {
-    return { success: false, error }
+    return { success: true }
+  } catch (error: any) {
+    console.error('SendGrid Error:', error.response?.body || error)
+    return { success: false, error: error.message || error }
   }
 }
