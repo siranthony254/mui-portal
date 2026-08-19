@@ -7,8 +7,11 @@ import { Metadata } from 'next'
 import {
   Users, Award, Clock, BarChart2, ChevronRight,
   UserCheck, Lightbulb, Zap, ShieldCheck, AlertCircle,
-  MessageSquare
+  MessageSquare, TrendingUp
 } from '@/components/icons'
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
+import { EnrollmentTrends, TaskDistribution } from '@/components/admin/DashboardCharts'
+
 export const metadata: Metadata = { title: 'Admin Dashboard' }
 
 export default async function AdminDashboardPage() {
@@ -32,28 +35,42 @@ export default async function AdminDashboardPage() {
     { data: recentTasks },
     { data: activeProfiles },
     { data: recentPosts },
-    { data: overdueTasks },
+    { data: taskStatusData },
   ] = await Promise.all([
     supabase.from('enrollments').select('*',{count:'exact',head:true}).eq('status','active'),
     supabase.from('profiles').select('*',{count:'exact',head:true}).eq('role','mentor').eq('approved',true),
     supabase.from('cohorts').select('*').eq('status','active'),
-    // Students who submitted this week's task
     supabase.from('tasks').select('student_id').eq('status','submitted').gte('submitted_at', startOfWeek),
-    // Students logged in within last 72h
     supabase.from('profiles').select('id, full_name, last_login_at, institution').eq('role','student').gte('last_login_at', seventyTwoHoursAgo),
-    // Students who posted on discussion board this week
     supabase.from('discussion_posts').select('author_id').gte('created_at', startOfWeek),
-    // Overdue tasks check (pending tasks from previous weeks)
-    supabase.from('tasks').select('student_id, title, week_number').eq('status', 'pending').lt('week_number', 2), // Example: week 2 logic
+    supabase.from('tasks').select('status')
   ])
 
-  // Calculate Engagement Health Score (Composite)
-  // Simplified calculation for V1
+  // Mock enrollment trends data
+  const trendData = [
+    { date: 'Mon', count: 12 },
+    { date: 'Tue', count: 19 },
+    { date: 'Wed', count: 15 },
+    { date: 'Thu', count: 22 },
+    { date: 'Fri', count: 30 },
+    { date: 'Sat', count: 28 },
+    { date: 'Sun', count: 34 },
+  ]
+
+  // Task distribution data
+  const statusCounts = (taskStatusData || []).reduce<Record<string, number>>((acc, t) => {
+    acc[t.status] = (acc[t.status] || 0) + 1
+    return acc
+  }, {})
+
+  const pieData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
+
+  // Calculate Engagement Health Score
   const uniqueTaskSubmitters = new Set(recentTasks?.map(t => t.student_id)).size
   const uniqueActiveLogins = activeProfiles?.length || 0
   const uniquePosters = new Set(recentPosts?.map(p => p.author_id)).size
 
-  const totalEnrolled = studentCount || 1 // Avoid division by zero
+  const totalEnrolled = studentCount || 1
   const taskRate = (uniqueTaskSubmitters / totalEnrolled) * 100
   const loginRate = (uniqueActiveLogins / totalEnrolled) * 100
   const postRate = (uniquePosters / totalEnrolled) * 100
@@ -69,39 +86,59 @@ export default async function AdminDashboardPage() {
   const stats = [
     { label:'Enrolled students', value:studentCount||0, icon:Users, href:'/admin/students' },
     { label:'Active mentors', value:mentorCount||0, icon:UserCheck, href:'/admin/mentors' },
-    { label:'System health', value:`${healthScore}%`, icon:Zap, href:'/admin/analytics' },
+    { label:'Engagement rate', value:healthScore, suffix: '%', icon:Zap, href:'/admin/analytics' },
     { label:'Active cohorts', value:activeCohorts?.length||0, icon:Award, href:'/admin/cohorts' },
   ]
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-7xl mx-auto space-y-8 pb-20">
       <div className="page-header">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Operational Overview</h1>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Operational Overview</h1>
           <p className="text-sm text-gray-500 font-medium">Programme-wide visibility and health metrics</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/admin/settings" className="btn-secondary text-xs">Platform Settings</Link>
-          <Link href="/admin/cohorts" className="btn-primary text-xs">Manage Cohorts</Link>
+          <Link href="/admin/settings" className="btn-secondary text-xs font-black uppercase tracking-widest">Platform Settings</Link>
+          <Link href="/admin/cohorts" className="btn-primary text-xs font-black uppercase tracking-widest">Manage Cohorts</Link>
         </div>
       </div>
 
       {/* Main Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map(s => { const Icon = s.icon; return (
-          <Link key={s.label} href={s.href} className="card p-5 hover:shadow-card-hover transition-all group">
-            <div className="w-10 h-10 bg-teal-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-teal-700 transition-colors">
-              <Icon className="w-5 h-5 text-teal-700 group-hover:text-white transition-colors" />
+          <Link key={s.label} href={s.href} className="card p-6 hover:shadow-card-hover transition-all group">
+            <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-teal-700 transition-colors shadow-sm">
+              <Icon className="w-6 h-6 text-teal-700 group-hover:text-white transition-colors" />
             </div>
-            <p className="text-3xl font-black text-gray-900">{s.value}</p>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{s.label}</p>
+            <p className="text-4xl font-black text-gray-900 tracking-tighter">
+                <AnimatedNumber value={s.value} suffix={s.suffix} />
+            </p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{s.label}</p>
           </Link>
         )})}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Engagement & Cohorts */}
-        <div className="lg:col-span-7 space-y-8">
+        <div className="lg:col-span-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <section className="card p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-emerald-500" /> Enrollment Trends
+                        </h2>
+                    </div>
+                    <EnrollmentTrends data={trendData} />
+                </section>
+
+                <section className="card p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-amber-500" /> Task Status
+                        </h2>
+                    </div>
+                    <TaskDistribution data={pieData} />
+                </section>
+            </div>
           {/* Engagement Health Score Card */}
           <section className="card p-8 bg-emerald-900 text-white overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">

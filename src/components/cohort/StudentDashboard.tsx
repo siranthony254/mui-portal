@@ -8,6 +8,7 @@ import { CheckCircle, Clock, Circle, ChevronRight, MessageSquare, FileText, User
 import { cn } from '@/lib/utils'
 import { PeerAccountabilityCard } from './PeerAccountabilityCard'
 import { MentorAssignmentBanner } from './MentorAssignmentBanner'
+import { JourneyMap } from './JourneyMap'
 
 interface Props { enrollment: any; tasks: Task[]; profile: Profile; partnership?: any }
 
@@ -15,51 +16,32 @@ export function StudentDashboard({ enrollment, tasks, profile, partnership }: Pr
   const cohort = enrollment.cohort
   const mentor = enrollment.mentor
   const currentPillar = PILLARS[enrollment.current_pillar - 1]
-  const progress = Math.round(((enrollment.current_week - 1) / 12) * 100)
   const pendingTasks = tasks.filter(t => t.status === 'pending').length
   const submittedTasks = tasks.filter(t => t.status !== 'pending').length
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 pb-20">
       {mentor && <MentorAssignmentBanner mentor={mentor} />}
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Welcome back, {profile.full_name.split(' ')[0]}</h1>
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Welcome back, {profile.full_name.split(' ')[0]}</h1>
           <p className="text-sm text-gray-500 mt-0.5">{cohort?.name} · Week {enrollment.current_week} of 12</p>
         </div>
         {pendingTasks > 0 && <span className="badge badge-amber">{pendingTasks} task{pendingTasks > 1 ? 's' : ''} pending</span>}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card p-4 md:p-5">
-          <p className="section-title">Your journey</p>
-          <div className="flex items-center gap-1.5 md:gap-2 mb-4">
-            {PILLARS.map((p, i) => {
-              const done = i + 1 < enrollment.current_pillar
-              const active = i + 1 === enrollment.current_pillar
-              return (
-                <div key={p.number} className="flex items-center gap-1 flex-1">
-                  <div className={cn('w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-[10px] md:text-xs font-semibold flex-shrink-0',
-                    done ? 'bg-teal-700 text-white' : active ? 'bg-teal-50 text-teal-700 ring-2 ring-teal-700' : 'bg-gray-100 text-gray-400')}>
-                    {done ? '✓' : p.number}
-                  </div>
-                  {i < 4 && <div className={cn('h-0.5 flex-1', done ? 'bg-teal-700' : 'bg-gray-100')} />}
-                </div>
-              )
-            })}
-          </div>
-          <div className="mb-3">
-            <div className="flex justify-between text-[10px] md:text-xs text-gray-400 mb-1">
-              <span>Week {enrollment.current_week} of 12</span><span>{progress}%</span>
-            </div>
-            <div className="progress-bar"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
-          </div>
-          <span className={cn('badge text-[10px] md:text-xs', getPillarColor(enrollment.current_pillar))}>
-            Pillar {enrollment.current_pillar}: {currentPillar?.name}
+      <section className="card p-0 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
+          <p className="section-title mb-0">Your Formation Journey</p>
+          <span className="text-[10px] font-black text-teal-600 uppercase tracking-widest bg-teal-50 px-2 py-0.5 rounded-md">
+            Week {enrollment.current_week} / 12
           </span>
         </div>
+        <JourneyMap currentWeek={enrollment.current_week} currentPillar={enrollment.current_pillar} />
+      </section>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="card p-4 md:p-5">
           <p className="section-title">Current focus</p>
           <h3 className="font-semibold text-gray-900 mb-1 text-sm md:text-base">{currentPillar?.name}</h3>

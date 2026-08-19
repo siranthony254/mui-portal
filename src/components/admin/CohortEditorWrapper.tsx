@@ -1,9 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { CohortEditor } from './CohortEditor'
 import { Edit3 } from '@/components/icons'
 import type { Cohort } from '@/types'
+import dynamic from 'next/dynamic'
+
+// Dynamically import the heavy editor component
+const CohortEditor = dynamic(() => import('./CohortEditor').then(mod => mod.CohortEditor), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-3xl p-12 text-center shadow-2xl">
+      <div className="w-10 h-10 border-4 border-teal-700 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading Editor Infrastructure...</p>
+    </div>
+  )
+})
 
 export function CohortEditorWrapper({ cohort }: { cohort: Cohort }) {
   const [isOpen, setIsOpen] = useState(false)

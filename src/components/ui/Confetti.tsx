@@ -1,11 +1,16 @@
 'use client'
 
-import confetti from 'canvas-confetti'
+/**
+ * Optimized Confetti utility using dynamic imports
+ * This prevents the heavy canvas-confetti library from being part of the initial bundle
+ */
 
-export function triggerConfetti() {
+export async function triggerConfetti() {
+  const { default: confetti } = await import('canvas-confetti')
+
   const duration = 3 * 1000
   const animationEnd = Date.now() + duration
-  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 }
 
   const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min
 
@@ -31,11 +36,14 @@ export function triggerConfetti() {
   }, 250)
 }
 
-export function triggerSuccessConfetti() {
+export async function triggerSuccessConfetti() {
+    const { default: confetti } = await import('canvas-confetti')
+
     confetti({
         particleCount: 150,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#0d9488', '#2dd4bf', '#fbbf24']
+        colors: ['#0d9488', '#2dd4bf', '#fbbf24'],
+        zIndex: 100
     })
 }

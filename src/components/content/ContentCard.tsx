@@ -75,7 +75,7 @@ export function ContentCard({ content, compact=false, isAdmin=false }: { content
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
               ) : (
                 <button onClick={() => setPlaying(true)} className="w-full h-full relative group">
-                  <img src={getYouTubeThumbnail(youtubeId)} alt={content.title} className="w-full h-full object-cover" />
+                  <img src={getYouTubeThumbnail(youtubeId)} alt={content.title} className="w-full h-full object-cover" loading="lazy" />
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
                     <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform shadow-lg">
                       <Play className="w-6 h-6 text-gray-900 ml-0.5" />

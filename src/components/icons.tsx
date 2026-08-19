@@ -42,6 +42,7 @@ import {
   ShieldCheck as LucideShieldCheck,
   Star as LucideStar,
   Trash2 as LucideTrash2,
+  TrendingUp as LucideTrendingUp,
   UserCheck as LucideUserCheck,
   Users as LucideUsers,
   Video as LucideVideo,
@@ -54,6 +55,7 @@ import {
   User as LucideUser,
   Layers as LucideLayers,
   Edit3 as LucideEdit3,
+  Sparkles as LucideSparkles,
 } from 'lucide-react'
 
 type IconProps = SVGProps<SVGSVGElement>
@@ -98,6 +100,7 @@ export function Settings(props: IconProps) { return <LucideSettings {...props} /
 export function Share2(props: IconProps) { return <LucideShare2 {...props} /> }
 export function ShieldCheck(props: IconProps) { return <LucideShieldCheck {...props} /> }
 export function Star(props: IconProps) { return <LucideStar {...props} /> }
+export function TrendingUp(props: IconProps) { return <LucideTrendingUp {...props} /> }
 export function Trash2(props: IconProps) { return <LucideTrash2 {...props} /> }
 export function UserCheck(props: IconProps) { return <LucideUserCheck {...props} /> }
 export function Users(props: IconProps) { return <LucideUsers {...props} /> }
@@ -111,6 +114,7 @@ export function Phone(props: IconProps) { return <LucidePhone {...props} /> }
 export function User(props: IconProps) { return <LucideUser {...props} /> }
 export function Layers(props: IconProps) { return <LucideLayers {...props} /> }
 export function Edit3(props: IconProps) { return <LucideEdit3 {...props} /> }
+export function Sparkles(props: IconProps) { return <LucideSparkles {...props} /> }
 
 
 

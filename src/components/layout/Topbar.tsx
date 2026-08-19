@@ -1,16 +1,30 @@
 'use client'
 import { useState } from 'react'
 import { signOut } from '@/lib/actions/auth'
-import { getInitials, formatDate } from '@/lib/utils'
+import { getInitials, formatDate, cn } from '@/lib/utils'
 import type { Profile } from '@/types'
 import { Bell, LogOut, ChevronDown, Menu, CheckCircle, Clock } from '@/components/icons'
 import { markAsRead, clearAllNotifications } from '@/lib/actions/notifications'
 import Link from 'next/link'
+import { useEffect, useState as useReactState } from 'react'
 
 export function Topbar({ profile, onMenuClick, initialNotifications = [] }: { profile: Profile; onMenuClick?: () => void; initialNotifications?: any[] }) {
   const [open, setOpen] = useState(false)
   const [notifsOpen, setNotifsOpen] = useState(false)
+  const [isOnline, setIsOnline] = useReactState(true)
   const unreadCount = initialNotifications.filter(n => !n.read).length
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine)
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 px-4 md:px-6 flex items-center justify-between flex-shrink-0">
@@ -83,9 +97,15 @@ export function Topbar({ profile, onMenuClick, initialNotifications = [] }: { pr
           )}
         </div>
         <div className="relative">
-          <button onClick={() => setOpen(!open)} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-semibold">
-              {getInitials(profile.full_name)}
+          <button onClick={() => setOpen(!open)} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors relative">
+            <div className="relative">
+                <div className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-semibold">
+                {getInitials(profile.full_name)}
+                </div>
+                <div className={cn(
+                    "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white",
+                    isOnline ? "bg-emerald-500" : "bg-gray-400"
+                )} />
             </div>
             <span className="text-sm font-medium text-gray-700 hidden sm:block">{profile.full_name.split(' ')[0]}</span>
             <ChevronDown className="w-3.5 h-3.5 text-gray-400" />

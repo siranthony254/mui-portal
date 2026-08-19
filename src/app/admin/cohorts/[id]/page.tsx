@@ -4,6 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import { CohortCard } from '@/components/cohort/CohortCard'
 import { SealedLetterManager } from '@/components/admin/SealedLetterManager'
 import { CohortEditorWrapper } from '@/components/admin/CohortEditorWrapper'
+import { CohortTimeline } from '@/components/admin/CohortTimeline'
 import Link from 'next/link'
 import { ArrowLeft, Zap, ShieldCheck, Clock, Edit3 } from '@/components/icons'
 import { Metadata } from 'next'
@@ -47,6 +48,9 @@ export default async function CohortDetailPage({ params }: { params: Promise<{ i
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 space-y-8">
+           <section className="card p-6 bg-white shadow-sm border-gray-100">
+              <CohortTimeline currentWeek={cohort.current_week} />
+           </section>
            <CohortCard cohort={cohort} enrolledCount={enrolledCount||0} />
 
            <div className="card p-6 bg-gray-900 text-white relative overflow-hidden">

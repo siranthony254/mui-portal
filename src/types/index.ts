@@ -12,6 +12,9 @@ export interface Profile {
   county?: string
   phone?: string
   bio?: string
+  interests?: string[]
+  expertise?: string[]
+  personality_tags?: string[]
   approved: boolean
   created_at: string
   updated_at: string

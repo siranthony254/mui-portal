@@ -3,17 +3,18 @@
 import Link from 'next/link'
 import { getInitials, cn } from '@/lib/utils'
 import { MessageSquare, AlertCircle, Clock, User } from '@/components/icons'
+import { ProgressRing } from '@/components/charts/ProgressRing'
 
 interface MenteeProps {
   enrollment: any
   lastMessageDate?: string | null
   overdueTasks: number
   sessionsCompleted?: number
+  progress?: number
 }
 
-export function MenteeOverview({ enrollment, lastMessageDate, overdueTasks, sessionsCompleted = 0 }: MenteeProps) {
+export function MenteeOverview({ enrollment, lastMessageDate, overdueTasks, sessionsCompleted = 0, progress = 0 }: MenteeProps) {
   const s = enrollment.student as any
-  const progress = Math.round(((enrollment.current_week - 1) / 12) * 100)
 
   // Engagement logic
   const isInactive = false // Placeholder for 72h inactivity check
@@ -41,13 +42,13 @@ export function MenteeOverview({ enrollment, lastMessageDate, overdueTasks, sess
         </div>
 
         <div className="space-y-4">
-          <div>
-            <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
-              <span className="text-gray-400">Pillar {enrollment.current_pillar} · Week {enrollment.current_week}</span>
-              <span className="text-teal-700">{sessionsCompleted} Sessions Done</span>
-            </div>
-            <div className="progress-bar h-1.5 bg-gray-100">
-              <div className="progress-fill bg-teal-600" style={{ width: `${progress}%` }} />
+          <div className="flex items-center gap-4">
+            <ProgressRing progress={progress} size={64} color="teal" />
+            <div className="flex-1">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
+                <span className="text-gray-400">Pillar {enrollment.current_pillar} · Week {enrollment.current_week}</span>
+                <span className="text-teal-700">{sessionsCompleted} Sessions Done</span>
+              </div>
             </div>
           </div>
 

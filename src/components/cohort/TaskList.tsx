@@ -6,6 +6,7 @@ import { CheckCircle, Clock, Circle, ChevronDown, ChevronUp, ChevronRight, FileT
 import { cn, formatDate } from '@/lib/utils'
 import { PILLARS, getPillarColor } from '@/types'
 import type { Task } from '@/types'
+import { Confetti } from '@/components/gamification/Confetti'
 
 interface Props {
   tasks: Task[]
@@ -14,6 +15,7 @@ interface Props {
 
 export function TaskList({ tasks, currentWeek }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   const grouped = tasks.reduce<Record<number, Task[]>>((acc, t) => {
     if (!acc[t.week_number]) acc[t.week_number] = []
@@ -23,6 +25,7 @@ export function TaskList({ tasks, currentWeek }: Props) {
 
   return (
     <div className="space-y-6">
+      <Confetti trigger={showConfetti} />
       {Array.from({ length: 12 }, (_, i) => i + 1).map(week => {
         const weekTasks = grouped[week] || []
         const isCurrentWeek = week === currentWeek

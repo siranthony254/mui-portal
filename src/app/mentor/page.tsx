@@ -7,6 +7,8 @@ import { Clock, Users, MessageSquare, CheckCircle, BookOpen, ArrowRight } from '
 import { MentorOnboarding } from '@/components/mentor/MentorOnboarding'
 import { MenteeOverview } from '@/components/mentor/MenteeOverview'
 import { Metadata } from 'next'
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
+
 export const metadata: Metadata = { title: 'Mentor Dashboard' }
 
 export default async function MentorDashboardPage() {
@@ -31,9 +33,9 @@ export default async function MentorDashboardPage() {
 
   const studentIds = enrollments?.map(e=>(e.student as any)?.id).filter(Boolean)||[]
 
-  // Fetch completions for all mentees to show granular progress
+  // Fetch completions for all mentees
   const { data: allCompletions } = studentIds.length
-    ? await supabase.from('session_completions').select('*').in('student_id', studentIds)
+    ? await supabase.from('session_homework_completions').select('*').in('student_id', studentIds)
     : { data: [] }
 
   const completionsMap = (allCompletions || []).reduce<Record<string, number>>((acc, c) => {
@@ -41,7 +43,14 @@ export default async function MentorDashboardPage() {
     return acc
   }, {})
 
-  // Mentor Onboarding Logic
+  // Calculate progress
+  const progressMap: Record<string, number> = {}
+  enrollments?.forEach(enrollment => {
+    const studentId = (enrollment.student as any).id
+    const completedSessions = completionsMap[studentId] || 0
+    progressMap[studentId] = Math.min(100, Math.round((completedSessions / 12) * 100)) // Assuming 12 sessions total for now
+  })
+
   if (!profile.onboarded) {
     const mentees = enrollments?.map(e => {
       const s = e.student as any
@@ -54,28 +63,25 @@ export default async function MentorDashboardPage() {
     return <MentorOnboarding mentorName={profile.full_name} mentees={mentees} />
   }
 
-  // Pending Tasks
   const { data: pendingTasks } = studentIds.length
     ? await supabase.from('tasks').select('*,student:profiles!student_id(id,full_name)').in('student_id',studentIds).eq('status','submitted').order('submitted_at',{ascending:true})
     : { data:[] }
 
-  // Shared Journals
   const { data: sharedJournals } = studentIds.length
     ? await supabase.from('journals').select('*,student:profiles!student_id(id,full_name)').in('student_id',studentIds).eq('is_shared',true).order('updated_at',{ascending:false})
     : { data:[] }
 
-  // Overdue Task counts per student
-  // Definition of overdue: week < current_week and status is 'pending'
   const overdueTasksByStudent: Record<string, number> = {}
   if (studentIds.length && enrollments) {
     for (const enrollment of enrollments) {
+      const studentId = (enrollment.student as any).id
       const { count } = await supabase.from('tasks')
         .select('*', { count: 'exact', head: true })
-        .eq('student_id', (enrollment.student as any).id)
+        .eq('student_id', studentId)
         .eq('status', 'pending')
         .lt('week_number', (enrollment.cohort as any).current_week)
 
-      overdueTasksByStudent[(enrollment.student as any).id] = count || 0
+      overdueTasksByStudent[studentId] = count || 0
     }
   }
 
@@ -90,10 +96,10 @@ export default async function MentorDashboardPage() {
   ]
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8 pb-20">
       <div className="page-header">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Mentor Dashboard</h1>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Mentor Dashboard</h1>
           <p className="text-sm text-gray-500 font-medium">Accompanying {enrollments?.length||0} emerging leaders</p>
         </div>
       </div>
@@ -104,14 +110,15 @@ export default async function MentorDashboardPage() {
             <div className="w-10 h-10 bg-teal-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-teal-700 transition-colors">
               <Icon className="w-5 h-5 text-teal-700 group-hover:text-white transition-colors" />
             </div>
-            <p className="text-3xl font-black text-gray-900">{s.value}</p>
+            <p className="text-3xl font-black text-gray-900 tracking-tighter">
+                <AnimatedNumber value={s.value} />
+            </p>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{s.label}</p>
           </Link>
         )})}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Mentees */}
         <div className="lg:col-span-8 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Mentee Overview</h2>
@@ -133,7 +140,7 @@ export default async function MentorDashboardPage() {
                     enrollment={enrollment}
                     overdueTasks={overdueTasksByStudent[studentId] || 0}
                     sessionsCompleted={completionsMap[studentId] || 0}
-                    lastMessageDate={null} // TODO: Implement last message date
+                    progress={progressMap[studentId] || 0}
                   />
                 )
               })}
@@ -141,9 +148,7 @@ export default async function MentorDashboardPage() {
           )}
         </div>
 
-        {/* Right Column: Pending Actions & Feed */}
         <div className="lg:col-span-4 space-y-8">
-          {/* Pending Actions */}
           <section className="space-y-4">
             <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Pending Actions</h2>
             <div className="card divide-y divide-gray-50">
@@ -182,7 +187,6 @@ export default async function MentorDashboardPage() {
             </div>
           </section>
 
-          {/* Group Activity Feed */}
           <section className="space-y-4">
              <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Group Activity</h2>
              <div className="card p-6 bg-emerald-900 text-white overflow-hidden relative">

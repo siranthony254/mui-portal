@@ -5,7 +5,35 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8bb94af-4cee-458b-ad48-2a180ac85ea8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/components/admin/AnalyticsCharts.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/admin/CohortTimeline.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/admin/DashboardCharts.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/cohort/JourneyMap.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/ui/AnimatedNumber.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/ui/Confetti.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/ui/ProgressRing.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/supabase/update_profiles_v2.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/cohorts/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/cohorts/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/mentor/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/mentor/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/admin/CohortEditorWrapper.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/CohortEditorWrapper.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/auth/ProfileForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/auth/ProfileForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/brand/PhotoCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/brand/PhotoCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/cohort/StudentDashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/StudentDashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/cohort/TaskList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/TaskList.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/cohort/TaskSubmitForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/TaskSubmitForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/content/ContentCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/content/ContentCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/icons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/icons.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/LandingContent.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/LandingContent.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/Topbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/Topbar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/mentor/MenteeOverview.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/mentor/MenteeOverview.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/mentor/TaskFeedbackForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/mentor/TaskFeedbackForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tailwind.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/tailwind.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

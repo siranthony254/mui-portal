@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react'
 import { submitTask } from '@/lib/actions/cohort'
 import { useRouter } from 'next/navigation'
-import { CloudOff, CheckCircle } from '@/components/icons'
+import { CloudOff, CheckCircle, Sparkles } from '@/components/icons'
+import { triggerSuccessConfetti } from '@/components/ui/Confetti'
 
 export function TaskSubmitForm({ taskId }: { taskId: string }) {
   const [submission, setSubmission] = useState('')
@@ -10,6 +11,7 @@ export function TaskSubmitForm({ taskId }: { taskId: string }) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [isOnline, setIsOnline] = useState(true)
+  const [showSuccess, setShowSuccess] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -56,9 +58,28 @@ export function TaskSubmitForm({ taskId }: { taskId: string }) {
     setResult(res)
     setLoading(false)
     if (res.success) {
+      triggerSuccessConfetti()
+      setShowSuccess(true)
       localStorage.removeItem(`task_draft_${taskId}`)
-      setTimeout(() => router.refresh(), 1000)
+      setTimeout(() => router.refresh(), 2000)
     }
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="card p-12 text-center space-y-4 animate-reveal">
+        <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-700/10">
+          <CheckCircle className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Submission Received!</h2>
+        <p className="text-gray-500 max-w-xs mx-auto font-medium">Your response has been successfully sent to your mentor. Great work!</p>
+        <div className="pt-4 flex justify-center">
+            <button onClick={() => router.push('/dashboard')} className="btn-primary text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                Back to Dashboard <Sparkles className="w-4 h-4" />
+            </button>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -12,6 +12,8 @@ export function TaskFeedbackForm({ taskId }: { taskId: string }) {
   const supabase = createClient()
   const router = useRouter()
 
+  const emojis = ['🌟', '👏', '🎯', '💡', '🌱', '🔥']
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!feedback.trim()) return
@@ -46,6 +48,18 @@ export function TaskFeedbackForm({ taskId }: { taskId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex gap-2 mb-2">
+        {emojis.map(e => (
+          <button
+            key={e}
+            type="button"
+            onClick={() => setFeedback(prev => prev + ' ' + e)}
+            className="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-emerald-50 rounded-lg text-lg transition-colors border border-gray-100"
+          >
+            {e}
+          </button>
+        ))}
+      </div>
       <div className="relative">
         <textarea
           value={feedback}
