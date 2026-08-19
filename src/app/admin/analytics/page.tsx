@@ -6,6 +6,7 @@ import { Metadata } from 'next'
 import { QueryParamSelect } from '@/components/admin/QueryParamSelect'
 export const metadata: Metadata = { title: 'Analytics' }
 
+
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ cohort?: string }> }) {
   const { cohort: cohortFilter } = await searchParams
   const supabase = await createClient()
