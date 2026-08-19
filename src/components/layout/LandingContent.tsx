@@ -8,10 +8,12 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { BentoGrid, BentoItem } from '@/components/layout/BentoGrid'
 import { GlassCard } from '@/components/layout/GlassCard'
 import { AnimatedNumber } from '@/components/charts/AnimatedNumber'
-import { GrowthIcon, MentorshipIcon, LearningIcon } from '@/components/illustrations'
-import { TestimonialCarousel } from '@/components/brand'
-import { BrandFooter } from '@/components/brand'
-import { AfricanPattern } from '@/components/brand'
+import { GrowthIcon } from '@/components/illustrations/GrowthIcon'
+import { MentorshipIcon } from '@/components/illustrations/MentorshipIcon'
+import { LearningIcon } from '@/components/illustrations/LearningIcon'
+import { TestimonialCarousel } from '@/components/brand/TestimonialCarousel'
+import { BrandFooter } from '@/components/brand/BrandFooter'
+import { AfricanPattern } from '@/components/brand/AfricanPattern'
 
 export function LandingContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
