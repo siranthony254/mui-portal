@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getCohortCurriculum } from '@/lib/sanity/queries'
+import { PILLARS } from '@/types'
 import {
     updateCohortCurriculum,
     deleteCurriculumSession,
@@ -36,6 +37,7 @@ export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
     const [activeSession, setActiveSession] = useState<any>(null)
 
     const selectedCohort = cohorts.find(c => c.id === selectedCohortId)
+    const activePillars = selectedCohort?.pillars_config || PILLARS.map(p => ({ ...p, objectives: [] }))
 
     useEffect(() => {
         if (selectedCohortId) {
@@ -136,14 +138,14 @@ export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
                 />
             ) : activePillar ? (
                 <PillarModuleView
-                    pillar={selectedCohort?.pillars_config.find(p => p.number === activePillar)!}
+                    pillar={activePillars.find(p => p.number === activePillar)!}
                     curriculum={curriculum}
                     onOpenSession={(s: any) => setActiveSession(s)}
                     onDeleteSession={handleDeleteSession}
                 />
             ) : (
                 <PillarSelectionGrid
-                    pillars={selectedCohort?.pillars_config || []}
+                    pillars={activePillars}
                     curriculum={curriculum}
                     onSelect={(num) => setActivePillar(num)}
                     onEditPillar={(p) => setEditingPillar(p)}
@@ -254,15 +256,44 @@ function PillarEditor({ pillar, cohortId, onUpdate, onClose }: { pillar: Pillar,
     )
 }
 
-function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }: { pillar: Pillar, curriculum: any, onOpenSession: (s: any) => void, onDeleteSession: (p: number, w: number, d: number) => void }) {
+function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }: { pillar: any, curriculum: any, onOpenSession: (s: any) => void, onDeleteSession: (p: number, w: number, d: number) => void }) {
     const weeks = [(pillar.number * 2) - 1, (pillar.number * 2)]
     const sanityPillar = curriculum?.pillars?.find((p: any) => p.number === pillar.number)
 
     return (
         <div className="space-y-10 animate-reveal">
-            <div className="space-y-2">
-                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Pillar {pillar.number}: {pillar.name}</h3>
-                <p className="text-sm text-gray-500 font-medium">{pillar.description}</p>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Pillar {pillar.number}: {pillar.name}</h3>
+                        <p className="text-sm text-emerald-600 font-black uppercase tracking-widest">{pillar.subtitle}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pillar Goal</p>
+                        <p className="text-sm font-bold text-gray-900">{pillar.goal}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Pillar Description</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed font-medium">{pillar.description}</p>
+                    </div>
+
+                    <div className="bg-teal-50/50 rounded-2xl p-6 border border-teal-100">
+                        <h4 className="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-3">Pillar Objectives</h4>
+                        <ul className="space-y-2">
+                            {pillar.objectives?.map((obj: string, i: number) => (
+                                <li key={i} className="flex gap-2 text-sm text-teal-900 font-medium italic">
+                                    <span className="text-teal-400">•</span> {obj}
+                                </li>
+                            ))}
+                            {(!pillar.objectives || pillar.objectives.length === 0) && (
+                                <li className="text-sm text-gray-400 italic">No specific objectives set for this pillar.</li>
+                            )}
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

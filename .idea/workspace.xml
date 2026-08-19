@@ -5,7 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8bb94af-4cee-458b-ad48-2a180ac85ea8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/components/admin/CohortEditor.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/admin/CohortEditorWrapper.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/content/ContentEditor.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/supabase/add_cohort_meta_fields.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/cohorts/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/cohorts/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/admin/CurriculumOrchestrator.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/CurriculumOrchestrator.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/cohort/CreateCohortForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/CreateCohortForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/content/ContentCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/content/ContentCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/actions/cohort.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/cohort.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/actions/sanity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/sanity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/index.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

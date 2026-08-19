@@ -29,6 +29,9 @@ export interface Cohort {
   end_date?: string
   max_participants: number
   current_week: number
+  description?: string
+  objectives?: string[]
+  pillars_config?: Pillar[]
   applications_open: boolean
   vision_clubs_enabled: boolean
   capstone_submissions_enabled: boolean
@@ -60,6 +63,7 @@ export interface Pillar {
   goal: string
   weeks: string
   description: string
+  objectives?: string[]
 }
 
 export const PILLARS: Pillar[] = [

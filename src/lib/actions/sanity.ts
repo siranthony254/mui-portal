@@ -39,6 +39,40 @@ export async function createStandaloneContent(formData: FormData) {
   }
 }
 
+export async function updateStandaloneContent(id: string, formData: FormData) {
+  if (!writeClient) return { error: 'Sanity Write Client not configured.' }
+
+  const title = formData.get('title') as string
+  const description = formData.get('description') as string
+  const contentType = formData.get('contentType') as string
+  const url = formData.get('url') as string
+  const youtubeId = formData.get('youtubeId') as string
+  const pillarNumber = parseInt(formData.get('pillarNumber') as string)
+  const weekNumber = parseInt(formData.get('weekNumber') as string)
+  const isRequired = formData.get('isRequired') === 'true'
+
+  try {
+    const doc = {
+      title,
+      description,
+      contentType,
+      url: contentType !== 'article' ? url : undefined,
+      youtubeId: contentType === 'video' ? youtubeId : undefined,
+      pillarNumber,
+      weekNumber,
+      isRequired,
+    }
+
+    await writeClient.patch(id).set(doc).commit()
+    revalidatePath('/admin/content')
+    revalidatePath('/dashboard/content')
+    return { success: true }
+  } catch (error: any) {
+    console.error('Sanity Update Error:', error)
+    return { error: error.message }
+  }
+}
+
 export async function deleteSanityDocument(id: string) {
   if (!writeClient) return { error: 'Sanity Write Client not configured.' }
 

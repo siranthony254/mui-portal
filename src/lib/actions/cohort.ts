@@ -138,7 +138,17 @@ export async function toggleCohortFeature(
   const { error } = await admin.from('cohorts').update({ [feature]: value }).eq('id', cohortId)
   if (error) return { error: error.message }
   revalidatePath('/admin')
+  revalidatePath(`/admin/cohorts/${cohortId}`)
   return { success: 'Updated.' }
+}
+
+export async function updateCohort(cohortId: string, data: any) {
+  const admin = await createAdminClient()
+  const { error } = await admin.from('cohorts').update(data).eq('id', cohortId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/cohorts')
+  revalidatePath(`/admin/cohorts/${cohortId}`)
+  return { success: 'Cohort updated successfully.' }
 }
 
 export async function activateVisionClub(clubId: string) {

@@ -3,8 +3,9 @@ export const dynamic = 'force-dynamic'
 import { redirect, notFound } from 'next/navigation'
 import { CohortCard } from '@/components/cohort/CohortCard'
 import { SealedLetterManager } from '@/components/admin/SealedLetterManager'
+import { CohortEditorWrapper } from '@/components/admin/CohortEditorWrapper'
 import Link from 'next/link'
-import { ArrowLeft, Zap, ShieldCheck, Clock } from '@/components/icons'
+import { ArrowLeft, Zap, ShieldCheck, Clock, Edit3 } from '@/components/icons'
 import { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Cohort Control Room' }
 
@@ -29,6 +30,7 @@ export default async function CohortDetailPage({ params }: { params: Promise<{ i
             <ArrowLeft className="w-4 h-4" /> Back to cohorts
         </Link>
         <div className="flex gap-2">
+            <CohortEditorWrapper cohort={cohort} />
             <span className="badge badge-gray text-[10px] font-black uppercase tracking-widest">{cohort.semester} {cohort.year}</span>
             <span className="badge badge-teal text-[10px] font-black uppercase tracking-widest">{cohort.status}</span>
         </div>

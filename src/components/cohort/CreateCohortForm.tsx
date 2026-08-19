@@ -11,19 +11,21 @@ export function CreateCohortForm() {
   const [result, setResult] = useState<any>(null)
 
   // Pillars Config State
-  const [pillars, setPillars] = useState([{ number: 1, name: 'Identity', description: '' }])
+  const [pillars, setPillars] = useState([
+    { number: 1, name: 'Identity', subtitle: 'Understanding self & belief systems', goal: 'Clarity of self', weeks: 'Weeks 1–2', description: '', objectives: [] }
+  ])
 
   const router = useRouter()
 
   const addPillar = () => {
-    setPillars([...pillars, { number: pillars.length + 1, name: '', description: '' }])
+    setPillars([...pillars, { number: pillars.length + 1, name: '', subtitle: '', goal: '', weeks: `Weeks ${pillars.length * 2 + 1}–${pillars.length * 2 + 2}`, description: '', objectives: [] }])
   }
 
   const removePillar = (index: number) => {
-    setPillars(pillars.filter((_, i) => i !== index).map((p, i) => ({ ...p, number: i + 1 })))
+    setPillars(pillars.filter((_, i) => i !== index).map((p, i) => ({ ...p, number: i + 1, weeks: `Weeks ${i * 2 + 1}–${i * 2 + 2}` })))
   }
 
-  const updatePillar = (index: number, field: string, value: string) => {
+  const updatePillar = (index: number, field: string, value: any) => {
     const newPillars = [...pillars]
     newPillars[index] = { ...newPillars[index], [field]: value }
     setPillars(newPillars)
@@ -39,6 +41,7 @@ export function CreateCohortForm() {
       semester: data.get('semester'),
       year: parseInt(data.get('year') as string),
       max_participants: parseInt(data.get('max_participants') as string) || 25,
+      description: data.get('description'),
       start_date: data.get('start_date') || null,
       end_date: data.get('end_date') || null,
       pillars_config: pillars, // Save the dynamic pillars
@@ -85,6 +88,11 @@ export function CreateCohortForm() {
                 <div className="md:col-span-2">
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Cohort Identity</label>
                     <input name="name" type="text" required placeholder="e.g. MUI Forge — Sem 1 2026" className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 font-bold" />
+                </div>
+
+                <div className="md:col-span-2">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Cohort Description</label>
+                    <textarea name="description" rows={3} placeholder="What is the focus of this specific cohort?" className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm font-medium" />
                 </div>
 
                 <div>
@@ -157,8 +165,8 @@ export function CreateCohortForm() {
                                     </button>
                                 )}
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="md:col-span-1">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
                                     <input
                                         value={pillar.name}
                                         onChange={(e) => updatePillar(index, 'name', e.target.value)}
@@ -167,11 +175,36 @@ export function CreateCohortForm() {
                                         className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 text-sm font-bold"
                                     />
                                 </div>
-                                <div className="md:col-span-2">
+                                <div>
                                     <input
+                                        value={pillar.subtitle}
+                                        onChange={(e) => updatePillar(index, 'subtitle', e.target.value)}
+                                        placeholder="Subtitle (e.g. Understanding self)"
+                                        className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 text-sm font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <input
+                                        value={pillar.goal}
+                                        onChange={(e) => updatePillar(index, 'goal', e.target.value)}
+                                        placeholder="Main Goal (e.g. Clarity of self)"
+                                        className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 text-sm font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <input
+                                        value={pillar.weeks}
+                                        onChange={(e) => updatePillar(index, 'weeks', e.target.value)}
+                                        placeholder="Weeks (e.g. Weeks 1-2)"
+                                        className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 text-sm font-medium"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <textarea
                                         value={pillar.description}
                                         onChange={(e) => updatePillar(index, 'description', e.target.value)}
-                                        placeholder="Short Description..."
+                                        placeholder="Pillar Description..."
+                                        rows={2}
                                         className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 text-sm font-medium"
                                     />
                                 </div>
