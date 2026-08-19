@@ -10,12 +10,23 @@ export function CreateCohortForm() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
 
+  // Cohort Objectives State
+  const [objectives, setObjectives] = useState<string[]>([])
+
   // Pillars Config State
-  const [pillars, setPillars] = useState([
+  const [pillars, setPillars] = useState<any[]>([
     { number: 1, name: 'Identity', subtitle: 'Understanding self & belief systems', goal: 'Clarity of self', weeks: 'Weeks 1–2', description: '', objectives: [] }
   ])
 
   const router = useRouter()
+
+  const addObjective = () => setObjectives([...objectives, ''])
+  const removeObjective = (index: number) => setObjectives(objectives.filter((_, i) => i !== index))
+  const updateObjective = (index: number, value: string) => {
+    const newObjs = [...objectives]
+    newObjs[index] = value
+    setObjectives(newObjs)
+  }
 
   const addPillar = () => {
     setPillars([...pillars, { number: pillars.length + 1, name: '', subtitle: '', goal: '', weeks: `Weeks ${pillars.length * 2 + 1}–${pillars.length * 2 + 2}`, description: '', objectives: [] }])
@@ -31,6 +42,29 @@ export function CreateCohortForm() {
     setPillars(newPillars)
   }
 
+  const updatePillarObjective = (pIndex: number, oIndex: number, value: string) => {
+    const newPillars = [...pillars]
+    const currentObjs = Array.isArray(newPillars[pIndex].objectives) ? newPillars[pIndex].objectives : []
+    const newObjs = [...currentObjs]
+    newObjs[oIndex] = value
+    newPillars[pIndex].objectives = newObjs
+    setPillars(newPillars)
+  }
+
+  const addPillarObjective = (pIndex: number) => {
+    const newPillars = [...pillars]
+    const currentObjs = Array.isArray(newPillars[pIndex].objectives) ? newPillars[pIndex].objectives : []
+    newPillars[pIndex].objectives = [...currentObjs, '']
+    setPillars(newPillars)
+  }
+
+  const removePillarObjective = (pIndex: number, oIndex: number) => {
+    const newPillars = [...pillars]
+    const currentObjs = Array.isArray(newPillars[pIndex].objectives) ? newPillars[pIndex].objectives : []
+    newPillars[pIndex].objectives = currentObjs.filter((_: any, i: number) => i !== oIndex)
+    setPillars(newPillars)
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setLoading(true); setResult(null)
     const data = new FormData(e.currentTarget)
@@ -42,9 +76,13 @@ export function CreateCohortForm() {
       year: parseInt(data.get('year') as string),
       max_participants: parseInt(data.get('max_participants') as string) || 25,
       description: data.get('description'),
+      objectives: objectives.filter(o => o.trim() !== ''),
       start_date: data.get('start_date') || null,
       end_date: data.get('end_date') || null,
-      pillars_config: pillars, // Save the dynamic pillars
+      pillars_config: pillars.map(p => ({
+        ...p,
+        objectives: (p.objectives as string[]).filter(o => o.trim() !== '')
+      })),
       status: 'draft',
       current_week: 1,
       applications_open: false,
@@ -53,8 +91,9 @@ export function CreateCohortForm() {
       chat_enabled: true,
     })
 
-    if (error) { setResult({ error: error.message }) }
-    else {
+    if (error) {
+        setResult({ error: error.message })
+    } else {
         setResult({ success: 'Cohort created.' });
         setOpen(false);
         router.refresh()
@@ -93,6 +132,29 @@ export function CreateCohortForm() {
                 <div className="md:col-span-2">
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Cohort Description</label>
                     <textarea name="description" rows={3} placeholder="What is the focus of this specific cohort?" className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm font-medium" />
+                </div>
+
+                <div className="md:col-span-2 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Cohort Objectives</label>
+                        <button type="button" onClick={addObjective} className="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 flex items-center gap-1">
+                            <Plus className="w-3 h-3" /> Add Objective
+                        </button>
+                    </div>
+                    {objectives.map((obj, i) => (
+                        <div key={i} className="flex gap-2">
+                            <input
+                                value={obj}
+                                onChange={(e) => updateObjective(i, e.target.value)}
+                                placeholder={`Objective #${i+1}`}
+                                className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:border-emerald-500 focus:ring-0"
+                            />
+                            <button type="button" onClick={() => removeObjective(i)} className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ))}
+                    {objectives.length === 0 && <p className="text-[10px] text-gray-400 italic px-1">No objectives added yet.</p>}
                 </div>
 
                 <div>
@@ -207,6 +269,28 @@ export function CreateCohortForm() {
                                         rows={2}
                                         className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 text-sm font-medium"
                                     />
+                                </div>
+                                <div className="md:col-span-2 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Pillar Objectives</label>
+                                        <button type="button" onClick={() => addPillarObjective(index)} className="text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 flex items-center gap-1">
+                                            <Plus className="w-2.5 h-2.5" /> Add
+                                        </button>
+                                    </div>
+                                    {(pillar.objectives as string[]).map((obj, oi) => (
+                                        <div key={oi} className="flex gap-2">
+                                            <input
+                                                value={obj}
+                                                onChange={(e) => updatePillarObjective(index, oi, e.target.value)}
+                                                placeholder={`Objective #${oi+1}`}
+                                                className="flex-1 px-3 py-1.5 bg-white border border-gray-100 rounded-lg text-xs font-medium focus:border-emerald-500 focus:ring-0"
+                                            />
+                                            <button type="button" onClick={() => removePillarObjective(index, oi)} className="p-1.5 text-gray-300 hover:text-red-500 transition-colors">
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {(pillar.objectives as string[]).length === 0 && <p className="text-[9px] text-gray-400 italic">No pillar objectives yet.</p>}
                                 </div>
                             </div>
                         </div>

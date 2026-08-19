@@ -15,8 +15,10 @@ export function CohortEditor({ cohort, onCancel }: { cohort: Cohort; onCancel: (
     semester: cohort.semester,
     year: cohort.year,
     description: cohort.description || '',
-    objectives: cohort.objectives || [],
-    pillars_config: cohort.pillars_config || PILLARS.map(p => ({ ...p, objectives: [] })),
+    objectives: Array.isArray(cohort.objectives) ? cohort.objectives : [],
+    pillars_config: Array.isArray(cohort.pillars_config) && cohort.pillars_config.length > 0
+      ? cohort.pillars_config
+      : PILLARS.map(p => ({ ...p, objectives: [] })),
   })
   const [activeTab, setActiveTab] = useState<'basic' | 'pillars'>('basic')
   const [expandedPillar, setExpandedPillar] = useState<number | null>(1)
