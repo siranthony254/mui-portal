@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getInitials, formatDate, cn } from '@/lib/utils'
 import {
   ArrowLeft, Clock, CheckCircle, BookOpen, MessageSquare,
-  AlertCircle, ShieldCheck, User, Zap, Globe, ArrowRight
+  AlertCircle, ShieldCheck, User, Zap, Globe, ArrowRight, Mic2
 } from '@/components/icons'
 import Link from 'next/link'
 import { TaskFeedbackForm } from '@/components/mentor/TaskFeedbackForm'
@@ -203,7 +203,7 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
                 </div>
              ) : (
                 <div className="space-y-4">
-                  {journals.map(entry => (
+                  {journals?.map(entry => (
                     <div key={entry.id} className="card p-6 border-l-4 border-l-blue-500">
                       <div className="flex items-center justify-between mb-4">
                          <div className="flex items-center gap-2">

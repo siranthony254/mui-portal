@@ -25,6 +25,7 @@ export function MessagesClient({ currentUser, conversations: initial, participan
   const [sending, setSending] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [search, setSearch] = useState('')
+  const bottomRef = useRef<HTMLDivElement>(null)
 
   // Handle initial user pre-selection
   useEffect(() => {
@@ -32,9 +33,6 @@ export function MessagesClient({ currentUser, conversations: initial, participan
         startConvo(initialUserId)
     }
   }, [initialUserId])
-
-  const [search, setSearch] = useState('')
-  const bottomRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
   const profileMap = new Map(participantProfiles.map((p:any) => [p.id, p]))
 
