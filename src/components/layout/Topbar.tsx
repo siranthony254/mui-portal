@@ -64,24 +64,28 @@ export function Topbar({ profile, onMenuClick, initialNotifications = [] }: { pr
                   {initialNotifications.length === 0 ? (
                     <div className="p-10 text-center text-gray-400 italic text-xs">No notifications yet.</div>
                   ) : initialNotifications.map(n => (
-                    <div key={n.id} className="p-4 hover:bg-gray-50 transition-colors group">
-                       <div className="flex justify-between items-start gap-3">
+                    <div key={n.id} className="relative group">
+                       <Link
+                        href={n.link || '#'}
+                        onClick={() => !n.read && markAsRead(n.id)}
+                        className="block p-4 hover:bg-gray-50 transition-colors"
+                       >
                           <div className="space-y-1">
-                             <p className="text-sm font-bold text-gray-900 leading-tight">{n.title}</p>
+                             <p className={cn("text-sm font-bold leading-tight", n.read ? "text-gray-500" : "text-gray-900")}>{n.title}</p>
                              <p className="text-xs text-gray-500 leading-relaxed">{n.message}</p>
                              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter pt-1 flex items-center gap-1">
                                <Clock className="w-2.5 h-2.5" /> {formatDate(n.created_at)}
                              </p>
                           </div>
-                          {!n.read && (
-                            <button
-                                onClick={() => markAsRead(n.id)}
-                                className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                       </div>
+                       </Link>
+                       {!n.read && (
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); markAsRead(n.id) }}
+                            className="absolute right-4 top-4 w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                        </button>
+                       )}
                     </div>
                   ))}
                </div>

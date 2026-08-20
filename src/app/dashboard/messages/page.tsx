@@ -5,7 +5,8 @@ import { MessagesClient } from '@/components/chat/MessagesClient'
 import { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Messages' }
 
-export default async function MessagesPage() {
+export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ convo?: string, user?: string }> }) {
+  const { convo: initialConvoId, user: initialUserId } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
@@ -39,6 +40,8 @@ export default async function MessagesPage() {
       conversations={conversations || []}
       participantProfiles={participantProfiles || []}
       contactableUsers={contactableUsers}
+      initialConvoId={initialConvoId}
+      initialUserId={initialUserId}
     />
   )
 }

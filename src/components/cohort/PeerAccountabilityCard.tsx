@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { logPeerCheckIn } from '@/lib/actions/cohort'
 import { getInitials, formatDate } from '@/lib/utils'
-import { Users, CheckCircle, Clock } from '@/components/icons'
+import { Users, CheckCircle, Clock, MessageSquare } from '@/components/icons'
 import type { AccountabilityPartnership } from '@/types'
+import Link from 'next/link'
 
 interface Props {
   partnership: AccountabilityPartnership | null
@@ -39,7 +40,16 @@ export function PeerAccountabilityCard({ partnership }: Props) {
 
   return (
     <div className="card p-5">
-      <p className="section-title">Accountability Partner</p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="section-title mb-0">Accountability Partner</p>
+        <Link
+            href={`/dashboard/messages?user=${partner.id}`}
+            className="p-2 bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 transition-all"
+            title="Chat with partner"
+        >
+            <MessageSquare className="w-3.5 h-3.5" />
+        </Link>
+      </div>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-semibold text-sm flex-shrink-0">
           {getInitials(partner.full_name)}

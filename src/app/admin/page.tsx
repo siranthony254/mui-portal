@@ -184,6 +184,7 @@ export default async function AdminDashboardPage() {
                 {activeCohorts?.map(cohort => {
                   const pillars = cohort.pillars_config || PILLARS
                   const currentPillar = pillars.find((p: any) => {
+                    if (!p.weeks) return false
                     const weeksRange = p.weeks.match(/\d+/g)
                     if (!weeksRange) return false
                     const start = parseInt(weeksRange[0])

@@ -69,7 +69,7 @@ export function MenteeOverview({ enrollment, lastMessageDate, overdueTasks, sess
         <Link href={`/mentor/students/${s.id}`} className="text-[10px] font-black text-gray-400 hover:text-teal-700 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
           <User className="w-3.5 h-3.5" /> View Profile
         </Link>
-        <Link href="/mentor/messages" className="text-[10px] font-black text-teal-700 hover:text-teal-900 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
+        <Link href={`/mentor/messages?user=${s.id}`} className="text-[10px] font-black text-teal-700 hover:text-teal-900 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
           Message <MessageSquare className="w-3.5 h-3.5" />
         </Link>
       </div>

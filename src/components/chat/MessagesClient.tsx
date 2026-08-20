@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { sendMessage, getOrCreateConversation } from '@/lib/actions/messages'
 import { getInitials, timeAgo, cn } from '@/lib/utils'
 import type { Profile } from '@/types'
-import { Send, Plus, Search, ShieldCheck } from '@/components/icons'
+import { Send, Plus, Search, ShieldCheck, Mic2, Square } from '@/components/icons'
 
 interface Props {
   currentUser: Profile
@@ -15,14 +15,28 @@ interface Props {
   readOnly?: boolean
 }
 
-export function MessagesClient({ currentUser, conversations: initial, participantProfiles, contactableUsers, compact = false, readOnly = false }: Props) {
+export function MessagesClient({ currentUser, conversations: initial, participantProfiles, contactableUsers, compact = false, readOnly = false, initialConvoId, initialUserId }: Props & { initialConvoId?: string | null, initialUserId?: string | null }) {
   const [conversations, setConversations] = useState(initial)
-  const [activeConvoId, setActiveConvoId] = useState<string|null>(initial[0]?.id || null)
+  const [activeConvoId, setActiveConvoId] = useState<string|null>(initialConvoId || initial[0]?.id || null)
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [search, setSearch] = useState('')
+
+  // Handle initial user pre-selection
+  useEffect(() => {
+    if (initialUserId && !initialConvoId) {
+        startConvo(initialUserId)
+    }
+  }, [initialUserId])
+
+  // Voice Note State
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const mediaRecorder = useRef<MediaRecorder | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
   const profileMap = new Map(participantProfiles.map((p:any) => [p.id, p]))
@@ -57,6 +71,40 @@ export function MessagesClient({ currentUser, conversations: initial, participan
     setSending(true)
     await sendMessage(activeConvoId, newMessage.trim())
     setNewMessage(''); setSending(false)
+  }
+
+  const startRecording = async () => {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const recorder = new MediaRecorder(stream)
+        mediaRecorder.current = recorder
+
+        recorder.ondataavailable = async (e) => {
+            if (e.data.size > 0 && activeConvoId) {
+                // In a real app, upload to storage first.
+                // For now, we'll send a placeholder indicating a voice note.
+                await sendMessage(activeConvoId, "🎤 [Voice Note Sent]")
+            }
+        }
+
+        recorder.start()
+        setIsRecording(true)
+        setRecordingTime(0)
+        timerRef.current = setInterval(() => {
+            setRecordingTime(prev => prev + 1)
+        }, 1000)
+    } catch (err) {
+        console.error("Failed to start recording:", err)
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorder.current && isRecording) {
+        mediaRecorder.current.stop()
+        mediaRecorder.current.stream.getTracks().forEach(track => track.stop())
+        setIsRecording(false)
+        if (timerRef.current) clearInterval(timerRef.current)
+    }
   }
 
   async function startConvo(userId: string) {
@@ -157,9 +205,30 @@ export function MessagesClient({ currentUser, conversations: initial, participan
               <div ref={bottomRef} />
             </div>
             {!readOnly && (
-              <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex gap-2">
-                <input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="input flex-1" disabled={sending} />
-                <button type="submit" disabled={sending || !newMessage.trim()} className="btn-primary px-3 py-2 transition-all active:scale-95"><Send className="w-4 h-4" /></button>
+              <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex items-center gap-2">
+                {isRecording ? (
+                    <div className="flex-1 flex items-center justify-between bg-red-50 px-4 py-2 rounded-2xl border border-red-100 animate-pulse">
+                        <div className="flex items-center gap-2 text-red-600 font-bold text-xs">
+                            <div className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+                            RECORDING... {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, '0')}
+                        </div>
+                        <button type="button" onClick={stopRecording} className="text-red-700 hover:text-red-900">
+                            <Square className="w-5 h-5 fill-current" />
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <button
+                            type="button"
+                            onClick={startRecording}
+                            className="p-2.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all active:scale-95"
+                        >
+                            <Mic2 className="w-5 h-5" />
+                        </button>
+                        <input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="input flex-1" disabled={sending} />
+                        <button type="submit" disabled={sending || !newMessage.trim()} className="btn-primary px-3 py-2 transition-all active:scale-95"><Send className="w-4 h-4" /></button>
+                    </>
+                )}
               </form>
             )}
             {readOnly && (

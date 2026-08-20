@@ -42,5 +42,24 @@ export async function sendMessage(conversationId: string, content: string) {
   })
 
   if (error) return { error: error.message }
+
+  // 1. Get other participants to notify them
+  const { data: convo } = await supabase.from('conversations').select('participant_ids').eq('id', conversationId).single()
+  const others = convo?.participant_ids?.filter((id: string) => id !== user.id) || []
+
+  if (others.length > 0) {
+    const { data: sender } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+
+    const notifications = others.map((id: string) => ({
+      user_id: id,
+      title: 'New Message',
+      message: `${sender?.full_name || 'Someone'} sent you a message.`,
+      type: 'message',
+      link: '/dashboard/messages'
+    }))
+
+    await supabase.from('notifications').insert(notifications)
+  }
+
   return { success: true }
 }

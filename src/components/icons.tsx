@@ -41,10 +41,12 @@ import {
   Share2 as LucideShare2,
   ShieldCheck as LucideShieldCheck,
   Star as LucideStar,
+  Square as LucideSquare,
   Trash2 as LucideTrash2,
   TrendingUp as LucideTrendingUp,
   UserCheck as LucideUserCheck,
   Users as LucideUsers,
+  UserPlus as LucideUserPlus,
   Video as LucideVideo,
   X as LucideX,
   Zap as LucideZap,
@@ -96,6 +98,7 @@ export function Plus(props: IconProps) { return <LucidePlus {...props} /> }
 export function Save(props: IconProps) { return <LucideSave {...props} /> }
 export function Search(props: IconProps) { return <LucideSearch {...props} /> }
 export function Send(props: IconProps) { return <LucideSend {...props} /> }
+export function Square(props: IconProps) { return <LucideSquare {...props} /> }
 export function Settings(props: IconProps) { return <LucideSettings {...props} /> }
 export function Share2(props: IconProps) { return <LucideShare2 {...props} /> }
 export function ShieldCheck(props: IconProps) { return <LucideShieldCheck {...props} /> }
@@ -103,6 +106,7 @@ export function Star(props: IconProps) { return <LucideStar {...props} /> }
 export function TrendingUp(props: IconProps) { return <LucideTrendingUp {...props} /> }
 export function Trash2(props: IconProps) { return <LucideTrash2 {...props} /> }
 export function UserCheck(props: IconProps) { return <LucideUserCheck {...props} /> }
+export function UserPlus(props: IconProps) { return <LucideUserPlus {...props} /> }
 export function Users(props: IconProps) { return <LucideUsers {...props} /> }
 export function Video(props: IconProps) { return <LucideVideo {...props} /> }
 export function X(props: IconProps) { return <LucideX {...props} /> }

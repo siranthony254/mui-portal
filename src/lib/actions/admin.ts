@@ -211,3 +211,63 @@ export async function admitStudentWithSequence(data: {
     return { success: true }
 }
 
+export async function createPeerPartnership(studentId1: string, studentId2: string, cohortId: string) {
+    const admin = await createAdminClient()
+
+    // Sort IDs to satisfy (student_id_1 < student_id_2) constraint
+    const [id1, id2] = [studentId1, studentId2].sort()
+
+    const { data, error } = await admin.from('accountability_partnerships').upsert({
+        student_id_1: id1,
+        student_id_2: id2,
+        cohort_id: cohortId
+    }, { onConflict: 'student_id_1,cohort_id' }) // Adjust conflict as needed based on logic
+
+    if (error) return { error: error.message }
+
+    // Create a conversation for the pair
+    await createPairConversation([id1, id2], cohortId)
+
+    // Notify both students
+    const notifications = [id1, id2].map(id => ({
+        user_id: id,
+        title: 'Peer Partner Assigned',
+        message: 'You have been matched with an accountability partner. Start a conversation in the community space!',
+        type: 'peer_assigned',
+        link: '/dashboard'
+    }))
+    await admin.from('notifications').insert(notifications)
+
+    revalidatePath('/admin/pairing')
+    return { success: true }
+}
+
+export async function createPairConversation(participantIds: string[], cohortId?: string) {
+    const admin = await createAdminClient()
+
+    // Check if conversation already exists
+    const { data: existing } = await admin.from('conversations')
+        .select('id')
+        .contains('participant_ids', participantIds)
+        .maybeSingle()
+
+    if (existing) return existing.id
+
+    const { data: conversation, error } = await admin.from('conversations').insert({
+        participant_ids: participantIds,
+        cohort_id: cohortId,
+        last_message: 'Conversation started.'
+    }).select().single()
+
+    if (error) throw new Error(error.message)
+    return conversation.id
+}
+
+export async function removePeerPartnership(partnershipId: string) {
+    const admin = await createAdminClient()
+    const { error } = await admin.from('accountability_partnerships').delete().eq('id', partnershipId)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/pairing')
+    return { success: true }
+}
+
