@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Zap, Clock, Bell, ShieldCheck, Play, Pause, Settings, CheckCircle, AlertCircle } from '@/components/icons'
+import { Zap, Clock, Bell, ShieldCheck, Play, Pause, Settings, CheckCircle, AlertCircle, X } from '@/components/icons'
 import { cn } from '@/lib/utils'
 
 interface AutomationConfig {

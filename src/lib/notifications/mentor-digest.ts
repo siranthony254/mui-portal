@@ -5,7 +5,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
-import { createNotification, NotificationPriority } from './factory'
+import { createNotification, NotificationPriority, NotificationCategory, NotificationType } from './factory'
 
 interface MentorDigestConfig {
   enabled: boolean
@@ -124,8 +124,8 @@ async function getMentorDigestData(mentorId: string): Promise<MentorDigestData> 
   for (const task of pendingTasks || []) {
     priorities.push({
       type: 'response',
-      studentName: task.student?.full_name || 'Unknown',
-      context: `${task.enrollment?.current_pillar || 'formation'} task`,
+      studentName: task.student?.[0]?.full_name || 'Unknown',
+      context: `${task.enrollment?.[0]?.current_pillar || 'formation'} task`,
       urgency: 'high'
     })
   }
@@ -134,7 +134,7 @@ async function getMentorDigestData(mentorId: string): Promise<MentorDigestData> 
   for (const journal of pendingJournals || []) {
     priorities.push({
       type: 'response',
-      studentName: journal.student?.full_name || 'Unknown',
+      studentName: journal.student?.[0]?.full_name || 'Unknown',
       context: `Week ${journal.week_number} journal`,
       urgency: 'high'
     })
@@ -146,7 +146,7 @@ async function getMentorDigestData(mentorId: string): Promise<MentorDigestData> 
     if (enrollment) {
       priorities.push({
         type: 'inactive',
-        studentName: enrollment.student?.full_name || 'Unknown',
+        studentName: enrollment.student?.[0]?.full_name || 'Unknown',
         context: 'inactive for 7+ days',
         urgency: 'medium'
       })
@@ -157,7 +157,7 @@ async function getMentorDigestData(mentorId: string): Promise<MentorDigestData> 
   for (const milestone of completedMilestones || []) {
     priorities.push({
       type: 'milestone',
-      studentName: milestone.student?.full_name || 'Unknown',
+      studentName: milestone.student?.[0]?.full_name || 'Unknown',
       context: 'milestone completed',
       urgency: 'low'
     })
@@ -226,8 +226,8 @@ async function sendMentorDigest(mentorId: string) {
     title: 'MENTOR DIGEST',
     message,
     priority: NotificationPriority.ROUTINE,
-    category: 'mentorship',
-    type: 'mentor_digest',
+    category: NotificationCategory.MENTORSHIP,
+    type: NotificationType.MENTOR_MESSAGE,
     link: '/mentor/students',
     metadata: digestData
   })

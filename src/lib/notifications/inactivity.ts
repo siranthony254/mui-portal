@@ -5,7 +5,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
-import { createNotification, NotificationTemplates, NotificationPriority } from './factory'
+import { createNotification, NotificationTemplates, NotificationPriority, NotificationCategory, NotificationType } from './factory'
 
 interface InactivityConfig {
   enabled: boolean
@@ -102,7 +102,7 @@ export async function getAllStudentInactivityStatus(): Promise<StudentInactivity
     
     statuses.push({
       studentId: enrollment.student_id,
-      studentName: enrollment.student?.full_name || 'Unknown',
+      studentName: enrollment.student?.[0]?.full_name || 'Unknown',
       cohortId: enrollment.cohort_id,
       daysInactive,
       lastActivity: lastActivity?.toISOString() || null,
@@ -183,8 +183,8 @@ async function alertMentor(
     title: '🟡 Student may need a check-in',
     message: `${studentName} has been inactive for ${daysInactive} days. Consider reaching out to them.`,
     priority: NotificationPriority.ACTION_REQUIRED,
-    category: 'mentorship',
-    type: 'student_inactivity',
+    category: NotificationCategory.MENTORSHIP,
+    type: NotificationType.MENTOR_MESSAGE,
     link: '/mentor/students',
     metadata: { student_id: studentId, student_name: studentName, days_inactive: daysInactive }
   })
@@ -234,10 +234,10 @@ async function escalateToAdmin(
         title: '🔴 Student Inactivity Escalation',
         message: `${studentName} (${cohort?.name || 'Unknown Cohort'}) has been inactive for ${daysInactive} days. Leadership intervention may be required.`,
         priority: NotificationPriority.INTERVENTION,
-        category: 'admin',
-        type: 'student_escalation',
+        category: NotificationCategory.ADMIN,
+        type: NotificationType.BROADCAST,
         link: '/admin/students',
-        metadata: { student_id: studentId, student_name: studentName, cohort_id, days_inactive: daysInactive }
+        metadata: { student_id: studentId, student_name: studentName, cohortId, days_inactive: daysInactive }
       })
     )
   )
@@ -246,7 +246,7 @@ async function escalateToAdmin(
   await supabase.from('student_activity_log').insert({
     student_id: studentId,
     activity_type: 'admin_escalation',
-    metadata: { days_inactive: daysInactive, cohort_id }
+    metadata: { days_inactive: daysInactive, cohortId }
   })
   
   return { success: true, results }

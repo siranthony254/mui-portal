@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Bell, X, CheckCircle, Clock, Filter, Archive, MoreVertical } from '@/components/icons'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/utils'
 import { NotificationPriority, NotificationCategory } from '@/lib/notifications/factory'
 
 interface Notification {

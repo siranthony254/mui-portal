@@ -70,6 +70,8 @@ export interface NotificationData {
   metadata?: Record<string, any>
 }
 
+export interface NotificationTemplateData extends Omit<NotificationData, 'userId'> {}
+
 export interface NotificationResult {
   success: boolean
   notificationId?: string
@@ -178,7 +180,7 @@ export async function createBulkNotifications(
  */
 export const NotificationTemplates = {
   // Formation Templates
-  dailyReminder: (studentName: string, question: string): NotificationData => ({
+  dailyReminder: (studentName: string, question: string): NotificationTemplateData => ({
     title: '🧭 Today\'s formation',
     message: `You have one question waiting for you today:\n"${question}"\n\nTake 5 minutes to reflect.`,
     priority: NotificationPriority.ROUTINE,
@@ -188,7 +190,7 @@ export const NotificationTemplates = {
     metadata: { question }
   }),
 
-  sessionReady: (sessionNumber: number, sessionTitle: string): NotificationData => ({
+  sessionReady: (sessionNumber: number, sessionTitle: string): NotificationTemplateData => ({
     title: '🧠 Something to think about',
     message: `Today's session is ready. Give yourself 15 minutes to explore ${sessionTitle}.`,
     priority: NotificationPriority.ROUTINE,
@@ -198,7 +200,7 @@ export const NotificationTemplates = {
     metadata: { session_number: sessionNumber, session_title: sessionTitle }
   }),
 
-  practiceDue: (practiceName: string): NotificationData => ({
+  practiceDue: (practiceName: string): NotificationTemplateData => ({
     title: '🎯 Your formation practice',
     message: `You chose to practice ${practiceName} this week.\nHow is it going today?`,
     priority: NotificationPriority.ACTION_REQUIRED,
@@ -208,7 +210,7 @@ export const NotificationTemplates = {
     metadata: { practice_name: practiceName }
   }),
 
-  weeklySummary: (weekNumber: number): NotificationData => ({
+  weeklySummary: (weekNumber: number): NotificationTemplateData => ({
     title: '🔄 Weekly reflection',
     message: `What changed in you this week? Take a moment to reflect on your formation journey.`,
     priority: NotificationPriority.ROUTINE,
@@ -219,7 +221,7 @@ export const NotificationTemplates = {
   }),
 
   // Mentorship Templates
-  mentorAssigned: (mentorName: string): NotificationData => ({
+  mentorAssigned: (mentorName: string): NotificationTemplateData => ({
     title: '👤 Mentor Assigned',
     message: `${mentorName} has been assigned to accompany you on your formation journey.`,
     priority: NotificationPriority.SOCIAL,
@@ -229,7 +231,7 @@ export const NotificationTemplates = {
     metadata: { mentor_name: mentorName }
   }),
 
-  mentorMessage: (mentorName: string, context: string): NotificationData => ({
+  mentorMessage: (mentorName: string, context: string): NotificationTemplateData => ({
     title: '👤 Your mentor responded',
     message: `${mentorName} has responded to your ${context}.`,
     priority: NotificationPriority.ACTION_REQUIRED,
@@ -239,7 +241,7 @@ export const NotificationTemplates = {
     metadata: { mentor_name: mentorName, context }
   }),
 
-  mentorAvailable: (mentorName: string, duration: number): NotificationData => ({
+  mentorAvailable: (mentorName: string, duration: number): NotificationTemplateData => ({
     title: '🟢 Your mentor is available',
     message: `${mentorName} is currently online. You can continue your conversation.`,
     priority: NotificationPriority.SOCIAL,
@@ -249,7 +251,7 @@ export const NotificationTemplates = {
     metadata: { mentor_name: mentorName, duration_minutes: duration }
   }),
 
-  mentorMilestoneApproved: (milestoneName: string): NotificationData => ({
+  mentorMilestoneApproved: (milestoneName: string): NotificationTemplateData => ({
     title: '🌱 Formation milestone unlocked',
     message: `Your mentor has approved your ${milestoneName} milestone.`,
     priority: NotificationPriority.SOCIAL,
@@ -260,7 +262,7 @@ export const NotificationTemplates = {
   }),
 
   // Accountability Templates
-  peerAssigned: (): NotificationData => ({
+  peerAssigned: (): NotificationTemplateData => ({
     title: '🤝 Peer Partner Assigned',
     message: 'You have been matched with an accountability partner. Start a conversation in the community space!',
     priority: NotificationPriority.SOCIAL,
@@ -270,7 +272,7 @@ export const NotificationTemplates = {
     metadata: {}
   }),
 
-  peerCheckin: (partnerName: string): NotificationData => ({
+  peerCheckin: (partnerName: string): NotificationTemplateData => ({
     title: '🤝 Your accountability partner is here',
     message: `${partnerName} just checked in. Have you completed your commitment today?`,
     priority: NotificationPriority.SOCIAL,
@@ -280,7 +282,7 @@ export const NotificationTemplates = {
     metadata: { partner_name: partnerName }
   }),
 
-  commitmentReminder: (commitment: string, daysSince: number): NotificationData => ({
+  commitmentReminder: (commitment: string, daysSince: number): NotificationTemplateData => ({
     title: '🎯 Remember what you chose?',
     message: `You committed to: "${commitment}"\n\nHow did it go?`,
     priority: NotificationPriority.ACTION_REQUIRED,
@@ -291,7 +293,7 @@ export const NotificationTemplates = {
   }),
 
   // Social Templates
-  peerResponse: (peerName: string, context: string): NotificationData => ({
+  peerResponse: (peerName: string, context: string): NotificationTemplateData => ({
     title: '💬 Response to your reflection',
     message: `${peerName} responded to your ${context}.`,
     priority: NotificationPriority.SOCIAL,
@@ -301,7 +303,7 @@ export const NotificationTemplates = {
     metadata: { peer_name: peerName, context }
   }),
 
-  mention: (userName: string, location: string): NotificationData => ({
+  mention: (userName: string, location: string): NotificationTemplateData => ({
     title: `@${userName} mentioned you`,
     message: `${userName} mentioned you in the ${location}.`,
     priority: NotificationPriority.SOCIAL,
@@ -311,7 +313,7 @@ export const NotificationTemplates = {
     metadata: { user_name: userName, location }
   }),
 
-  cohortDiscussion: (topic: string, participantCount: number): NotificationData => ({
+  cohortDiscussion: (topic: string, participantCount: number): NotificationTemplateData => ({
     title: '💬 Your cohort is thinking about this',
     message: `${participantCount} students have shared their thoughts on today's question.\nWhat's yours?`,
     priority: NotificationPriority.SOCIAL,
@@ -322,7 +324,7 @@ export const NotificationTemplates = {
   }),
 
   // Inactivity Templates
-  inactivityReminder: (daysInactive: number): NotificationData => ({
+  inactivityReminder: (daysInactive: number): NotificationTemplateData => ({
     title: '👋 We haven\'t seen you this week',
     message: `Your formation journey is still here.\nTake a few minutes to reconnect.`,
     priority: NotificationPriority.ROUTINE,
@@ -332,7 +334,7 @@ export const NotificationTemplates = {
     metadata: { days_inactive: daysInactive }
   }),
 
-  inactivityEscalation: (daysInactive: number, context: string): NotificationData => ({
+  inactivityEscalation: (daysInactive: number, context: string): NotificationTemplateData => ({
     title: '🧭 Pick up where you left off',
     message: `You were exploring ${context}.\nYour unfinished reflection is waiting.`,
     priority: NotificationPriority.ACTION_REQUIRED,
@@ -343,7 +345,7 @@ export const NotificationTemplates = {
   }),
 
   // Admin Templates
-  broadcast: (title: string, message: string): NotificationData => ({
+  broadcast: (title: string, message: string): NotificationTemplateData => ({
     title,
     message,
     priority: NotificationPriority.ROUTINE,
@@ -353,7 +355,7 @@ export const NotificationTemplates = {
     metadata: {}
   }),
 
-  admission: (cohortName: string): NotificationData => ({
+  admission: (cohortName: string): NotificationTemplateData => ({
     title: 'Welcome to the Cohort!',
     message: `You have been admitted to ${cohortName}. Your 12-week formation journey starts now.`,
     priority: NotificationPriority.ACTION_REQUIRED,

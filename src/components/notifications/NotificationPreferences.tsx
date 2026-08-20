@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Bell, Mail, MessageSquare, Moon, Sun, Check, X } from '@/components/icons'
+import { Bell, Mail, MessageSquare, Moon, Sun, Check } from '@/components/icons'
 import { cn } from '@/lib/utils'
 
 interface NotificationPreferences {
