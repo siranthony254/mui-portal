@@ -57,18 +57,16 @@ export async function signUpStudent(formData: FormData) {
     const admin = await createAdminClient()
     const isEmailAdmin = isAdminEmail(email)
 
-    const { error: profileError } = await admin.from('profiles').upsert({
-      id: signUpData.user.id,
-      email,
-      full_name: fullName,
-      role: isEmailAdmin ? 'admin' : 'student',
-      approved: isEmailAdmin,
+    // The trigger already creates the profile, so we update it with additional fields
+    const { error: profileError } = await admin.from('profiles').update({
       institution,
       institution_type: institutionType,
       year_of_study: yearOfStudy,
       county,
       phone,
-    }, { onConflict: 'id' })
+      approved: isEmailAdmin,
+      status: isEmailAdmin ? 'approved' : 'pending',
+    }).eq('id', signUpData.user.id)
 
     if (profileError) {
       console.error('Error updating profile:', profileError)
@@ -126,15 +124,12 @@ export async function signUpMentor(formData: FormData) {
     const admin = await createAdminClient()
     const isEmailAdmin = isAdminEmail(email)
 
-    const { error: profileError } = await admin.from('profiles').upsert({
-      id: signUpData.user.id,
-      email,
-      full_name: fullName,
-      role: isEmailAdmin ? 'admin' : 'mentor',
-      approved: isEmailAdmin,
-      status: isEmailAdmin ? 'approved' : 'pending',
+    // The trigger already creates the profile, so we update it with additional fields
+    const { error: profileError } = await admin.from('profiles').update({
       bio,
-    }, { onConflict: 'id' })
+      status: isEmailAdmin ? 'approved' : 'pending',
+      approved: isEmailAdmin,
+    }).eq('id', signUpData.user.id)
 
     if (profileError) {
       console.error('Error updating mentor profile:', profileError)
