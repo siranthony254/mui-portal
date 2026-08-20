@@ -4,22 +4,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f8bb94af-4cee-458b-ad48-2a180ac85ea8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/app/admin/pairing/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/admin/PairingManager.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/messages/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/messages/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/mentor/messages/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/mentor/messages/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/MessagesClient.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/MessagesClient.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/cohort/PeerAccountabilityCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/PeerAccountabilityCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/icons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/icons.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/Sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/Topbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/Topbar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/mentor/MenteeOverview.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/mentor/MenteeOverview.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/actions/admin.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/admin.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/actions/messages.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/messages.ts" afterDir="false" />
-    </list>
+    <list default="true" id="f8bb94af-4cee-458b-ad48-2a180ac85ea8" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
