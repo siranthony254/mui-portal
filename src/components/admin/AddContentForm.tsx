@@ -7,6 +7,7 @@ import {
     Globe, Plus, X, Award, Layers, Calendar, Play
 } from '@/components/icons'
 import { cn, parseYouTubeEmbed } from '@/lib/utils'
+import { SimpleRichEditor } from '@/components/ui/SimpleRichEditor'
 
 export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?: () => void }) {
   const [loading, setLoading] = useState(false)
@@ -22,6 +23,7 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
   const [contentType, setContentType] = useState('video')
   const [videoSource, setVideoSource] = useState<'youtube' | 'upload'>('youtube')
   const [youtubeInput, setYoutubeInput] = useState('')
+  const [articleBody, setArticleBody] = useState('')
   const [journalPrompt, setJournalPrompt] = useState('')
 
   const selectedCohort = cohorts.find(c => c.id === selectedCohortId)
@@ -43,6 +45,10 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
     let contentBlock: any = {
         _type: contentType === 'video' ? 'videoBlock' : contentType === 'article' ? 'textBlock' : 'fileBlock',
         title: formData.get('title'),
+    }
+
+    if (contentType === 'article') {
+        contentBlock.body = articleBody;
     }
 
     if (contentType === 'video') {
@@ -201,6 +207,21 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Content Title</label>
                         <input name="title" required className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 font-bold" placeholder="e.g. Introduction to Identity" />
                     </div>
+
+                    {contentType === 'article' && (
+                        <div className="space-y-4 animate-reveal">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Article Body (Type or Paste)</label>
+                                <SimpleRichEditor
+                                    value={articleBody}
+                                    onChange={setArticleBody}
+                                    placeholder="Type or paste your article content here..."
+                                    rows={12}
+                                />
+                                <p className="mt-2 text-[9px] text-gray-400 font-bold uppercase italic tracking-tighter">Use the toolbar for basic formatting. Content is stored as plain text/markdown.</p>
+                            </div>
+                        </div>
+                    )}
 
                     {contentType === 'video' && (
                         <div className="space-y-4 animate-reveal">

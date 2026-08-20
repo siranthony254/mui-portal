@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { TaskList } from '@/components/cohort/TaskList'
 import { Metadata } from 'next'
+import { PILLARS } from '@/types'
 export const metadata: Metadata = { title: 'Weekly Tasks' }
 
 export default async function TasksPage() {

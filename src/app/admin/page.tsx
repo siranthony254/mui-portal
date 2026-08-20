@@ -11,6 +11,8 @@ import {
 } from '@/components/icons'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { EnrollmentTrends, TaskDistribution } from '@/components/admin/DashboardCharts'
+import { AdminContentActions } from '@/components/admin/AdminContentActions'
+import { PILLARS } from '@/types'
 
 export const metadata: Metadata = { title: 'Admin Dashboard' }
 
@@ -36,14 +38,21 @@ export default async function AdminDashboardPage() {
     { data: activeProfiles },
     { data: recentPosts },
     { data: taskStatusData },
+    { data: cohortsList }
   ] = await Promise.all([
     supabase.from('enrollments').select('*',{count:'exact',head:true}).eq('status','active'),
     supabase.from('profiles').select('*',{count:'exact',head:true}).eq('role','mentor').eq('approved',true),
     supabase.from('cohorts').select('*').eq('status','active'),
+    // Students who submitted this week's task
     supabase.from('tasks').select('student_id').eq('status','submitted').gte('submitted_at', startOfWeek),
+    // Students logged in within last 72h
     supabase.from('profiles').select('id, full_name, last_login_at, institution').eq('role','student').gte('last_login_at', seventyTwoHoursAgo),
+    // Students who posted on discussion board this week
     supabase.from('discussion_posts').select('author_id').gte('created_at', startOfWeek),
-    supabase.from('tasks').select('status')
+    // All task status for distribution
+    supabase.from('tasks').select('status'),
+    // Full cohort list for actions
+    supabase.from('cohorts').select('id, name, pillars_config').order('created_at', { ascending: false })
   ])
 
   // Mock enrollment trends data
@@ -65,12 +74,11 @@ export default async function AdminDashboardPage() {
 
   const pieData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
 
-  // Calculate Engagement Health Score
+  const totalEnrolled = studentCount || 1
   const uniqueTaskSubmitters = new Set(recentTasks?.map(t => t.student_id)).size
   const uniqueActiveLogins = activeProfiles?.length || 0
   const uniquePosters = new Set(recentPosts?.map(p => p.author_id)).size
 
-  const totalEnrolled = studentCount || 1
   const taskRate = (uniqueTaskSubmitters / totalEnrolled) * 100
   const loginRate = (uniqueActiveLogins / totalEnrolled) * 100
   const postRate = (uniquePosters / totalEnrolled) * 100
@@ -97,10 +105,7 @@ export default async function AdminDashboardPage() {
           <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Operational Overview</h1>
           <p className="text-sm text-gray-500 font-medium">Programme-wide visibility and health metrics</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/admin/settings" className="btn-secondary text-xs font-black uppercase tracking-widest">Platform Settings</Link>
-          <Link href="/admin/cohorts" className="btn-primary text-xs font-black uppercase tracking-widest">Manage Cohorts</Link>
-        </div>
+        <AdminContentActions cohorts={cohortsList || []} />
       </div>
 
       {/* Main Stats */}
@@ -119,6 +124,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left: Engagement & Cohorts */}
         <div className="lg:col-span-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <section className="card p-6">
@@ -139,6 +145,7 @@ export default async function AdminDashboardPage() {
                     <TaskDistribution data={pieData} />
                 </section>
             </div>
+
           {/* Engagement Health Score Card */}
           <section className="card p-8 bg-emerald-900 text-white overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -156,9 +163,9 @@ export default async function AdminDashboardPage() {
               </div>
               <div className="flex-1 space-y-4 text-center md:text-left">
                 <div>
-                  <h2 className="text-xl font-black mb-1">Engagement Health</h2>
-                  <p className="text-emerald-100/70 text-sm leading-relaxed">
-                    Composite score of task submissions, 72h login activity, and discussion board participation.
+                  <h2 className="text-xl font-black mb-1 uppercase tracking-tight">Engagement Health</h2>
+                  <p className="text-emerald-100/70 text-sm leading-relaxed font-medium">
+                    Composite score of task submissions, 72h login activity, and community participation.
                   </p>
                 </div>
                 <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black uppercase tracking-widest">
@@ -174,33 +181,44 @@ export default async function AdminDashboardPage() {
           <section className="space-y-4">
              <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Active Cohorts</h2>
              <div className="grid grid-cols-1 gap-4">
-                {activeCohorts?.map(cohort => (
-                  <div key={cohort.id} className="card p-5 hover:bg-gray-50 transition-all group">
-                    <div className="flex items-center justify-between mb-4">
-                       <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-black">
-                            {cohort.name[0]}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-gray-900">{cohort.name}</h3>
-                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{cohort.semester} {cohort.year}</p>
-                          </div>
-                       </div>
-                       <Link href={`/admin/cohorts/${cohort.id}`} className="p-2 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100">
-                         <ChevronRight className="w-4 h-4 text-gray-400" />
-                       </Link>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
-                        <span className="text-gray-400">Week {cohort.current_week} of 12</span>
-                        <span className="text-teal-700">Pillar {Math.min(5, Math.ceil(cohort.current_week / 2.4))}</span>
+                {activeCohorts?.map(cohort => {
+                  const pillars = cohort.pillars_config || PILLARS
+                  const currentPillar = pillars.find((p: any) => {
+                    const weeksRange = p.weeks.match(/\d+/g)
+                    if (!weeksRange) return false
+                    const start = parseInt(weeksRange[0])
+                    const end = parseInt(weeksRange[1] || weeksRange[0])
+                    return cohort.current_week >= start && cohort.current_week <= end
+                  }) || pillars[0]
+
+                  return (
+                    <div key={cohort.id} className="card p-5 hover:bg-gray-50 transition-all group">
+                      <div className="flex items-center justify-between mb-4">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-black">
+                              {cohort.name[0]}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900 group-hover:text-teal-700 transition-colors">{cohort.name}</h3>
+                              <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{cohort.semester} {cohort.year}</p>
+                            </div>
+                         </div>
+                         <Link href={`/admin/cohorts/${cohort.id}`} className="p-2 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100">
+                           <ChevronRight className="w-4 h-4 text-gray-400" />
+                         </Link>
                       </div>
-                      <div className="progress-bar h-1.5">
-                         <div className="progress-fill" style={{ width: `${(cohort.current_week/12)*100}%` }} />
+                      <div>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
+                          <span className="text-gray-400">Week {cohort.current_week} of 12</span>
+                          <span className="text-teal-700">Pillar {currentPillar?.number}: {currentPillar?.name}</span>
+                        </div>
+                        <div className="progress-bar h-1.5">
+                           <div className="progress-fill" style={{ width: `${(cohort.current_week/12)*100}%` }} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
                 {!activeCohorts?.length && (
                   <div className="card p-10 text-center text-gray-400 italic text-sm">No active cohorts currently running.</div>
                 )}
@@ -209,10 +227,10 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Right: Risk & Activity */}
-        <div className="lg:col-span-5 space-y-8">
+        <div className="lg:col-span-4 space-y-8">
            {/* Students at Risk */}
            <section className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between px-1">
                 <h2 className="text-xs font-black text-red-600 uppercase tracking-[0.2em] flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" /> Students at Risk
                 </h2>
@@ -233,7 +251,7 @@ export default async function AdminDashboardPage() {
                        </div>
                        <div className="text-right">
                           <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">
-                            {!student.last_login_at ? 'Never Logged In' : `Inactive ${Math.floor((now.getTime() - new Date(student.last_login_at).getTime()) / (1000 * 60 * 60 * 24))}d`}
+                            {!student.last_login_at ? 'Never' : `${Math.floor((now.getTime() - new Date(student.last_login_at).getTime()) / (1000 * 60 * 60 * 24))}d`}
                           </p>
                           <Link href={`/admin/students/${student.id}`} className="text-[9px] font-bold text-gray-400 hover:text-gray-600 underline">Intervene</Link>
                        </div>
@@ -243,7 +261,7 @@ export default async function AdminDashboardPage() {
                  {!atRiskProfiles?.length && (
                    <div className="p-10 text-center bg-emerald-50/30">
                      <ShieldCheck className="w-8 h-8 text-emerald-200 mx-auto mb-2" />
-                     <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest">No disengaged students flagged</p>
+                     <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest">No risks flagged</p>
                    </div>
                  )}
               </div>
@@ -254,9 +272,9 @@ export default async function AdminDashboardPage() {
               <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Operational Actions</h2>
               <div className="grid grid-cols-2 gap-3">
                  {[
-                   { label: 'Waitlist', count: '12 pending', href: '/admin/waitlist', icon: Clock, color: 'bg-teal-50 text-teal-700' },
-                   { label: 'Messages', count: '4 urgent', href: '/admin/messages', icon: MessageSquare, color: 'bg-blue-50 text-blue-700' },
-                   { label: 'Mentors', count: '2 apps', href: '/admin/mentors', icon: Award, color: 'bg-amber-50 text-amber-700' },
+                   { label: 'Waitlist', count: 'Review', href: '/admin/waitlist', icon: Clock, color: 'bg-teal-50 text-teal-700' },
+                   { label: 'Messages', count: 'Urgent', href: '/admin/messages', icon: MessageSquare, color: 'bg-blue-50 text-blue-700' },
+                   { label: 'Mentors', count: 'Approve', href: '/admin/mentors', icon: Award, color: 'bg-amber-50 text-amber-700' },
                    { label: 'Clubs', count: 'Activate', href: '/admin/vision-clubs', icon: Lightbulb, color: 'bg-purple-50 text-purple-700' },
                  ].map(action => (
                    <Link key={action.label} href={action.href} className="card p-4 hover:bg-gray-50 transition-all">

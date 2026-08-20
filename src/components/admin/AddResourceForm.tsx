@@ -7,11 +7,14 @@ import {
     Plus, X, Globe, Layers, Zap
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { SimpleRichEditor } from '@/components/ui/SimpleRichEditor'
 
 export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?: () => void }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [contentType, setContentType] = useState('article')
+  const [inputMode, setInputMode] = useState<'url' | 'type'>('url')
+  const [articleBody, setArticleBody] = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -79,9 +82,41 @@ export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?
                 <input name="title" required className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:ring-0 font-bold" placeholder="e.g. Recommended Reading: African Leadership" />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">URL / Link</label>
-                <input name="url" required type="url" className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:ring-0 font-mono text-sm" placeholder="https://..." />
+            <div className="md:col-span-2 space-y-4">
+                <div className="flex gap-4">
+                    <button
+                        type="button"
+                        onClick={() => setInputMode('url')}
+                        className={cn("flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all", inputMode === 'url' ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-gray-100 text-gray-400")}
+                    >
+                        URL / Link
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setInputMode('type')}
+                        className={cn("flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all", inputMode === 'type' ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-white border-gray-100 text-gray-400")}
+                    >
+                        Direct Type / Paste
+                    </button>
+                </div>
+
+                {inputMode === 'url' ? (
+                    <div className="animate-reveal">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 block mb-2">URL / Link</label>
+                        <input name="url" required type="url" className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:ring-0 font-mono text-sm" placeholder="https://..." />
+                    </div>
+                ) : (
+                    <div className="animate-reveal">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 block mb-2">Content Body</label>
+                        <SimpleRichEditor
+                            value={articleBody}
+                            onChange={setArticleBody}
+                            placeholder="Type or paste your content here..."
+                            rows={10}
+                        />
+                        <input type="hidden" name="body" value={articleBody} />
+                    </div>
+                )}
             </div>
 
             <div className="space-y-2">

@@ -48,7 +48,7 @@ export default async function PillarContentPage() {
   const { data: tasks } = await supabase.from('tasks')
     .select('id, status')
     .eq('enrollment_id', enrollment.id)
-    .eq('week_number', week)
+    .eq('week_number', weekNum)
     .limit(1)
 
   const activeTask = tasks?.[0]

@@ -12,7 +12,7 @@ import { cn, formatDate } from '@/lib/utils'
 export function ResourceManager({ cohorts, onClose }: { cohorts: any[], onClose?: () => void }) {
     const [resources, setResources] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [searchTerm, setSearch) = useState('')
+    const [searchTerm, setSearch] = useState('')
 
     useEffect(() => {
         fetchResources()

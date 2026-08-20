@@ -5,16 +5,22 @@ import { updateStandaloneContent } from '@/lib/actions/sanity'
 import type { ContentBlock } from '@/types'
 import { X, Save, Video, FileText, Headphones, FileImage, Star } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { SimpleRichEditor } from '@/components/ui/SimpleRichEditor'
 
 export function ContentEditor({ content, onCancel }: { content: ContentBlock; onCancel: () => void }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [body, setBody] = useState<string>(
+    typeof content.body === 'string' ? content.body : ''
+  )
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const res = await updateStandaloneContent(content._id, new FormData(e.currentTarget))
+    const formData = new FormData(e.currentTarget)
+    formData.set('body', body)
+    const res = await updateStandaloneContent(content._id, formData)
     if (res.error) {
       setError(res.error)
       setLoading(false)
@@ -90,6 +96,11 @@ export function ContentEditor({ content, onCancel }: { content: ContentBlock; on
         <div>
           <label className="label">YouTube ID (Optional)</label>
           <input name="youtubeId" defaultValue={content.youtubeId} className="input" placeholder="e.g. dQw4w9WgXcQ" />
+        </div>
+
+        <div>
+          <label className="label">Article Content (Markdown/Text)</label>
+          <SimpleRichEditor value={body} onChange={setBody} placeholder="Write or paste your article here..." rows={8} />
         </div>
 
         <div className="flex items-center gap-2 pt-2">

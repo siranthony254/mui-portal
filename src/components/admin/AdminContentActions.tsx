@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Zap, BookOpen, Settings, FileText } from '@/components/icons'
+import { Plus, Zap, BookOpen, Settings, FileText, Edit3 } from '@/components/icons'
 import { AddContentForm } from './AddContentForm'
 import { AddResourceForm } from './AddResourceForm'
 import { ResourceManager } from './ResourceManager'
@@ -59,8 +59,8 @@ export function AdminContentActions({ cohorts }: { cohorts: any[] }) {
             onClick={() => setShowShowForm('orchestrate')}
             className="bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/20 active:scale-95"
         >
-            <Plus className="w-4 h-4" />
-            Orchestrate Content
+            <Edit3 className="w-4 h-4" />
+            Write & Orchestrate
         </button>
         <a
             href="https://sanity.io/manage"

@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 /**
  * Optimized Confetti utility using dynamic imports

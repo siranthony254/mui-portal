@@ -47,6 +47,7 @@ export async function updateStandaloneContent(id: string, formData: FormData) {
   const contentType = formData.get('contentType') as string
   const url = formData.get('url') as string
   const youtubeId = formData.get('youtubeId') as string
+  const body = formData.get('body') as string
   const pillarNumber = parseInt(formData.get('pillarNumber') as string)
   const weekNumber = parseInt(formData.get('weekNumber') as string)
   const isRequired = formData.get('isRequired') === 'true'
@@ -58,6 +59,7 @@ export async function updateStandaloneContent(id: string, formData: FormData) {
       contentType,
       url: contentType !== 'article' ? url : undefined,
       youtubeId: contentType === 'video' ? youtubeId : undefined,
+      body: body || undefined,
       pillarNumber,
       weekNumber,
       isRequired,
@@ -80,6 +82,7 @@ export async function createSupplementaryResource(formData: FormData) {
   const description = formData.get('description') as string
   const contentType = formData.get('contentType') as string
   const url = formData.get('url') as string
+  const body = formData.get('body') as string
   const cohortId = formData.get('cohortId') as string
   const tags = (formData.get('tags') as string)?.split(',').map(t => t.trim()).filter(Boolean)
 
@@ -89,7 +92,8 @@ export async function createSupplementaryResource(formData: FormData) {
       title,
       description,
       contentType,
-      url,
+      url: url || undefined,
+      body: body || undefined,
       cohortId: cohortId || undefined,
       tags: tags || [],
       publishedAt: new Date().toISOString(),
