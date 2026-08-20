@@ -28,16 +28,17 @@ export async function getOrCreateConversation(otherUserId: string, cohortId?: st
   return { conversationId: created.id }
 }
 
-export async function sendMessage(conversationId: string, content: string) {
+export async function sendMessage(conversationId: string, content: string, audioUrl?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated.' }
-  if (!content.trim()) return { error: 'Message cannot be empty.' }
+  if (!content.trim() && !audioUrl) return { error: 'Message cannot be empty.' }
 
   const { error } = await supabase.from('messages').insert({
     conversation_id: conversationId,
     sender_id: user.id,
-    content: content.trim(),
+    content: content.trim() || '[Voice Note]',
+    audio_url: audioUrl,
     read_by: [user.id],
   })
 

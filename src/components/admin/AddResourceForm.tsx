@@ -4,17 +4,19 @@ import { useState } from 'react'
 import { createSupplementaryResource } from '@/lib/actions/sanity'
 import {
     Video, FileText, Headphones, FileDown,
-    Plus, X, Globe, Layers, Zap
+    Plus, X, Globe, Layers, Zap, Image
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { SimpleRichEditor } from '@/components/ui/SimpleRichEditor'
+import { MediaPicker } from '@/components/ui/MediaPicker'
 
 export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?: () => void }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [contentType, setContentType] = useState('article')
-  const [inputMode, setInputMode] = useState<'url' | 'type'>('url')
+  const [inputMode, setInputMode] = useState<'url' | 'type' | 'upload'>('url')
   const [articleBody, setArticleBody] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,6 +24,10 @@ export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?
     setError('')
 
     const formData = new FormData(e.currentTarget)
+    if (selectedFile) {
+        formData.append('file', selectedFile)
+    }
+
     const res = await createSupplementaryResource(formData)
 
     if (res.error) {
@@ -56,7 +62,7 @@ export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?
                         { id: 'article', label: 'Article', icon: FileText },
                         { id: 'audio', label: 'Audio', icon: Headphones },
                         { id: 'pdf', label: 'PDF', icon: FileDown },
-                        { id: 'image', label: 'Image', icon: Globe },
+                        { id: 'image', label: 'Image', icon: Image },
                     ].map((t) => (
                         <button
                             key={t.id}
@@ -96,7 +102,14 @@ export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?
                         onClick={() => setInputMode('type')}
                         className={cn("flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all", inputMode === 'type' ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-white border-gray-100 text-gray-400")}
                     >
-                        Direct Type / Paste
+                        Direct Type
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setInputMode('upload')}
+                        className={cn("flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all", inputMode === 'upload' ? "bg-purple-50 border-purple-200 text-purple-700" : "bg-white border-gray-100 text-gray-400")}
+                    >
+                        File Upload
                     </button>
                 </div>
 
@@ -105,7 +118,7 @@ export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 block mb-2">URL / Link</label>
                         <input name="url" required type="url" className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:ring-0 font-mono text-sm" placeholder="https://..." />
                     </div>
-                ) : (
+                ) : inputMode === 'type' ? (
                     <div className="animate-reveal">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 block mb-2">Content Body</label>
                         <SimpleRichEditor
@@ -115,6 +128,20 @@ export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?
                             rows={10}
                         />
                         <input type="hidden" name="body" value={articleBody} />
+                    </div>
+                ) : (
+                    <div className="animate-reveal">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 block mb-2">Select File</label>
+                        <MediaPicker
+                            onFileSelect={setSelectedFile}
+                            type={contentType as any}
+                            accept={
+                                contentType === 'video' ? 'video/*' :
+                                contentType === 'image' ? 'image/*' :
+                                contentType === 'audio' ? 'audio/*' :
+                                contentType === 'pdf' ? '.pdf' : '*'
+                            }
+                        />
                     </div>
                 )}
             </div>

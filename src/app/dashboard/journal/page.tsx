@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { JournalClient } from '@/components/cohort/JournalClient'
 import { Metadata } from 'next'
+import { getVoiceJournals } from '@/lib/actions/sanity'
 
 export const metadata: Metadata = { title: 'My Journal' }
 
@@ -24,6 +25,8 @@ export default async function JournalPage() {
     .eq('student_id', user.id)
     .order('week_number', { ascending: true })
 
+  const voiceJournals = await getVoiceJournals(user.id)
+
   return (
     <div className="space-y-6">
       <div className="page-header">
@@ -33,9 +36,12 @@ export default async function JournalPage() {
 
       <JournalClient
         initialEntries={entries || []}
+        initialVoiceEntries={voiceJournals || []}
         currentWeek={enrollment.current_week}
         currentPillar={enrollment.current_pillar}
+        studentId={user.id}
       />
     </div>
+  )
   )
 }

@@ -29,6 +29,7 @@ export const resourceSchema = defineType({
     defineField({name:'description',title:'Description',type:'text',rows:3}),
     defineField({name:'contentType',title:'Content Type',type:'string',options:{list:['video','article','audio','pdf','image'],layout:'radio'},validation:r=>r.required()}),
     defineField({name:'url',title:'URL / Link',type:'url'}),
+    defineField({name:'body',title:'Content Body (if typed)',type:'array',of:[{type:'block'}]}),
     defineField({name:'cohortId',title:'Cohort ID (optional)',type:'string', description: 'Leave empty for global resources'}),
     defineField({name:'tags',title:'Tags',type:'array',of:[{type:'string'}]}),
     defineField({name:'publishedAt',title:'Published At',type:'datetime',initialValue:()=>new Date().toISOString()}),
@@ -159,4 +160,22 @@ export const taskPromptSchema = defineType({
     defineField({name:'instructions',title:'Detailed Instructions',type:'array',of:[{type:'block'}]}),
   ],
   preview:{select:{title:'title',pillar:'pillarNumber',week:'weekNumber'},prepare:({title,pillar,week})=>({title,subtitle:`P${pillar} - W${week}`})}
+})
+
+export const voiceJournalSchema = defineType({
+  name: 'voiceJournal',
+  title: 'Voice Journal',
+  type: 'document',
+  fields: [
+    defineField({ name: 'studentId', title: 'Student ID', type: 'string', validation: r => r.required() }),
+    defineField({ name: 'weekNumber', title: 'Week Number', type: 'number', validation: r => r.required() }),
+    defineField({ name: 'pillarNumber', title: 'Pillar Number', type: 'number', validation: r => r.required() }),
+    defineField({ name: 'audioFile', title: 'Audio File', type: 'file', options: { accept: 'audio/*' }, validation: r => r.required() }),
+    defineField({ name: 'duration', title: 'Duration (seconds)', type: 'number' }),
+    defineField({ name: 'publishedAt', title: 'Published At', type: 'datetime', initialValue: () => new Date().toISOString() }),
+  ],
+  preview: {
+    select: { student: 'studentId', week: 'weekNumber' },
+    prepare: ({ student, week }) => ({ title: `Voice Journal - W${week}`, subtitle: `Student: ${student}` })
+  }
 })

@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { updateCohortCurriculum } from '@/lib/actions/sanity'
 import {
     Zap, Video, FileText, Headphones, FileDown,
-    Globe, Plus, X, Award, Layers, Calendar, Play
+    Globe, Plus, X, Award, Layers, Calendar, Play, Image
 } from '@/components/icons'
 import { cn, parseYouTubeEmbed } from '@/lib/utils'
 import { SimpleRichEditor } from '@/components/ui/SimpleRichEditor'
+import { MediaPicker } from '@/components/ui/MediaPicker'
 
 export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?: () => void }) {
   const [loading, setLoading] = useState(false)
@@ -25,6 +26,7 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
   const [youtubeInput, setYoutubeInput] = useState('')
   const [articleBody, setArticleBody] = useState('')
   const [journalPrompt, setJournalPrompt] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const selectedCohort = cohorts.find(c => c.id === selectedCohortId)
   const pillars = selectedCohort?.pillars_config || []
@@ -43,12 +45,22 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
 
     // Construct Content Block
     let contentBlock: any = {
-        _type: contentType === 'video' ? 'videoBlock' : contentType === 'article' ? 'textBlock' : 'fileBlock',
+        _type: contentType === 'video' ? 'videoBlock' :
+               contentType === 'article' ? 'textBlock' :
+               contentType === 'image' ? 'imageBlock' : 'fileBlock',
         title: formData.get('title'),
     }
 
     if (contentType === 'article') {
-        contentBlock.body = articleBody;
+        // For simplicity, we wrap the string in a basic block structure
+        // Sanity expects an array of blocks for 'body' in textBlock
+        contentBlock.body = [{
+            _type: 'block',
+            _key: Math.random().toString(36).substring(2),
+            children: [{ _type: 'span', text: articleBody, marks: [] }],
+            markDefs: [],
+            style: 'normal'
+        }];
     }
 
     if (contentType === 'video') {
@@ -63,8 +75,17 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
             contentBlock.youtubeEmbed = youtubeInput
             contentBlock.url = `https://www.youtube.com/watch?v=${videoId}`
         } else {
-            // File upload logic would go here
-            setError('Direct video upload via this form is coming soon. Please use YouTube embed for now.')
+            if (!selectedFile) {
+                setError('Please select a video file to upload.')
+                setLoading(false)
+                return
+            }
+        }
+    }
+
+    if (contentType !== 'video' && contentType !== 'article') {
+        if (!selectedFile) {
+            setError('Please select a file to upload.')
             setLoading(false)
             return
         }
@@ -76,7 +97,8 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
         weekNumber: selectedWeekNum,
         dayNumber: selectedDayNum,
         contentBlock,
-        journalPrompt: journalPrompt || undefined
+        journalPrompt: journalPrompt || undefined,
+        file: selectedFile
     })
 
     if (res.error) {
@@ -176,12 +198,13 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
 
             <div className="space-y-4">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Format</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                     {[
                         { id: 'video', label: 'Video', icon: Video },
                         { id: 'article', label: 'Article', icon: FileText },
                         { id: 'audio', label: 'Audio', icon: Headphones },
                         { id: 'pdf', label: 'PDF', icon: FileDown },
+                        { id: 'image', label: 'Image', icon: Image },
                     ].map((t) => (
                         <button
                             key={t.id}
@@ -258,12 +281,32 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
                             ) : (
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Upload Video File</label>
-                                    <div className="w-full px-5 py-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl text-center cursor-pointer hover:border-emerald-500 transition-colors">
-                                        <Play className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Click to select MP4/MOV</p>
-                                    </div>
+                                    <MediaPicker
+                                        onFileSelect={setSelectedFile}
+                                        type="video"
+                                        accept="video/*"
+                                        label="Click to select MP4/MOV"
+                                    />
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {(contentType === 'audio' || contentType === 'pdf' || contentType === 'image') && (
+                        <div className="space-y-4 animate-reveal">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Upload {contentType.toUpperCase()} File</label>
+                                <MediaPicker
+                                    onFileSelect={setSelectedFile}
+                                    type={contentType as any}
+                                    accept={
+                                        contentType === 'audio' ? 'audio/*' :
+                                        contentType === 'image' ? 'image/*' :
+                                        '.pdf'
+                                    }
+                                    label={`Select ${contentType.toUpperCase()} file`}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>

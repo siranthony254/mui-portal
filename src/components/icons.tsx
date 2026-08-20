@@ -25,6 +25,7 @@ import {
   Flag as LucideFlag,
   Globe as LucideGlobe,
   Headphones as LucideHeadphones,
+  Image as LucideImage,
   LayoutDashboard as LucideLayoutDashboard,
   Lightbulb as LucideLightbulb,
   Lock as LucideLock,
@@ -32,8 +33,10 @@ import {
   Menu as LucideMenu,
   MessageSquare as LucideMessageSquare,
   Mic2 as LucideMic2,
+  Pause as LucidePause,
   Play as LucidePlay,
   Plus as LucidePlus,
+  RotateCcw as LucideRotateCcw,
   Save as LucideSave,
   Search as LucideSearch,
   Send as LucideSend,
@@ -86,6 +89,7 @@ export function FileDown(props: IconProps) { return <LucideFileImage {...props} 
 export function FileText(props: IconProps) { return <LucideFileText {...props} /> }
 export function Flag(props: IconProps) { return <LucideFlag {...props} /> }
 export function Globe(props: IconProps) { return <LucideGlobe {...props} /> }
+export function Image(props: IconProps) { return <LucideImage {...props} /> }
 export function Headphones(props: IconProps) { return <LucideHeadphones {...props} /> }
 export function LayoutDashboard(props: IconProps) { return <LucideLayoutDashboard {...props} /> }
 export function Lightbulb(props: IconProps) { return <LucideLightbulb {...props} /> }
@@ -94,8 +98,10 @@ export function LogOut(props: IconProps) { return <LucideLogOut {...props} /> }
 export function Menu(props: IconProps) { return <LucideMenu {...props} /> }
 export function MessageSquare(props: IconProps) { return <LucideMessageSquare {...props} /> }
 export function Mic2(props: IconProps) { return <LucideMic2 {...props} /> }
+export function Pause(props: IconProps) { return <LucidePause {...props} /> }
 export function Play(props: IconProps) { return <LucidePlay {...props} /> }
 export function Plus(props: IconProps) { return <LucidePlus {...props} /> }
+export function RotateCcw(props: IconProps) { return <LucideRotateCcw {...props} /> }
 export function Save(props: IconProps) { return <LucideSave {...props} /> }
 export function Search(props: IconProps) { return <LucideSearch {...props} /> }
 export function Send(props: IconProps) { return <LucideSend {...props} /> }

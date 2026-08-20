@@ -5,15 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8bb94af-4cee-458b-ad48-2a180ac85ea8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/components/admin/UserStatusManager.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/supabase/update_profiles_v3.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/ui/MediaPicker.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/ui/VoiceRecorder.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/supabase/add_audio_to_messages.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/voice_features_plan.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/mentors/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/mentors/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/students/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/students/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sanity/schemas/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/sanity/schemas/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/journal/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/journal/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/mentor/students/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/mentor/students/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/admin/AddContentForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/AddContentForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/admin/AddResourceForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/AddResourceForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/MessagesClient.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/MessagesClient.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/cohort/JournalClient.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/cohort/JournalClient.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/icons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/icons.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/actions/admin.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/admin.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/actions/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/middleware.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/middleware.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/actions/messages.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/messages.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/actions/sanity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/actions/sanity.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/index.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

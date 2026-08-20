@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { sendMessage, getOrCreateConversation } from '@/lib/actions/messages'
+import { uploadSanityAsset } from '@/lib/actions/sanity'
 import { getInitials, timeAgo, cn } from '@/lib/utils'
 import type { Profile } from '@/types'
-import { Send, Plus, Search, ShieldCheck, Mic2, Square } from '@/components/icons'
+import { Send, Plus, Search, ShieldCheck, Mic2, Square, Play, Pause } from '@/components/icons'
+import { VoiceRecorder } from '@/components/ui/VoiceRecorder'
 
 interface Props {
   currentUser: Profile
@@ -31,12 +33,7 @@ export function MessagesClient({ currentUser, conversations: initial, participan
     }
   }, [initialUserId])
 
-  // Voice Note State
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordingTime, setRecordingTime] = useState(0)
-  const mediaRecorder = useRef<MediaRecorder | null>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
-
+  const [search, setSearch] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
   const profileMap = new Map(participantProfiles.map((p:any) => [p.id, p]))
@@ -73,38 +70,16 @@ export function MessagesClient({ currentUser, conversations: initial, participan
     setNewMessage(''); setSending(false)
   }
 
-  const startRecording = async () => {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        const recorder = new MediaRecorder(stream)
-        mediaRecorder.current = recorder
-
-        recorder.ondataavailable = async (e) => {
-            if (e.data.size > 0 && activeConvoId) {
-                // In a real app, upload to storage first.
-                // For now, we'll send a placeholder indicating a voice note.
-                await sendMessage(activeConvoId, "🎤 [Voice Note Sent]")
-            }
-        }
-
-        recorder.start()
-        setIsRecording(true)
-        setRecordingTime(0)
-        timerRef.current = setInterval(() => {
-            setRecordingTime(prev => prev + 1)
-        }, 1000)
-    } catch (err) {
-        console.error("Failed to start recording:", err)
+  const handleVoiceUpload = async (file: File) => {
+    if (!activeConvoId) return
+    setSending(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    const resAsset = await uploadSanityAsset(formData)
+    if (resAsset.success && resAsset.url) {
+        await sendMessage(activeConvoId, '', resAsset.url)
     }
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorder.current && isRecording) {
-        mediaRecorder.current.stop()
-        mediaRecorder.current.stream.getTracks().forEach(track => track.stop())
-        setIsRecording(false)
-        if (timerRef.current) clearInterval(timerRef.current)
-    }
+    setSending(false)
   }
 
   async function startConvo(userId: string) {
@@ -196,7 +171,18 @@ export function MessagesClient({ currentUser, conversations: initial, participan
                   <div key={msg.id} className={cn('flex gap-2', isMe && 'flex-row-reverse')}>
                     {!isMe && <div className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-auto">{getInitials(msg.sender?.full_name||'U')}</div>}
                     <div className={cn('max-w-xs lg:max-w-md', isMe && 'items-end flex flex-col')}>
-                      <div className={cn('px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed', isMe?'chat-bubble-out':'chat-bubble-in')}>{msg.content}</div>
+                      <div className={cn('px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed', isMe?'chat-bubble-out':'chat-bubble-in')}>
+                        {msg.audio_url ? (
+                            <div className="flex items-center gap-3 py-1">
+                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                                </div>
+                                <audio src={msg.audio_url} controls className="max-w-[200px] h-8" />
+                            </div>
+                        ) : (
+                            msg.content
+                        )}
+                      </div>
                       <p className="text-xs text-gray-400 mt-1 px-1">{timeAgo(msg.created_at)}</p>
                     </div>
                   </div>
@@ -206,29 +192,9 @@ export function MessagesClient({ currentUser, conversations: initial, participan
             </div>
             {!readOnly && (
               <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex items-center gap-2">
-                {isRecording ? (
-                    <div className="flex-1 flex items-center justify-between bg-red-50 px-4 py-2 rounded-2xl border border-red-100 animate-pulse">
-                        <div className="flex items-center gap-2 text-red-600 font-bold text-xs">
-                            <div className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
-                            RECORDING... {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, '0')}
-                        </div>
-                        <button type="button" onClick={stopRecording} className="text-red-700 hover:text-red-900">
-                            <Square className="w-5 h-5 fill-current" />
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <button
-                            type="button"
-                            onClick={startRecording}
-                            className="p-2.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all active:scale-95"
-                        >
-                            <Mic2 className="w-5 h-5" />
-                        </button>
-                        <input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="input flex-1" disabled={sending} />
-                        <button type="submit" disabled={sending || !newMessage.trim()} className="btn-primary px-3 py-2 transition-all active:scale-95"><Send className="w-4 h-4" /></button>
-                    </>
-                )}
+                <VoiceRecorder onUpload={handleVoiceUpload} compact label="Record message" />
+                <input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="input flex-1" disabled={sending} />
+                <button type="submit" disabled={sending || !newMessage.trim()} className="btn-primary px-3 py-2 transition-all active:scale-95"><Send className="w-4 h-4" /></button>
               </form>
             )}
             {readOnly && (

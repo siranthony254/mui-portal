@@ -2,21 +2,27 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { saveJournalEntry, toggleJournalSharing, deleteJournalEntry } from '@/lib/actions/cohort'
+import { uploadVoiceJournal } from '@/lib/actions/sanity'
 import { JOURNAL_PROMPTS, getPillarColor } from '@/types'
-import { Lock, Unlock, Check, Save, ChevronLeft, ChevronRight, Share2, Globe, CloudOff, Trash2 } from '@/components/icons'
+import { Lock, Unlock, Check, Save, ChevronLeft, ChevronRight, Share2, Globe, CloudOff, Trash2, Mic2, Play, Pause } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import type { JournalEntry } from '@/types'
 import { useSearchParams } from 'next/navigation'
+import { VoiceRecorder } from '@/components/ui/VoiceRecorder'
 
 interface Props {
   initialEntries: JournalEntry[]
+  initialVoiceEntries?: any[]
   currentWeek: number
   currentPillar: number
+  studentId?: string
 }
 
-function JournalContent({ initialEntries, currentWeek, currentPillar }: Props) {
+function JournalContent({ initialEntries, initialVoiceEntries = [], currentWeek, currentPillar, studentId }: Props) {
   const [selectedWeek, setSelectedWeek] = useState(currentWeek)
   const [entries, setEntries] = useState(initialEntries)
+  const [voiceEntries, setVoiceEntries] = useState(initialVoiceEntries)
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
   const [content, setContent] = useState('')
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
@@ -122,6 +128,30 @@ function JournalContent({ initialEntries, currentWeek, currentPillar }: Props) {
     setSaving(false)
   }
 
+  const handleVoiceUpload = async (file: File) => {
+    if (!studentId) return
+    setSaving(true)
+    const res = await uploadVoiceJournal({
+        studentId,
+        weekNumber: selectedWeek,
+        pillarNumber: pillarNum,
+        file
+    })
+    if (res.success) {
+        setShowVoiceRecorder(false)
+        // Refresh local voice entries (in a real app we'd fetch again or optimistic update)
+        setVoiceEntries(prev => [{
+            _id: Math.random().toString(),
+            weekNumber: selectedWeek,
+            audioFile: { asset: { url: URL.createObjectURL(file) } }, // Temporary local URL
+            publishedAt: new Date().toISOString()
+        }, ...prev])
+    }
+    setSaving(false)
+  }
+
+  const weeklyVoiceEntries = voiceEntries.filter(v => v.weekNumber === selectedWeek)
+
   return (
     <div className="max-w-4xl mx-auto flex flex-col lg:flex-row gap-6">
       <div className="w-full lg:w-64 space-y-4 flex-shrink-0">
@@ -191,6 +221,16 @@ function JournalContent({ initialEntries, currentWeek, currentPillar }: Props) {
             >
               <Save className="w-3.5 h-3.5" /> {saving ? 'Saving...' : 'Save'}
             </button>
+            <button
+                onClick={() => setShowVoiceRecorder(!showVoiceRecorder)}
+                className={cn(
+                    "p-2 rounded-lg transition-all",
+                    showVoiceRecorder ? "bg-teal-600 text-white" : "bg-teal-50 text-teal-700 hover:bg-teal-100"
+                )}
+                title="Voice Journal"
+            >
+                <Mic2 className="w-4 h-4" />
+            </button>
             {content.trim() && (
                 <button
                     onClick={handleDelete}
@@ -203,6 +243,44 @@ function JournalContent({ initialEntries, currentWeek, currentPillar }: Props) {
             )}
           </div>
         </div>
+
+        {showVoiceRecorder && (
+            <div className="animate-reveal">
+                <VoiceRecorder onUpload={handleVoiceUpload} label="Weekly Voice Reflection" />
+            </div>
+        )}
+
+        {weeklyVoiceEntries.length > 0 && (
+            <div className="space-y-3 animate-reveal">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Voice Reflections</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {weeklyVoiceEntries.map((v: any) => (
+                        <div key={v._id} className="card p-4 flex items-center gap-4 bg-teal-50/30 border-teal-100/50">
+                            <div className="w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0">
+                                <Play className="w-5 h-5 fill-current ml-0.5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-gray-900">Voice Note</p>
+                                <p className="text-[10px] text-gray-400">{new Date(v.publishedAt).toLocaleDateString()}</p>
+                            </div>
+                            <audio src={v.audioFile?.asset?.url} controls className="hidden" />
+                            <button
+                                onClick={(e) => {
+                                    const audio = e.currentTarget.parentElement?.querySelector('audio')
+                                    if (audio) {
+                                        if (audio.paused) audio.play()
+                                        else audio.pause()
+                                    }
+                                }}
+                                className="text-[10px] font-black text-teal-700 uppercase tracking-widest hover:underline"
+                            >
+                                Play
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
 
         <div className="card overflow-hidden">
           <div className="px-5 py-4 bg-teal-50/50 border-b border-gray-100">

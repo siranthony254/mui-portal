@@ -3,6 +3,12 @@
 import { writeClient } from '@/lib/sanity/client'
 import { revalidatePath } from 'next/cache'
 
+async function uploadAsset(file: File) {
+    if (!writeClient) throw new Error('Sanity Write Client not configured.')
+    const asset = await writeClient.assets.upload(file.type.startsWith('image/') ? 'image' : 'file', file)
+    return asset
+}
+
 export async function createStandaloneContent(formData: FormData) {
   if (!writeClient) return { error: 'Sanity Write Client not configured.' }
 
@@ -85,15 +91,29 @@ export async function createSupplementaryResource(formData: FormData) {
   const body = formData.get('body') as string
   const cohortId = formData.get('cohortId') as string
   const tags = (formData.get('tags') as string)?.split(',').map(t => t.trim()).filter(Boolean)
+  const file = formData.get('file') as File | null
 
   try {
+    let url = formData.get('url') as string
+
+    if (file && file.size > 0) {
+        const asset = await uploadAsset(file)
+        url = asset.url
+    }
+
     const doc = {
       _type: 'resource',
       title,
       description,
       contentType,
       url: url || undefined,
-      body: body || undefined,
+      body: body ? [{
+          _type: 'block',
+          _key: Math.random().toString(36).substring(2),
+          children: [{ _type: 'span', text: body, marks: [] }],
+          markDefs: [],
+          style: 'normal'
+      }] : undefined,
       cohortId: cohortId || undefined,
       tags: tags || [],
       publishedAt: new Date().toISOString(),
@@ -153,10 +173,43 @@ export async function updateCohortCurriculum(data: {
   dayNumber: number
   contentBlock: any
   journalPrompt?: string
+  file?: File | null
 }) {
   if (!writeClient) return { error: 'Sanity Write Client not configured.' }
 
   try {
+    // Handle File Upload if present
+    if (data.file && data.file.size > 0) {
+        const asset = await uploadAsset(data.file)
+
+        if (data.contentBlock._type === 'imageBlock') {
+            data.contentBlock.image = {
+                _type: 'image',
+                asset: {
+                    _type: 'reference',
+                    _ref: asset._id
+                }
+            }
+        } else if (data.contentBlock._type === 'fileBlock') {
+            data.contentBlock.file = {
+                _type: 'file',
+                asset: {
+                    _type: 'reference',
+                    _ref: asset._id
+                }
+            }
+        } else if (data.contentBlock._type === 'videoBlock') {
+            data.contentBlock.videoFile = {
+                _type: 'file',
+                asset: {
+                    _type: 'reference',
+                    _ref: asset._id
+                }
+            }
+        }
+
+        data.contentBlock.url = asset.url
+    }
     // 1. Find or create the curriculum document for this cohort
     const query = `*[_type == "curriculum" && cohortId == $cohortId][0]`
     let curriculum = await writeClient.fetch(query, { cohortId: data.cohortId })
@@ -277,6 +330,73 @@ export async function updateCurriculumPillar(data: {
   } catch (e: any) {
     return { error: e.message }
   }
+}
+
+export async function uploadVoiceJournal(data: {
+    studentId: string
+    weekNumber: number
+    pillarNumber: number
+    file: File
+    duration?: number
+}) {
+    if (!writeClient) return { error: 'Sanity Write Client not configured.' }
+
+    try {
+        const asset = await uploadAsset(data.file)
+
+        const doc = {
+            _type: 'voiceJournal',
+            studentId: data.studentId,
+            weekNumber: data.weekNumber,
+            pillarNumber: data.pillarNumber,
+            audioFile: {
+                _type: 'file',
+                asset: {
+                    _type: 'reference',
+                    _ref: asset._id
+                }
+            },
+            duration: data.duration,
+            publishedAt: new Date().toISOString()
+        }
+
+        await writeClient.create(doc)
+        revalidatePath('/dashboard/journal')
+        return { success: true }
+    } catch (err: any) {
+        console.error("Voice Journal Upload Error:", err)
+        return { error: err.message }
+    }
+}
+
+export async function getVoiceJournals(studentId: string, weekNumber?: number) {
+    const query = weekNumber
+        ? `*[_type == "voiceJournal" && studentId == $studentId && weekNumber == $weekNumber] | order(publishedAt desc)`
+        : `*[_type == "voiceJournal" && studentId == $studentId] | order(publishedAt desc)`
+
+    // We can use the read client here
+    const { client } = await import('@/lib/sanity/client')
+    if (!client) return []
+
+    try {
+        const data = await client.fetch(query, { studentId, weekNumber })
+        return data
+    } catch (err) {
+        console.error("Fetch Voice Journals Error:", err)
+        return []
+    }
+}
+
+export async function uploadSanityAsset(formData: FormData) {
+    const file = formData.get('file') as File
+    if (!file) return { error: 'No file provided' }
+
+    try {
+        const asset = await uploadAsset(file)
+        return { success: true, url: asset.url }
+    } catch (err: any) {
+        return { error: err.message }
+    }
 }
 
 

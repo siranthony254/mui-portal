@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { TaskFeedbackForm } from '@/components/mentor/TaskFeedbackForm'
 import { MentorNotes } from '@/components/mentor/MentorNotes'
 
+import { getVoiceJournals } from '@/lib/actions/sanity'
+
 export default async function MenteeDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
   const supabase = await createClient()
@@ -39,6 +41,8 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
     .eq('student_id', id)
     .eq('is_shared', true)
     .order('updated_at', { ascending: false })
+
+  const voiceJournals = await getVoiceJournals(id)
 
   // Calculate Engagement Health
   const taskSubmissionRate = tasks?.length ? (tasks.filter(t => t.status !== 'pending').length / (cohort.current_week * 1)) * 100 : 0
@@ -171,10 +175,28 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
           <section className="space-y-4">
              <div className="flex items-center gap-2">
                <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Shared Journal Entries</h2>
-               <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-black">{journals?.length||0}</div>
+               <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-black">{(journals?.length||0) + (voiceJournals?.length||0)}</div>
              </div>
 
-             {!journals?.length ? (
+             {voiceJournals?.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {voiceJournals.map((v: any) => (
+                        <div key={v._id} className="card p-5 bg-teal-50 border-teal-100">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <Mic2 className="w-4 h-4 text-teal-600" />
+                                    <span className="text-[10px] font-black text-teal-700 uppercase tracking-widest">Voice Reflection</span>
+                                </div>
+                                <span className="text-[9px] text-teal-600/60 font-bold uppercase">Week {v.weekNumber}</span>
+                            </div>
+                            <audio src={v.audioFile?.asset?.url} controls className="w-full h-8" />
+                            <p className="text-[9px] text-teal-600/60 mt-2 font-bold uppercase tracking-tighter">Uploaded {formatDate(v.publishedAt)}</p>
+                        </div>
+                    ))}
+                </div>
+             )}
+
+             {!journals?.length && !voiceJournals?.length ? (
                 <div className="card p-10 text-center bg-blue-50/30 border-dashed border-blue-200">
                   <BookOpen className="w-8 h-8 text-blue-200 mx-auto mb-3" />
                   <p className="text-xs text-blue-400 font-bold uppercase tracking-wider">No journal entries shared yet</p>

@@ -256,6 +256,7 @@ export interface Message {
   conversation_id: string
   sender_id: string
   content: string
+  audio_url?: string
   read_by: string[]
   created_at: string
   sender?: Profile
