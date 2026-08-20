@@ -73,6 +73,38 @@ export async function updateStandaloneContent(id: string, formData: FormData) {
   }
 }
 
+export async function createSupplementaryResource(formData: FormData) {
+  if (!writeClient) return { error: 'Sanity Write Client not configured.' }
+
+  const title = formData.get('title') as string
+  const description = formData.get('description') as string
+  const contentType = formData.get('contentType') as string
+  const url = formData.get('url') as string
+  const cohortId = formData.get('cohortId') as string
+  const tags = (formData.get('tags') as string)?.split(',').map(t => t.trim()).filter(Boolean)
+
+  try {
+    const doc = {
+      _type: 'resource',
+      title,
+      description,
+      contentType,
+      url,
+      cohortId: cohortId || undefined,
+      tags: tags || [],
+      publishedAt: new Date().toISOString(),
+    }
+
+    await writeClient.create(doc)
+    revalidatePath('/admin/content')
+    revalidatePath('/dashboard/resources')
+    return { success: true }
+  } catch (error: any) {
+    console.error('Sanity Create Resource Error:', error)
+    return { error: error.message }
+  }
+}
+
 export async function deleteSanityDocument(id: string) {
   if (!writeClient) return { error: 'Sanity Write Client not configured.' }
 

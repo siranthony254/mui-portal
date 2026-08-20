@@ -193,7 +193,7 @@ export default async function AdminDashboardPage() {
                     <div>
                       <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
                         <span className="text-gray-400">Week {cohort.current_week} of 12</span>
-                        <span className="text-teal-700">Pillar {Math.ceil(cohort.current_week/3)}</span>
+                        <span className="text-teal-700">Pillar {Math.min(5, Math.ceil(cohort.current_week / 2.4))}</span>
                       </div>
                       <div className="progress-bar h-1.5">
                          <div className="progress-fill" style={{ width: `${(cohort.current_week/12)*100}%` }} />

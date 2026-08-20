@@ -22,6 +22,19 @@ export const imageBlock = defineType({
   preview: { select: { media: 'image', title: 'caption' }, prepare: ({ media, title }) => ({ title: title || 'Image Block', media }) }
 })
 
+export const resourceSchema = defineType({
+  name:'resource', title:'Supplementary Resource', type:'document',
+  fields:[
+    defineField({name:'title',title:'Title',type:'string',validation:r=>r.required()}),
+    defineField({name:'description',title:'Description',type:'text',rows:3}),
+    defineField({name:'contentType',title:'Content Type',type:'string',options:{list:['video','article','audio','pdf','image'],layout:'radio'},validation:r=>r.required()}),
+    defineField({name:'url',title:'URL / Link',type:'url'}),
+    defineField({name:'cohortId',title:'Cohort ID (optional)',type:'string', description: 'Leave empty for global resources'}),
+    defineField({name:'tags',title:'Tags',type:'array',of:[{type:'string'}]}),
+    defineField({name:'publishedAt',title:'Published At',type:'datetime',initialValue:()=>new Date().toISOString()}),
+  ]
+})
+
 export const contentSchema = defineType({
   name:'content', title:'Standalone Content', type:'document',
   fields:[

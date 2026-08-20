@@ -6,7 +6,15 @@ import { PILLARS } from '@/types'
 import { cn } from '@/lib/utils'
 import { Search } from '@/components/icons'
 
-export function ContentManagerClient({ content, isAdmin=false }: { content: ContentBlock[]; isAdmin?: boolean }) {
+export function ContentManagerClient({
+  content,
+  isAdmin=false,
+  customPillars = PILLARS
+}: {
+  content: ContentBlock[];
+  isAdmin?: boolean;
+  customPillars?: any[];
+}) {
   const [pillarFilter, setPillarFilter] = useState<number|null>(null)
   const [typeFilter, setTypeFilter] = useState<string|null>(null)
   const [search, setSearch] = useState('')
@@ -27,7 +35,7 @@ export function ContentManagerClient({ content, isAdmin=false }: { content: Cont
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <button onClick={()=>setPillarFilter(null)} className={cn('badge text-xs cursor-pointer',pillarFilter===null?'badge-teal':'badge-gray')}>All pillars</button>
-          {PILLARS.map(p=><button key={p.number} onClick={()=>setPillarFilter(pillarFilter===p.number?null:p.number)} className={cn('badge text-xs cursor-pointer',pillarFilter===p.number?'badge-teal':'badge-gray')}>P{p.number}: {p.name}</button>)}
+          {customPillars.map(p=><button key={p.number} onClick={()=>setPillarFilter(pillarFilter===p.number?null:p.number)} className={cn('badge text-xs cursor-pointer',pillarFilter===p.number?'badge-teal':'badge-gray')}>P{p.number}: {p.name}</button>)}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           {['video','article','audio','pdf','image'].map(type=><button key={type} onClick={()=>setTypeFilter(typeFilter===type?null:type)} className={cn('badge text-xs cursor-pointer capitalize',typeFilter===type?'badge-blue':'badge-gray')}>{type}</button>)}
@@ -42,7 +50,7 @@ export function ContentManagerClient({ content, isAdmin=false }: { content: Cont
       {pillarFilter ? (
         <div className="space-y-3">{filtered.map(c=><ContentCard key={c._id} content={c} compact isAdmin={isAdmin} />)}</div>
       ) : (
-        PILLARS.map(pillar => {
+        customPillars.map(pillar => {
           const items = filtered.filter(c=>c.pillarNumber===pillar.number)
           if (!items.length) return null
           return (

@@ -54,6 +54,13 @@ export async function deleteCohort(cohortId: string) {
   return { success: 'Cohort deleted successfully.' }
 }
 
+import { client } from '@/lib/sanity/client'
+
+async function getTaskFromSanity(pillar: number, week: number) {
+    if (!client) return null
+    return client.fetch(`*[_type == "taskPrompt" && pillarNumber == $pillar && weekNumber == $week][0]`, { pillar, week })
+}
+
 export async function createWeeklyTasks(cohortId: string, pillar: number, week: number) {
   const admin = await createAdminClient()
   const { data: enrollments } = await admin
@@ -64,11 +71,13 @@ export async function createWeeklyTasks(cohortId: string, pillar: number, week: 
 
   if (!enrollments?.length) return
 
+  const promptDoc = await getTaskFromSanity(pillar, week)
+
   const tasks = enrollments.map(e => ({
     enrollment_id: e.id, student_id: e.student_id, cohort_id: cohortId,
     pillar_number: pillar, week_number: week,
-    title: getTaskTitle(pillar, week),
-    prompt: getTaskPrompt(pillar, week),
+    title: promptDoc?.title || getTaskTitle(pillar, week),
+    prompt: promptDoc?.prompt || getTaskPrompt(pillar, week),
     status: 'pending',
   }))
 
@@ -138,6 +147,7 @@ export async function toggleCohortFeature(
   const { error } = await admin.from('cohorts').update({ [feature]: value }).eq('id', cohortId)
   if (error) return { error: error.message }
   revalidatePath('/admin')
+  revalidatePath('/dashboard')
   revalidatePath(`/admin/cohorts/${cohortId}`)
   return { success: 'Updated.' }
 }

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
-import { getContentForWeek } from '@/lib/sanity/queries'
+import { getCohortCurriculum } from '@/lib/sanity/queries'
 import { ContentCard } from '@/components/content/ContentCard'
 import { PILLARS } from '@/types'
 import { ArrowRight, BookOpen } from '@/components/icons'
@@ -23,11 +23,27 @@ export default async function PillarContentPage() {
 
   if (!enrollment) redirect('/dashboard')
 
-  const week = enrollment.current_week
+  const weekNum = enrollment.current_week
   const pillarNum = enrollment.current_pillar
-  const pillar = PILLARS[pillarNum - 1]
+  const activePillars = (enrollment.cohort as any)?.pillars_config || PILLARS
+  const pillar = activePillars[pillarNum - 1] || activePillars[0]
 
-  const content = await getContentForWeek(pillarNum, week).catch(() => [])
+  const curriculum = await getCohortCurriculum(enrollment.cohort_id)
+
+  // Extract content from curriculum hierarchy for the current week
+  const sanityPillar = curriculum?.pillars?.find((p: any) => p.number === pillarNum)
+  const sanityModule = sanityPillar?.modules?.find((m: any) => m.weekNumber === weekNum)
+  const sessions = sanityModule?.sessions || []
+
+  // Transform curriculum sessions into ContentBlock format for ContentCard
+  const content = sessions.flatMap((s: any) =>
+    (s.contentBlocks || []).map((cb: any) => ({
+        ...cb,
+        weekNumber: weekNum,
+        pillarNumber: pillarNum,
+        contentType: cb._type === 'videoBlock' ? 'video' : cb._type === 'textBlock' ? 'article' : 'pdf'
+    }))
+  )
 
   const { data: tasks } = await supabase.from('tasks')
     .select('id, status')
@@ -41,24 +57,16 @@ export default async function PillarContentPage() {
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Pillar {pillarNum}: {pillar?.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">Week {week} of 12 — Formation Content</p>
+          <h1 className="page-title uppercase tracking-tighter">Pillar {pillarNum}: {pillar?.name}</h1>
+          <p className="text-sm text-gray-500 mt-1">Week {weekNum} of 12 — Formation Content</p>
         </div>
       </div>
 
       {content.length > 0 ? (
         <div className="space-y-8">
-          {content.map((block) => (
-            <div key={block._id} className="space-y-4">
+          {content.map((block: any, idx: number) => (
+            <div key={idx} className="space-y-4">
                <ContentCard content={block} />
-               {block.body && (
-                 <div className="card p-6 prose prose-sm max-w-none prose-teal bg-white">
-                    {/* In a real Sanity app we'd use PortableText here */}
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {typeof block.body === 'string' ? block.body : 'Detailed reading material is available in the linked resource above.'}
-                    </p>
-                 </div>
-               )}
             </div>
           ))}
         </div>

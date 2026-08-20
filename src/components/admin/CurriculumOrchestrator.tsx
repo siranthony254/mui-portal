@@ -28,7 +28,7 @@ interface Cohort {
     pillars_config: Pillar[]
 }
 
-export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
+export function CurriculumOrchestrator({ cohorts, onCohortSelect }: { cohorts: Cohort[], onCohortSelect?: (id: string) => void }) {
     const [selectedCohortId, setSelectedCohortId] = useState('')
     const [curriculum, setCurriculum] = useState<any>(null)
     const [loading, setLoading] = useState(false)
@@ -46,6 +46,7 @@ export function CurriculumOrchestrator({ cohorts }: { cohorts: Cohort[] }) {
             setCurriculum(null)
             setActivePillar(null)
         }
+        if (onCohortSelect) onCohortSelect(selectedCohortId)
     }, [selectedCohortId])
 
     async function fetchCurriculum() {

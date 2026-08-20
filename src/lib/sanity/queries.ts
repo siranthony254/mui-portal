@@ -49,6 +49,13 @@ export async function getAnnouncements(role: string, cohortId?: string): Promise
   return sanityFetch(`*[_type=="announcement"&&$role in targetRoles${filter}&&(!defined(expiresAt)||expiresAt>now())]|order(publishedAt desc)[0...10]{_id,title,body,targetRoles,cohortId,publishedAt,expiresAt}`,{role,...(cohortId?{cohortId}:{})})
 }
 
+export async function getSupplementaryResources(cohortId?: string): Promise<any[]> {
+  const filter = cohortId ? ` && (cohortId == $cohortId || !defined(cohortId))` : ' && !defined(cohortId)'
+  return sanityFetch(`*[_type == "resource"${filter}] | order(publishedAt desc){
+    _id, title, description, contentType, url, tags, publishedAt, cohortId
+  }`, { cohortId })
+}
+
 export async function getCohortCurriculum(cohortId: string): Promise<any | null> {
   return sanityFetchOne(`*[_type=="curriculum" && cohortId == $cohortId][0]{
     _id,

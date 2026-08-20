@@ -5,6 +5,7 @@ import { CheckCircle, User, BookOpen, ShieldCheck, ArrowRight, Zap, Globe, Camer
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { PILLARS } from '@/types'
 
 interface Props {
   profile: any
@@ -122,38 +123,40 @@ export function StudentOnboarding({ profile, cohort }: Props) {
   }
 
   // Welcome Screen
+  const firstPillar = (cohort?.pillars_config || PILLARS)[0]
+
   return (
-    <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full">
+    <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center p-6 overflow-y-auto">
+      <div className="max-w-2xl w-full py-12">
         <div className="text-center space-y-8">
           <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-emerald-100/20 rotate-6 animate-bounce">
             <Zap className="w-10 h-10 text-emerald-600" />
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-none">
+            <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-none uppercase">
               Welcome to the <br /> <span className="text-emerald-700">Formation Journey.</span>
             </h1>
             <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto leading-relaxed">
-              You are now part of a movement building the fix from inside African campuses. We are glad you are here.
+              You are now part of a movement building the fix from inside African campuses. We are glad you are here, {formData.preferred_name}.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
             <div className="card p-6 border-emerald-50 bg-emerald-50/30">
-               <h3 className="font-black text-emerald-900 text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+               <h3 className="font-black text-emerald-900 text-[10px] uppercase tracking-widest mb-2 flex items-center gap-2">
                  <ShieldCheck className="w-4 h-4" /> The First 2 Weeks
                </h3>
                <p className="text-xs text-emerald-800 leading-relaxed font-medium">
-                 Focusing on **Identity & Self**. You'll explore the belief systems that have shaped who you are today.
+                 Focusing on <strong className="font-black">{firstPillar?.name}</strong>. {firstPillar?.description}
                </p>
             </div>
             <div className="card p-6 border-teal-50 bg-teal-50/30">
-               <h3 className="font-black text-teal-900 text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
-                 <BookOpen className="w-4 h-4" /> This Week's Task
+               <h3 className="font-black text-teal-900 text-[10px] uppercase tracking-widest mb-2 flex items-center gap-2">
+                 <BookOpen className="w-4 h-4" /> This Week's Content
                </h3>
                <p className="text-xs text-teal-800 leading-relaxed font-medium">
-                 Check your dashboard for "The Mirror" task. Your first journal entry is also due by Sunday.
+                 Your formation material for <strong className="font-black">{firstPillar?.subtitle || 'the first pillar'}</strong> is now live on your dashboard.
                </p>
             </div>
           </div>

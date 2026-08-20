@@ -3,6 +3,7 @@ import { structureTool } from 'sanity/structure'
 import { visionTool } from '@sanity/vision'
 import {
   contentSchema,
+  resourceSchema,
   courseSchema,
   announcementSchema,
   taskPromptSchema,
@@ -31,6 +32,7 @@ export default defineConfig({
     structureTool({structure:(S)=>S.list().title('MUI Content').items([
       S.listItem().title('Cohort Curriculums').child(S.documentTypeList('curriculum').title('All Curriculums')),
       S.listItem().title('Legacy Content Blocks').child(S.documentTypeList('content').title('All Content')),
+      S.listItem().title('Supplementary Resources').child(S.documentTypeList('resource').title('All Resources')),
       S.listItem().title('Courses').child(S.documentTypeList('course').title('All Courses')),
       S.listItem().title('Task Prompts').child(S.documentTypeList('taskPrompt').title('Task Prompts')),
       S.listItem().title('Announcements').child(S.documentTypeList('announcement').title('Announcements')),
@@ -39,6 +41,7 @@ export default defineConfig({
   ],
   schema:{ types:[
     contentSchema,
+    resourceSchema,
     courseSchema,
     announcementSchema,
     taskPromptSchema,

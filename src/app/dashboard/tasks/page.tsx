@@ -10,11 +10,12 @@ export default async function TasksPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: enrollment } = await supabase.from('enrollments').select('*,cohort:cohorts(current_week)').eq('student_id',user.id).in('status',['enrolled','active']).single()
+  const { data: enrollment } = await supabase.from('enrollments').select('*,cohort:cohorts(*)').eq('student_id',user.id).in('status',['enrolled','active']).single()
   if (!enrollment) redirect('/dashboard')
 
   const { data: tasks } = await supabase.from('tasks').select('*').eq('enrollment_id',enrollment.id).order('week_number',{ascending:true})
-  const currentWeek = enrollment.cohort?.current_week || 1
+  const currentWeek = (enrollment.cohort as any)?.current_week || 1
+  const pillars = (enrollment.cohort as any)?.pillars_config || PILLARS
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -23,7 +24,7 @@ export default async function TasksPage() {
         <span className="badge badge-teal">Week {currentWeek} active</span>
       </div>
 
-      <TaskList tasks={tasks || []} currentWeek={currentWeek} />
+      <TaskList tasks={tasks || []} currentWeek={currentWeek} pillars={pillars} />
     </div>
   )
 }

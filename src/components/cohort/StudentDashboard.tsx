@@ -15,7 +15,8 @@ interface Props { enrollment: any; tasks: Task[]; profile: Profile; partnership?
 export function StudentDashboard({ enrollment, tasks, profile, partnership }: Props) {
   const cohort = enrollment.cohort
   const mentor = enrollment.mentor
-  const currentPillar = PILLARS[enrollment.current_pillar - 1]
+  const activePillars = cohort?.pillars_config || PILLARS
+  const currentPillar = activePillars[enrollment.current_pillar - 1] || activePillars[0]
   const pendingTasks = tasks.filter(t => t.status === 'pending').length
   const submittedTasks = tasks.filter(t => t.status !== 'pending').length
 
@@ -38,7 +39,11 @@ export function StudentDashboard({ enrollment, tasks, profile, partnership }: Pr
             Week {enrollment.current_week} / 12
           </span>
         </div>
-        <JourneyMap currentWeek={enrollment.current_week} currentPillar={enrollment.current_pillar} />
+        <JourneyMap
+          currentWeek={enrollment.current_week}
+          currentPillar={enrollment.current_pillar}
+          pillars={activePillars}
+        />
       </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

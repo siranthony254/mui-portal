@@ -11,9 +11,10 @@ import { Confetti } from '@/components/gamification/Confetti'
 interface Props {
   tasks: Task[]
   currentWeek: number
+  pillars?: any[]
 }
 
-export function TaskList({ tasks, currentWeek }: Props) {
+export function TaskList({ tasks, currentWeek, pillars = PILLARS }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
 
@@ -31,7 +32,7 @@ export function TaskList({ tasks, currentWeek }: Props) {
         const isCurrentWeek = week === currentWeek
         const isFuture = week > currentWeek
         const pillarNum = Math.min(Math.ceil(week / 2.4), 5)
-        const pillar = PILLARS[pillarNum - 1]
+        const pillar = pillars.find(p => p.number === pillarNum) || pillars[pillarNum - 1]
 
         return (
           <div key={week} className={cn('card overflow-hidden', isFuture && 'opacity-50')}>

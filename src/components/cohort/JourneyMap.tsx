@@ -4,7 +4,15 @@ import { PILLARS } from '@/types'
 import { cn } from '@/lib/utils'
 import { CheckCircle2, Circle, Star, Zap } from 'lucide-react'
 
-export function JourneyMap({ currentWeek, currentPillar }: { currentWeek: number; currentPillar: number }) {
+export function JourneyMap({
+  currentWeek,
+  currentPillar,
+  pillars = PILLARS
+}: {
+  currentWeek: number;
+  currentPillar: number;
+  pillars?: any[]
+}) {
   return (
     <div className="relative py-12 px-4 overflow-x-auto">
       <div className="flex justify-between items-start min-w-[800px] relative">
@@ -15,7 +23,7 @@ export function JourneyMap({ currentWeek, currentPillar }: { currentWeek: number
           style={{ width: `${Math.min(((currentWeek - 1) / 12) * 100, 100)}%` }}
         />
 
-        {PILLARS.map((pillar) => {
+        {pillars.map((pillar) => {
           const isCompleted = pillar.number < currentPillar
           const isActive = pillar.number === currentPillar
 
