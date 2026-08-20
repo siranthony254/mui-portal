@@ -43,5 +43,4 @@ export default async function JournalPage() {
       />
     </div>
   )
-  )
 }
