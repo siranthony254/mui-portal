@@ -19,10 +19,29 @@ async function logAction(action: string, targetId: string, details?: any) {
 
 export async function toggleUserApproval(userId: string, approved: boolean) {
   const admin = await createAdminClient()
-  const { error } = await admin.from('profiles').update({ approved }).eq('id', userId)
+  const { error } = await admin.from('profiles').update({
+    approved,
+    status: approved ? 'approved' : 'pending'
+  }).eq('id', userId)
 
   if (!error) {
     await logAction(approved ? 'approve_user' : 'revoke_user', userId)
+    revalidatePath('/admin/students')
+    revalidatePath('/admin/mentors')
+    return { success: true }
+  }
+  return { error: error.message }
+}
+
+export async function updateUserStatus(userId: string, status: 'pending' | 'approved' | 'rejected' | 'left') {
+  const admin = await createAdminClient()
+  const { error } = await admin.from('profiles').update({
+    status,
+    approved: status === 'approved'
+  }).eq('id', userId)
+
+  if (!error) {
+    await logAction('update_status', userId, { status })
     revalidatePath('/admin/students')
     revalidatePath('/admin/mentors')
     return { success: true }

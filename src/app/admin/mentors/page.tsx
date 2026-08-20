@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
-import { getInitials, formatDate, cn } from '@/lib/utils'
-import { UserStatusToggle } from '@/components/admin/UserStatusToggle'
+import { getInitials, formatDate, cn, timeAgo } from '@/lib/utils'
+import { UserStatusManager } from '@/components/admin/UserStatusManager'
 import { RolePromoter } from '@/components/admin/RolePromoter'
 import { DeleteUserButton } from '@/components/admin/DeleteUserButton'
 import { Metadata } from 'next'
-import { Search, UserCheck, MessageSquare, ExternalLink } from '@/components/icons'
+import { Search, UserCheck, MessageSquare, ExternalLink, Clock } from '@/components/icons'
 import Link from 'next/link'
 
 export const metadata: Metadata = { title: 'Mentor Management — People Hub' }
@@ -21,7 +21,12 @@ export default async function MentorsPage() {
     .eq('role', 'mentor')
     .order('created_at', { ascending: false })
 
-  const pendingCount = mentors?.filter(m => !m.approved).length || 0
+  const pendingCount = mentors?.filter(m => m.status === 'pending').length || 0
+  const activeNowCount = mentors?.filter(m => {
+    if (!m.last_login_at) return false
+    const mins = (Date.now() - new Date(m.last_login_at).getTime()) / (1000 * 60)
+    return mins < 15
+  }).length || 0
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
@@ -32,7 +37,7 @@ export default async function MentorsPage() {
         </div>
         <div className="flex gap-2">
            <span className="badge badge-amber">{pendingCount} Pending</span>
-           <span className="badge badge-teal">{(mentors?.length || 0) - pendingCount} Active</span>
+           <span className="badge badge-blue">{activeNowCount} Active Now</span>
         </div>
       </div>
 
@@ -54,59 +59,69 @@ export default async function MentorsPage() {
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Mentor</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Bio & Background</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Students</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Access Status</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Last Seen</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {mentors?.map(mentor => (
-                <tr key={mentor.id} className="group hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                       <div className="w-10 h-10 rounded-[0.8rem] bg-teal-100 text-teal-700 flex items-center justify-center font-black text-xs">
-                         {getInitials(mentor.full_name)}
-                       </div>
-                       <div>
-                         <p className="text-sm font-bold text-gray-900 leading-none mb-1">{mentor.full_name}</p>
-                         <p className="text-xs text-gray-400 font-medium">{mentor.email}</p>
-                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 max-w-xs">
-                     <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed italic">
-                        {mentor.bio || "No bio provided."}
-                     </p>
-                  </td>
-                  <td className="px-6 py-5 text-center">
-                     <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-[10px] font-black">
-                        {mentor.enrollments?.length || 0}
-                     </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                       <UserStatusToggle userId={mentor.id} initialStatus={mentor.approved} />
-                       <span className={cn(
-                         "text-[9px] font-black uppercase tracking-widest",
-                         mentor.approved ? "text-emerald-600" : "text-amber-500"
-                       )}>
-                         {mentor.approved ? 'Active' : 'Pending'}
+              {mentors?.map(mentor => {
+                const isActive = mentor.last_login_at && (Date.now() - new Date(mentor.last_login_at).getTime()) / (1000 * 60) < 15
+
+                return (
+                  <tr key={mentor.id} className="group hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                         <div className="relative">
+                           <div className="w-10 h-10 rounded-[0.8rem] bg-teal-100 text-teal-700 flex items-center justify-center font-black text-xs">
+                             {getInitials(mentor.full_name)}
+                           </div>
+                           {isActive && (
+                             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-blue-500 border-2 border-white rounded-full animate-pulse shadow-sm" title="Online Now" />
+                           )}
+                         </div>
+                         <div>
+                           <p className="text-sm font-bold text-gray-900 leading-none mb-1">{mentor.full_name}</p>
+                           <p className="text-xs text-gray-400 font-medium">{mentor.email}</p>
+                         </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 max-w-xs">
+                       <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed italic">
+                          {mentor.bio || "No bio provided."}
+                       </p>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                       <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-[10px] font-black">
+                          {mentor.enrollments?.length || 0}
                        </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                     <div className="flex items-center justify-end gap-2">
-                        <RolePromoter userId={mentor.id} currentRole={mentor.role} />
-                        <Link
-                          href={`/admin/messages?user=${mentor.id}`}
-                          className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-gray-100 text-gray-400 hover:text-teal-600 transition-all"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                        </Link>
-                        <DeleteUserButton userId={mentor.id} userName={mentor.full_name} />
-                     </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                       <div className="flex flex-col items-center gap-0.5">
+                         <p className="text-[10px] font-bold text-gray-700">
+                           {mentor.last_login_at ? timeAgo(mentor.last_login_at) : 'Never'}
+                         </p>
+                         <Clock className="w-3 h-3 text-gray-300" />
+                       </div>
+                    </td>
+                    <td className="px-6 py-5">
+                       <UserStatusManager userId={mentor.id} currentStatus={mentor.status || 'pending'} />
+                    </td>
+                    <td className="px-6 py-5">
+                       <div className="flex items-center justify-end gap-2">
+                          <RolePromoter userId={mentor.id} currentRole={mentor.role} />
+                          <Link
+                            href={`/admin/messages?user=${mentor.id}`}
+                            className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-gray-100 text-gray-400 hover:text-teal-600 transition-all"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </Link>
+                          <DeleteUserButton userId={mentor.id} userName={mentor.full_name} />
+                       </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

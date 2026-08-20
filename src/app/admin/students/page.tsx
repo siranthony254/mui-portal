@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
-import { getInitials, cn } from '@/lib/utils'
+import { getInitials, cn, timeAgo } from '@/lib/utils'
 import { Metadata } from 'next'
-import { Search, UserCheck, MessageSquare, AlertCircle } from '@/components/icons'
+import { Search, UserCheck, MessageSquare, AlertCircle, Clock } from '@/components/icons'
 import Link from 'next/link'
-import { UserStatusToggle } from '@/components/admin/UserStatusToggle'
+import { UserStatusManager } from '@/components/admin/UserStatusManager'
 import { CohortAndMentorPicker } from '@/components/admin/CohortAndMentorPicker'
 import { DeleteUserButton } from '@/components/admin/DeleteUserButton'
 
@@ -25,7 +25,7 @@ export default async function StudentsPage() {
     supabase.from('profiles').select('*, enrollments:enrollments(*, cohort:cohorts(id, name))').eq('role', 'student').order('created_at', { ascending: false }),
     supabase.from('cohorts').select('id, name').order('year', { ascending: false }),
     supabase.from('profiles').select('id, full_name').eq('role', 'mentor').eq('approved', true),
-    supabase.from('session_completions').select('student_id')
+    supabase.from('session_homework_completions').select('student_id')
   ])
 
   const completionsMap = (allCompletions || []).reduce<Record<string, number>>((acc, c) => {
@@ -60,22 +60,27 @@ export default async function StudentsPage() {
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Student</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Institution</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Formation Assignment</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Progress</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Access</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Last Seen</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {students?.map(student => {
                 const enrollment = student.enrollments?.[0] as any
-                const pct = enrollment ? Math.round(((enrollment.current_week - 1) / 12) * 100) : 0
+                const isActive = student.last_login_at && (Date.now() - new Date(student.last_login_at).getTime()) / (1000 * 60) < 15
 
                 return (
                   <tr key={student.id} className="group hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-[0.8rem] bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">
-                           {getInitials(student.full_name)}
+                         <div className="relative">
+                           <div className="w-10 h-10 rounded-[0.8rem] bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">
+                             {getInitials(student.full_name)}
+                           </div>
+                           {isActive && (
+                             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-blue-500 border-2 border-white rounded-full animate-pulse shadow-sm" title="Online Now" />
+                           )}
                          </div>
                          <div>
                            <p className="text-sm font-bold text-gray-900 leading-none mb-1">{student.full_name}</p>
@@ -101,23 +106,16 @@ export default async function StudentsPage() {
                         mentors={mentors || []}
                        />
                     </td>
-                    <td className="px-6 py-5">
-                      {enrollment ? (
-                        <div className="w-32">
-                          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest mb-1">
-                             <span className="text-gray-400">Week {enrollment.current_week}</span>
-                             <span className="text-teal-700">{completionsMap[student.id] || 0} Sessions</span>
-                          </div>
-                          <div className="progress-bar h-1">
-                             <div className="progress-fill" style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Not Enrolled</span>
-                      )}
+                    <td className="px-6 py-5 text-center">
+                       <div className="flex flex-col items-center gap-0.5">
+                         <p className="text-[10px] font-bold text-gray-700">
+                           {student.last_login_at ? timeAgo(student.last_login_at) : 'Never'}
+                         </p>
+                         <Clock className="w-3 h-3 text-gray-300" />
+                       </div>
                     </td>
                     <td className="px-6 py-5">
-                       <UserStatusToggle userId={student.id} initialStatus={student.approved} />
+                       <UserStatusManager userId={student.id} currentStatus={student.status || (student.approved ? 'approved' : 'pending')} />
                     </td>
                     <td className="px-6 py-5">
                        <div className="flex items-center justify-end gap-2">

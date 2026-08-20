@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
     // 3. Role-Based Access Control
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, approved')
+      .select('role, approved, status')
       .eq('id', user.id)
       .single()
 
@@ -80,7 +80,8 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(url)
         }
 
-        if (profile.role === 'mentor' && !profile.approved && pathname !== '/auth/pending') {
+        const isApproved = profile.approved || profile.status === 'approved'
+        if (profile.role === 'mentor' && !isApproved && pathname !== '/auth/pending') {
           const url = request.nextUrl.clone()
           url.pathname = '/auth/pending'
           return NextResponse.redirect(url)

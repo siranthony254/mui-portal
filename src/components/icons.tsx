@@ -49,6 +49,7 @@ import {
   UserPlus as LucideUserPlus,
   Video as LucideVideo,
   X as LucideX,
+  XCircle as LucideXCircle,
   Zap as LucideZap,
   Unlock as LucideUnlock,
   CircleAlert as LucideCircleAlert,
@@ -110,6 +111,7 @@ export function UserPlus(props: IconProps) { return <LucideUserPlus {...props} /
 export function Users(props: IconProps) { return <LucideUsers {...props} /> }
 export function Video(props: IconProps) { return <LucideVideo {...props} /> }
 export function X(props: IconProps) { return <LucideX {...props} /> }
+export function XCircle(props: IconProps) { return <LucideXCircle {...props} /> }
 export function Zap(props: IconProps) { return <LucideZap {...props} /> }
 export function Unlock(props: IconProps) { return <LucideUnlock {...props} /> }
 export function AlertCircle(props: IconProps) { return <LucideCircleAlert {...props} /> }

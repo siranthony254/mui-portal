@@ -132,6 +132,7 @@ export async function signUpMentor(formData: FormData) {
       full_name: fullName,
       role: isEmailAdmin ? 'admin' : 'mentor',
       approved: isEmailAdmin,
+      status: isEmailAdmin ? 'approved' : 'pending',
       bio,
     }, { onConflict: 'id' })
 

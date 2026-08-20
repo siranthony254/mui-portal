@@ -16,6 +16,8 @@ export interface Profile {
   expertise?: string[]
   personality_tags?: string[]
   approved: boolean
+  status: 'pending' | 'approved' | 'rejected' | 'left'
+  last_login_at?: string
   created_at: string
   updated_at: string
 }
