@@ -30,9 +30,12 @@ import {
   Lightbulb as LucideLightbulb,
   Lock as LucideLock,
   LogOut as LucideLogOut,
+  Mail as LucideMail,
   Menu as LucideMenu,
   MessageSquare as LucideMessageSquare,
   Mic2 as LucideMic2,
+  Moon as LucideMoon,
+  MoreVertical as LucideMoreVertical,
   Pause as LucidePause,
   Play as LucidePlay,
   Plus as LucidePlus,
@@ -45,6 +48,7 @@ import {
   ShieldCheck as LucideShieldCheck,
   Star as LucideStar,
   Square as LucideSquare,
+  Sun as LucideSun,
   Trash2 as LucideTrash2,
   TrendingUp as LucideTrendingUp,
   UserCheck as LucideUserCheck,
@@ -62,6 +66,8 @@ import {
   Layers as LucideLayers,
   Edit3 as LucideEdit3,
   Sparkles as LucideSparkles,
+  Archive as LucideArchive,
+  Filter as LucideFilter,
 } from 'lucide-react'
 
 type IconProps = SVGProps<SVGSVGElement>
@@ -127,6 +133,12 @@ export function User(props: IconProps) { return <LucideUser {...props} /> }
 export function Layers(props: IconProps) { return <LucideLayers {...props} /> }
 export function Edit3(props: IconProps) { return <LucideEdit3 {...props} /> }
 export function Sparkles(props: IconProps) { return <LucideSparkles {...props} /> }
+export function Archive(props: IconProps) { return <LucideArchive {...props} /> }
+export function Filter(props: IconProps) { return <LucideFilter {...props} /> }
+export function Mail(props: IconProps) { return <LucideMail {...props} /> }
+export function Moon(props: IconProps) { return <LucideMoon {...props} /> }
+export function Sun(props: IconProps) { return <LucideSun {...props} /> }
+export function MoreVertical(props: IconProps) { return <LucideMoreVertical {...props} /> }
 
 
 

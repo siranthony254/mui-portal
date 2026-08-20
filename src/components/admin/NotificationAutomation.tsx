@@ -32,7 +32,7 @@ export function NotificationAutomation() {
   const [activeTab, setActiveTab] = useState<'daily' | 'inactivity' | 'mentor' | 'reports'>('daily')
 
   const handleToggle = (key: keyof AutomationConfig) => {
-    setConfig(prev => ({ ...prev, [key]: !prev[key as any] }))
+    setConfig(prev => ({ ...prev, [key]: !prev[key] as boolean }))
   }
 
   const handleTimeChange = (key: keyof AutomationConfig, value: string) => {

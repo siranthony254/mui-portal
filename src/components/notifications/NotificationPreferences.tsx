@@ -30,7 +30,7 @@ export function NotificationPreferences({ preferences, onSave }: NotificationPre
   const [hasChanges, setHasChanges] = useState(false)
 
   const handleToggle = (key: keyof NotificationPreferences) => {
-    setLocalPrefs(prev => ({ ...prev, [key]: !prev[key as any] }))
+    setLocalPrefs(prev => ({ ...prev, [key]: !prev[key] as boolean }))
     setHasChanges(true)
   }
 
