@@ -7,7 +7,7 @@ import {
     Plus, X, Globe, Layers, Zap, Image
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
-import { SimpleRichEditor } from '@/components/ui/SimpleRichEditor'
+import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { MediaPicker } from '@/components/ui/MediaPicker'
 
 export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?: () => void }) {
@@ -121,11 +121,10 @@ export function AddResourceForm({ cohorts, onClose }: { cohorts: any[], onClose?
                 ) : inputMode === 'type' ? (
                     <div className="animate-reveal">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 block mb-2">Content Body</label>
-                        <SimpleRichEditor
+                        <RichTextEditor
                             value={articleBody}
                             onChange={setArticleBody}
                             placeholder="Type or paste your content here..."
-                            rows={10}
                         />
                         <input type="hidden" name="body" value={articleBody} />
                     </div>

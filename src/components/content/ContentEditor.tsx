@@ -5,7 +5,7 @@ import { updateStandaloneContent } from '@/lib/actions/sanity'
 import type { ContentBlock } from '@/types'
 import { X, Save, Video, FileText, Headphones, FileImage, Star } from '@/components/icons'
 import { cn } from '@/lib/utils'
-import { SimpleRichEditor } from '@/components/ui/SimpleRichEditor'
+import { RichTextEditor } from '@/components/ui/RichTextEditor'
 
 export function ContentEditor({ content, onCancel }: { content: ContentBlock; onCancel: () => void }) {
   const [loading, setLoading] = useState(false)
@@ -99,8 +99,8 @@ export function ContentEditor({ content, onCancel }: { content: ContentBlock; on
         </div>
 
         <div>
-          <label className="label">Article Content (Markdown/Text)</label>
-          <SimpleRichEditor value={body} onChange={setBody} placeholder="Write or paste your article here..." rows={8} />
+          <label className="label">Article Content</label>
+          <RichTextEditor value={body} onChange={setBody} placeholder="Write or paste your article here..." />
         </div>
 
         <div className="flex items-center gap-2 pt-2">
