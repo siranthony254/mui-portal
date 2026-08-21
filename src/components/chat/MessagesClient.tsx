@@ -37,6 +37,7 @@ export function MessagesClient({ currentUser, conversations: initial, participan
   const profileMap = new Map(participantProfiles.map((p:any) => [p.id, p]))
 
   function getOther(convo: any) {
+    if (convo.is_group) return { full_name: convo.group_name || 'Group Chat', role: 'group' }
     const otherId = convo.participant_ids.find((id:string) => id !== currentUser.id)
     return profileMap.get(otherId) || { full_name:'Unknown', role:'student' }
   }
@@ -153,7 +154,7 @@ export function MessagesClient({ currentUser, conversations: initial, participan
           <>
             <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-3">
               <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0',
-                (otherParticipant as any).role==='mentor'?'bg-blue-100 text-blue-700':'bg-teal-100 text-teal-700')}>
+                (otherParticipant as any).role==='mentor'?'bg-blue-100 text-blue-700':(otherParticipant as any).role==='group'?'bg-emerald-100 text-emerald-700':'bg-teal-100 text-teal-700')}>
                 {getInitials((otherParticipant as any).full_name||'U')}
               </div>
               <div>
@@ -167,9 +168,17 @@ export function MessagesClient({ currentUser, conversations: initial, participan
                 const isMe = msg.sender_id === currentUser.id
                 return (
                   <div key={msg.id} className={cn('flex gap-2', isMe && 'flex-row-reverse')}>
-                    {!isMe && <div className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-auto">{getInitials(msg.sender?.full_name||'U')}</div>}
+                    {!isMe && (
+                        <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 mt-auto shadow-sm',
+                            msg.sender?.role === 'mentor' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700')}>
+                            {getInitials(msg.sender?.full_name||'U')}
+                        </div>
+                    )}
                     <div className={cn('max-w-xs lg:max-w-md', isMe && 'items-end flex flex-col')}>
-                      <div className={cn('px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed', isMe?'chat-bubble-out':'chat-bubble-in')}>
+                      {!isMe && activeConvo?.is_group && (
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">{msg.sender?.full_name?.split(' ')[0]}</p>
+                      )}
+                      <div className={cn('px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed', isMe?'chat-bubble-out':'chat-bubble-in shadow-sm')}>
                         {msg.audio_url ? (
                             <div className="flex items-center gap-3 py-1">
                                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">

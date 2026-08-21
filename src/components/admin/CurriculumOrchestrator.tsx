@@ -12,9 +12,11 @@ import {
 import {
     Layers, Zap, Calendar, Play, ChevronRight,
     ArrowLeft, Plus, MessageSquare, BookOpen,
-    FileText, Video, Headphones, FileDown, X, CheckCircle, Search, Trash2, Edit3, Save
+    FileText, Video, Headphones, FileDown, X, CheckCircle, Search, Trash2, Edit3, Save, Globe, Image as ImageIcon
 } from '@/components/icons'
 import { cn, parseYouTubeEmbed } from '@/lib/utils'
+import { CohortCurriculumHub } from '@/components/cohort/hub/CohortCurriculumHub'
+import { MediaPicker } from '@/components/ui/MediaPicker'
 
 interface Pillar {
     number: number
@@ -28,13 +30,14 @@ interface Cohort {
     pillars_config: Pillar[]
 }
 
-export function CurriculumOrchestrator({ cohorts, onCohortSelect }: { cohorts: Cohort[], onCohortSelect?: (id: string) => void }) {
+export function CurriculumOrchestrator({ cohorts, onCohortSelect, onClose }: { cohorts: any[], onCohortSelect?: (id: string) => void, onClose?: () => void }) {
     const [selectedCohortId, setSelectedCohortId] = useState('')
     const [curriculum, setCurriculum] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [activePillar, setActivePillar] = useState<number | null>(null)
     const [editingPillar, setEditingPillar] = useState<Pillar | null>(null)
     const [activeSession, setActiveSession] = useState<any>(null)
+    const [showPreview, setShowPreview] = useState(false)
 
     const selectedCohort = cohorts.find(c => c.id === selectedCohortId)
     const activePillars = selectedCohort?.pillars_config || PILLARS.map(p => ({ ...p, objectives: [] }))
@@ -101,17 +104,50 @@ export function CurriculumOrchestrator({ cohorts, onCohortSelect }: { cohorts: C
                     onClick={() => {
                         if (activeSession) setActiveSession(null)
                         else if (activePillar) setActivePillar(null)
+                        else if (onClose) onClose()
                         else setSelectedCohortId('')
                     }}
                     className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-emerald-700 transition-colors"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Back {activeSession ? 'to Pillar' : activePillar ? 'to Cohort' : 'to Selection'}
+                    <ArrowLeft className="w-4 h-4" /> Back {activeSession ? 'to Pillar' : activePillar ? 'to Cohort' : onClose ? 'to Dashboard' : 'to Selection'}
                 </button>
                 <div className="flex items-center gap-3">
+                    {selectedCohortId && (
+                        <button
+                            onClick={() => setShowPreview(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 transition-all"
+                        >
+                            <Globe className="w-3.5 h-3.5" /> Learner Preview
+                        </button>
+                    )}
                     <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">Orchestrating</span>
                     <h2 className="text-sm font-bold text-gray-900">{selectedCohort?.name}</h2>
                 </div>
             </div>
+
+            {showPreview && (
+                <div className="fixed inset-0 z-[150] bg-white overflow-y-auto">
+                    <div className="max-w-6xl mx-auto p-6 md:p-10">
+                        <div className="flex items-center justify-between mb-10 pb-6 border-b border-gray-100">
+                             <div>
+                                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Learner Experience Preview</h2>
+                                <p className="text-sm text-gray-500 font-medium">Viewing as a student in {selectedCohort?.name}</p>
+                             </div>
+                             <button
+                                onClick={() => setShowPreview(false)}
+                                className="p-3 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-all"
+                             >
+                                <X className="w-6 h-6 text-gray-400" />
+                             </button>
+                        </div>
+                        <CohortCurriculumHub
+                            curriculum={curriculum}
+                            completions={[]}
+                            enrollment={{ cohort_id: selectedCohortId }}
+                        />
+                    </div>
+                </div>
+            )}
 
             {loading ? (
                 <div className="py-20 text-center space-y-4">
@@ -144,7 +180,7 @@ export function CurriculumOrchestrator({ cohorts, onCohortSelect }: { cohorts: C
                 />
             ) : activePillar ? (
                 <PillarModuleView
-                    pillar={activePillars.find(p => p.number === activePillar)!}
+                    pillar={activePillars.find((p: any) => p.number === activePillar)!}
                     curriculum={curriculum}
                     onOpenSession={(s: any) => setActiveSession(s)}
                     onDeleteSession={handleDeleteSession}
@@ -407,7 +443,15 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
     const [loading, setLoading] = useState(false)
     const [title, setTitle] = useState(session?.title || '')
     const [journalPrompt, setJournalPrompt] = useState(session?.journalPrompt || '')
-    const [contentType, setContentType] = useState(session?.contentBlocks?.[0]?._type === 'videoBlock' ? 'video' : session?.contentBlocks?.[0]?._type === 'textBlock' ? 'article' : session?.contentBlocks?.[0]?._type === 'audioBlock' ? 'audio' : session?.contentBlocks?.[0]?._type === 'fileBlock' ? 'pdf' : 'image')
+
+    const initialBlock = session?.contentBlocks?.[0]
+    const [contentType, setContentType] = useState(
+        initialBlock?._type === 'videoBlock' ? 'video' :
+        initialBlock?._type === 'textBlock' ? 'article' :
+        initialBlock?._type === 'audioBlock' ? 'audio' :
+        initialBlock?._type === 'fileBlock' ? 'pdf' :
+        initialBlock?._type === 'imageBlock' ? 'image' : 'video'
+    )
     const [videoSource, setVideoSource] = useState<'youtube' | 'upload'>(session?.contentBlocks?.[0]?.videoType === 'youtube' ? 'youtube' : 'upload')
     const [youtubeInput, setYoutubeInput] = useState(() => {
         const block = session?.contentBlocks?.[0]
@@ -459,14 +503,26 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                 contentBlock.url = URL.createObjectURL(selectedFile)
             }
         } else if (contentType === 'article') {
-            // Wrap article body in Sanity block structure
-            contentBlock.body = [{
+            // Split article body by newlines and create Sanity blocks for each paragraph
+            const paragraphs = articleBody.split(/\n+/).filter(p => p.trim().length > 0);
+            contentBlock.body = paragraphs.map(p => ({
                 _type: 'block',
                 _key: Math.random().toString(36).substring(2),
-                children: [{ _type: 'span', text: articleBody, marks: [] }],
+                children: [{ _type: 'span', text: p.trim(), marks: [] }],
                 markDefs: [],
                 style: 'normal'
-            }]
+            }));
+
+            // If empty, provide at least one empty block
+            if (contentBlock.body.length === 0) {
+                contentBlock.body = [{
+                    _type: 'block',
+                    _key: Math.random().toString(36).substring(2),
+                    children: [{ _type: 'span', text: '', marks: [] }],
+                    markDefs: [],
+                    style: 'normal'
+                }];
+            }
         } else if (contentType === 'audio' || contentType === 'pdf' || contentType === 'image') {
             if (selectedFile) {
                 contentBlock.url = selectedFile.name
@@ -562,7 +618,7 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                             { id: 'article', icon: FileText, label: 'Article' },
                             { id: 'audio', icon: Headphones, label: 'Audio' },
                             { id: 'pdf', icon: FileDown, label: 'PDF' },
-                            { id: 'image', icon: FileDown, label: 'Image' }
+                            { id: 'image', icon: ImageIcon, label: 'Image' }
                         ].map(type => {
                             const Icon = type.icon
                             return (
@@ -615,14 +671,14 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                         ) : (
                             <div className="space-y-2">
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Upload Video</label>
-                                <input
-                                    type="file"
+                                <MediaPicker
+                                    onFileSelect={setSelectedFile}
+                                    type="video"
                                     accept="video/*"
-                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm"
+                                    label="Click to select MP4/MOV"
                                 />
-                                {session?.contentBlocks?.[0]?.url && (
-                                    <p className="text-xs text-gray-500">Current video: {typeof session.contentBlocks[0].url === 'string' ? session.contentBlocks[0].url : 'Video uploaded'}</p>
+                                {session?.contentBlocks?.[0]?.url && !selectedFile && (
+                                    <p className="text-[10px] text-gray-400 mt-2 italic px-2">Current video: {typeof session.contentBlocks[0].url === 'string' ? session.contentBlocks[0].url.split('/').pop() : 'Video uploaded'}</p>
                                 )}
                             </div>
                         )}
@@ -635,8 +691,8 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                         <textarea
                             value={articleBody}
                             onChange={(e) => setArticleBody(e.target.value)}
-                            rows={6}
-                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm font-medium"
+                            rows={8}
+                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm font-medium leading-relaxed"
                             placeholder="Write your article content here..."
                         />
                     </div>
@@ -644,15 +700,14 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
 
                 {(contentType === 'audio' || contentType === 'pdf' || contentType === 'image') && (
                     <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Upload {contentType === 'audio' ? 'Audio' : contentType === 'pdf' ? 'PDF' : 'Image'}</label>
-                        <input
-                            type="file"
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Upload {contentType.toUpperCase()}</label>
+                        <MediaPicker
+                            onFileSelect={setSelectedFile}
+                            type={contentType as any}
                             accept={contentType === 'audio' ? 'audio/*' : contentType === 'pdf' ? 'application/pdf' : 'image/*'}
-                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm"
                         />
-                        {session?.contentBlocks?.[0]?.url && (
-                            <p className="text-xs text-gray-500">Current file: {typeof session.contentBlocks[0].url === 'string' ? session.contentBlocks[0].url : 'File uploaded'}</p>
+                        {session?.contentBlocks?.[0]?.url && !selectedFile && (
+                            <p className="text-[10px] text-gray-400 mt-2 italic px-2">Current file: {typeof session.contentBlocks[0].url === 'string' ? session.contentBlocks[0].url.split('/').pop() : 'File uploaded'}</p>
                         )}
                     </div>
                 )}

@@ -40,40 +40,54 @@ export const curriculumSchema = defineType({
                     of: [{ type: 'block' }]
                 }),
                 defineField({
-                  name: 'sessions',
-                  title: 'Sessions (Daily)',
+                  name: 'days',
+                  title: 'Days (Daily Content)',
                   type: 'array',
                   of: [{
                     type: 'object',
-                    name: 'session',
+                    name: 'day',
                     fields: [
-                      defineField({ name: 'dayNumber', title: 'Day Number (1-6)', type: 'number', validation: r => r.min(1).max(6) }),
-                      defineField({ name: 'title', title: 'Session Title', type: 'string', validation: r => r.required() }),
+                      defineField({ name: 'dayNumber', title: 'Day Number (1-7)', type: 'number', validation: r => r.min(1).max(7) }),
+                      defineField({ name: 'title', title: 'Day Title', type: 'string' }),
                       defineField({
-                        name: 'contentBlocks',
-                        title: 'Content Blocks',
-                        type: 'array',
-                        of: [
-                          { type: 'textBlock' },
-                          { type: 'videoBlock' },
-                          { type: 'imageBlock' },
-                          { type: 'fileBlock', name: 'fileBlock', title: 'File/PDF' }
-                        ]
-                      }),
-                      defineField({
-                        name: 'subsessions',
-                        title: 'Subsessions',
+                        name: 'sessions',
+                        title: 'Sessions',
                         type: 'array',
                         of: [{
                           type: 'object',
-                          name: 'subsession',
+                          name: 'session',
                           fields: [
-                            defineField({ name: 'title', title: 'Subsession Title', type: 'string' }),
-                            defineField({ name: 'content', type: 'array', of: [{ type: 'block' }] })
+                            defineField({ name: 'sessionNumber', title: 'Session Number', type: 'number', validation: r => r.required() }),
+                            defineField({ name: 'title', title: 'Session Title', type: 'string', validation: r => r.required() }),
+                            defineField({
+                              name: 'contentBlocks',
+                              title: 'Content Blocks',
+                              type: 'array',
+                              of: [
+                                { type: 'textBlock' },
+                                { type: 'videoBlock' },
+                                { type: 'imageBlock' },
+                                { type: 'audioBlock', name: 'audioBlock', title: 'Audio' },
+                                { type: 'fileBlock', name: 'fileBlock', title: 'File/PDF' }
+                              ]
+                            }),
+                            defineField({
+                              name: 'subsessions',
+                              title: 'Subsessions',
+                              type: 'array',
+                              of: [{
+                                type: 'object',
+                                name: 'subsession',
+                                fields: [
+                                  defineField({ name: 'title', title: 'Subsession Title', type: 'string' }),
+                                  defineField({ name: 'content', type: 'array', of: [{ type: 'block' }] })
+                                ]
+                              }]
+                            }),
+                            defineField({ name: 'journalPrompt', title: 'Journal Prompt', type: 'text', rows: 3, description: 'Optional prompt triggered after session completion.' })
                           ]
                         }]
-                      }),
-                      defineField({ name: 'journalPrompt', title: 'Journal Prompt', type: 'text', rows: 3, description: 'Optional prompt triggered after session completion.' })
+                      })
                     ]
                   }]
                 })
@@ -132,4 +146,15 @@ export const fileBlock = defineType({
         defineField({ name: 'file', title: 'Upload File', type: 'file' }),
         defineField({ name: 'externalUrl', title: 'External URL', type: 'url' })
     ]
+})
+
+export const audioBlock = defineType({
+  name: 'audioBlock',
+  title: 'Audio',
+  type: 'object',
+  fields: [
+    defineField({ name: 'title', title: 'Audio Title', type: 'string' }),
+    defineField({ name: 'audioFile', title: 'Upload Audio', type: 'file', options: { accept: 'audio/*' } }),
+    defineField({ name: 'description', title: 'Audio Description', type: 'text', rows: 2 })
+  ]
 })

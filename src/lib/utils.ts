@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getYouTubeId(url: string): string | null {
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/)([^&\n?#]+)/,
     /^([a-zA-Z0-9_-]{11})$/,
   ]
   for (const pattern of patterns) {
@@ -19,7 +19,10 @@ export function getYouTubeId(url: string): string | null {
 
 export function getYouTubeEmbed(urlOrId: string): string {
   const id = getYouTubeId(urlOrId) || urlOrId
-  return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`
+  // rel=0 ensures that when the video finishes, suggestions are limited to the same channel
+  // modestbranding=1 removes the YouTube logo from the control bar
+  // iv_load_policy=3 hides video annotations
+  return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&iv_load_policy=3`
 }
 
 export function getYouTubeThumbnail(urlOrId: string): string {

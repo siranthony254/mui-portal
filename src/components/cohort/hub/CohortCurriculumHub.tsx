@@ -32,8 +32,10 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
   const allSessions: any[] = []
   curriculum.pillars?.forEach((p: any) => {
     p.modules?.forEach((m: any) => {
-        m.sessions?.forEach((s: any) => {
-            allSessions.push({ ...s, pillar: p, module: m })
+        m.days?.forEach((d: any) => {
+            d.sessions?.forEach((s: any) => {
+                allSessions.push({ ...s, pillar: p, module: m, day: d })
+            })
         })
     })
   })
@@ -102,47 +104,51 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
                                 <h3 className="text-sm font-bold text-gray-700">{module.title || 'Formation Module'}</h3>
                             </div>
 
-                            <div className="space-y-2">
-                                {module.sessions?.map((session: any, sIdx: number) => {
-                                    // Logic for locking:
-                                    // A session is locked if it's not the very first session
-                                    // AND the session before it in allSessions is not completed.
-                                    const sessionIndex = allSessions.findIndex(as => as._key === session._key)
-                                    const isCompleted = completions.includes(session._key)
-                                    const isLocked = sessionIndex > 0 && !completions.includes(allSessions[sessionIndex - 1]._key)
+                            <div className="space-y-6">
+                                {module.days?.sort((a: any, b: any) => a.dayNumber - b.dayNumber).map((day: any) => (
+                                    <div key={day._key} className="space-y-2">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Day {day.dayNumber}</p>
+                                        <div className="space-y-2">
+                                            {day.sessions?.sort((a: any, b: any) => a.sessionNumber - b.sessionNumber).map((session: any) => {
+                                                const sessionIndex = allSessions.findIndex(as => as._key === session._key)
+                                                const isCompleted = completions.includes(session._key)
+                                                const isLocked = sessionIndex > 0 && !completions.includes(allSessions[sessionIndex - 1]._key)
 
-                                    return (
-                                        <button
-                                            key={session._key}
-                                            disabled={isLocked}
-                                            onClick={() => setActiveSession({ ...session, pillar, module })}
-                                            className={cn(
-                                                "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group",
-                                                isLocked
-                                                    ? "bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed"
-                                                    : isCompleted
-                                                        ? "bg-white border-emerald-100 hover:border-emerald-200"
-                                                        : "bg-white border-gray-100 hover:border-emerald-600 hover:shadow-lg"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-4 text-left">
-                                                <div className={cn(
-                                                    "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
-                                                    isLocked ? "bg-gray-100 text-gray-300" : isCompleted ? "bg-emerald-100 text-emerald-700" : "bg-teal-50 text-teal-600 group-hover:bg-emerald-700 group-hover:text-white"
-                                                )}>
-                                                    {isLocked ? <Lock className="w-3.5 h-3.5" /> : isCompleted ? <CheckCircle className="w-4 h-4" /> : <Play className="w-3.5 h-3.5" />}
-                                                </div>
-                                                <div>
-                                                    <p className={cn("text-xs font-black uppercase tracking-widest", isLocked ? "text-gray-300" : "text-gray-400")}>Day {session.dayNumber}</p>
-                                                    <p className={cn("text-sm font-bold truncate max-w-[180px]", isLocked ? "text-gray-300" : "text-gray-900")}>{session.title}</p>
-                                                </div>
-                                            </div>
-                                            {!isLocked && <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 transition-colors" />}
-                                        </button>
-                                    )
-                                })}
+                                                return (
+                                                    <button
+                                                        key={session._key}
+                                                        disabled={isLocked}
+                                                        onClick={() => setActiveSession({ ...session, pillar, module, day })}
+                                                        className={cn(
+                                                            "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group",
+                                                            isLocked
+                                                                ? "bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed"
+                                                                : isCompleted
+                                                                    ? "bg-white border-emerald-100 hover:border-emerald-200"
+                                                                    : "bg-white border-gray-100 hover:border-emerald-600 hover:shadow-lg"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-4 text-left">
+                                                            <div className={cn(
+                                                                "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
+                                                                isLocked ? "bg-gray-100 text-gray-300" : isCompleted ? "bg-emerald-100 text-emerald-700" : "bg-teal-50 text-teal-600 group-hover:bg-emerald-700 group-hover:text-white"
+                                                            )}>
+                                                                {isLocked ? <Lock className="w-3.5 h-3.5" /> : isCompleted ? <CheckCircle className="w-4 h-4" /> : <Play className="w-3.5 h-3.5" />}
+                                                            </div>
+                                                            <div>
+                                                                <p className={cn("text-[10px] font-black uppercase tracking-widest", isLocked ? "text-gray-300" : "text-emerald-600/60")}>Session {session.sessionNumber}</p>
+                                                                <p className={cn("text-sm font-bold truncate max-w-[180px]", isLocked ? "text-gray-300" : "text-gray-900")}>{session.title}</p>
+                                                            </div>
+                                                        </div>
+                                                        {!isLocked && <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 transition-colors" />}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                     </div>
                     ))}
                 </div>
             </section>

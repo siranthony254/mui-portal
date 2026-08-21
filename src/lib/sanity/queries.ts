@@ -83,12 +83,13 @@ export async function getCohortCurriculum(cohortId: string): Promise<any | null>
                         title,
                         videoType,
                         youtubeEmbed,
-                        videoFile,
+                        "videoUrl": videoFile.asset->url,
                         description,
                         body,
-                        image,
+                        "imageUrl": image.asset->url,
                         caption,
-                        file,
+                        "fileUrl": file.asset->url,
+                        "audioUrl": audioFile.asset->url,
                         externalUrl,
                         url
                     }

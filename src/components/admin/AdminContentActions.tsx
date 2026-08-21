@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, Zap, BookOpen, Settings, FileText, Edit3 } from '@/components/icons'
-import { AddContentForm } from './AddContentForm'
+import { CurriculumOrchestrator } from './CurriculumOrchestrator'
 import { AddResourceForm } from './AddResourceForm'
 import { ResourceManager } from './ResourceManager'
 
@@ -11,9 +11,12 @@ export function AdminContentActions({ cohorts }: { cohorts: any[] }) {
 
   if (showForm === 'orchestrate') {
     return (
-      <div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-md flex items-center justify-center p-6 overflow-y-auto">
-        <div className="max-w-4xl w-full">
-          <AddContentForm cohorts={cohorts} onClose={() => setShowShowForm(null)} />
+      <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
+        <div className="max-w-6xl mx-auto p-6 md:p-10">
+          <div className="flex items-center justify-between mb-8 pb-4 border-b">
+             <h2 className="text-xl font-black uppercase tracking-widest text-emerald-700">Quick Orchestration</h2>
+          </div>
+          <CurriculumOrchestrator cohorts={cohorts} onClose={() => setShowShowForm(null)} />
         </div>
       </div>
     )

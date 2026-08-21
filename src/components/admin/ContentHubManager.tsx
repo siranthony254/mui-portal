@@ -49,7 +49,7 @@ export function ContentHubManager({ cohorts }: { cohorts: any[] }) {
         <div className="space-y-12">
             {/* 1. Hierarchical Drill-Down UI */}
             <section className="space-y-6">
-                <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Curriculum Orchestrator</h2>
+                <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Orchestration Studio</h2>
                 <CurriculumOrchestrator
                     cohorts={cohorts}
                     onCohortSelect={setSelectedCohortId}

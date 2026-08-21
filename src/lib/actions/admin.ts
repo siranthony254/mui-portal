@@ -19,6 +19,8 @@ async function logAction(action: string, targetId: string, details?: any) {
 
 export async function toggleUserApproval(userId: string, approved: boolean) {
   const admin = await createAdminClient()
+  const { data: profile } = await admin.from('profiles').select('role').eq('id', userId).single()
+
   const { error } = await admin.from('profiles').update({
     approved,
     status: approved ? 'approved' : 'pending'
@@ -26,6 +28,20 @@ export async function toggleUserApproval(userId: string, approved: boolean) {
 
   if (!error) {
     await logAction(approved ? 'approve_user' : 'revoke_user', userId)
+
+    // If approving a mentor, add them to any relevant cohort groups if they are already assigned
+    if (approved && profile?.role === 'mentor') {
+        const { data: assignments } = await admin.from('enrollments').select('cohort_id').eq('mentor_id', userId)
+        if (assignments && assignments.length > 0) {
+            for (const a of assignments) {
+                const { data: group } = await admin.from('conversations').select('id, participant_ids').eq('cohort_id', a.cohort_id).eq('is_group', true).maybeSingle()
+                if (group && !group.participant_ids.includes(userId)) {
+                    await admin.from('conversations').update({ participant_ids: [...group.participant_ids, userId] }).eq('id', group.id)
+                }
+            }
+        }
+    }
+
     revalidatePath('/admin/students')
     revalidatePath('/admin/mentors')
     return { success: true }
@@ -111,6 +127,45 @@ export async function updateStudentCohort(studentId: string, cohortId: string | 
 
   if (!error) {
     await logAction('enroll_in_cohort', studentId, { cohort_id: cohortId })
+
+    // Auto-create or add to cohort group chat
+    try {
+        const { data: cohort } = await admin.from('cohorts').select('name').eq('id', cohortId).single()
+        const groupName = `${cohort?.name || 'Cohort'} Community`
+
+        // 1. Find the group conversation for this cohort
+        const { data: existingGroup } = await admin.from('conversations')
+            .select('id, participant_ids')
+            .eq('cohort_id', cohortId)
+            .eq('is_group', true)
+            .maybeSingle()
+
+        if (existingGroup) {
+            // Add user if not already in participants
+            if (!existingGroup.participant_ids.includes(studentId)) {
+                await admin.from('conversations')
+                    .update({
+                        participant_ids: [...existingGroup.participant_ids, studentId]
+                    })
+                    .eq('id', existingGroup.id)
+            }
+        } else {
+            // Create new group chat (Admin should be included by default)
+            const { data: admins } = await admin.from('profiles').select('id').eq('role', 'admin')
+            const adminIds = admins?.map(a => a.id) || []
+
+            await admin.from('conversations').insert({
+                cohort_id: cohortId,
+                participant_ids: [...new Set([...adminIds, studentId])],
+                is_group: true,
+                group_name: groupName,
+                last_message: 'Community space activated.'
+            })
+        }
+    } catch (e) {
+        console.error('Group chat sync error:', e)
+    }
+
     revalidatePath('/admin/students')
     return { success: true }
   }
@@ -125,7 +180,7 @@ export async function assignMentorToStudent(studentId: string, mentorId: string 
     await logAction('assign_mentor', studentId, { mentor_id: mentorId })
 
     if (mentorId) {
-        // Notify student about mentor assignment
+        // 1. Notify student about mentor assignment
         const { data: mentor } = await admin.from('profiles').select('full_name').eq('id', mentorId).single()
         await admin.from('notifications').insert({
             user_id: studentId,
@@ -134,6 +189,18 @@ export async function assignMentorToStudent(studentId: string, mentorId: string 
             type: 'mentor_assigned',
             link: '/dashboard'
         })
+
+        // 2. Create/Sync personal conversation between Mentor and Student
+        await createPairConversation([studentId, mentorId])
+
+        // 3. Ensure Mentor is in the student's cohort group chat
+        const { data: enrollment } = await admin.from('enrollments').select('cohort_id').eq('student_id', studentId).single()
+        if (enrollment?.cohort_id) {
+            const { data: group } = await admin.from('conversations').select('id, participant_ids').eq('cohort_id', enrollment.cohort_id).eq('is_group', true).maybeSingle()
+            if (group && !group.participant_ids.includes(mentorId)) {
+                await admin.from('conversations').update({ participant_ids: [...group.participant_ids, mentorId] }).eq('id', group.id)
+            }
+        }
     }
 
     revalidatePath('/admin/students')

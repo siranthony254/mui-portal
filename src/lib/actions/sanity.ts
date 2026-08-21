@@ -9,6 +9,17 @@ async function uploadAsset(file: File) {
     return asset
 }
 
+function textToBlocks(text: string) {
+  if (!text) return []
+  return text.split(/\n+/).filter(p => p.trim().length > 0).map(p => ({
+    _type: 'block',
+    _key: Math.random().toString(36).substring(2),
+    children: [{ _type: 'span', text: p.trim(), marks: [] }],
+    markDefs: [],
+    style: 'normal'
+  }))
+}
+
 export async function createStandaloneContent(formData: FormData) {
   if (!writeClient) return { error: 'Sanity Write Client not configured.' }
 
@@ -65,7 +76,7 @@ export async function updateStandaloneContent(id: string, formData: FormData) {
       contentType,
       url: contentType !== 'article' ? url : undefined,
       youtubeId: contentType === 'video' ? youtubeId : undefined,
-      body: body || undefined,
+      body: body ? textToBlocks(body) : undefined,
       pillarNumber,
       weekNumber,
       isRequired,
@@ -107,13 +118,7 @@ export async function createSupplementaryResource(formData: FormData) {
       description,
       contentType,
       url: url || undefined,
-      body: body ? [{
-          _type: 'block',
-          _key: Math.random().toString(36).substring(2),
-          children: [{ _type: 'span', text: body, marks: [] }],
-          markDefs: [],
-          style: 'normal'
-      }] : undefined,
+      body: body ? textToBlocks(body) : undefined,
       cohortId: cohortId || undefined,
       tags: tags || [],
       publishedAt: new Date().toISOString(),
@@ -207,6 +212,14 @@ export async function updateCohortCurriculum(data: {
                     _ref: asset._id
                 }
             }
+        } else if (data.contentBlock._type === 'audioBlock') {
+            data.contentBlock.audioFile = {
+                _type: 'file',
+                asset: {
+                    _type: 'reference',
+                    _ref: asset._id
+                }
+            }
         }
 
         data.contentBlock.url = asset.url
@@ -238,14 +251,16 @@ export async function updateCohortCurriculum(data: {
       modules.push(module)
     }
 
-    const days = module.days || []
+    if (!module.days) module.days = []
+    const days = module.days
     let day = days.find((d: any) => d.dayNumber === data.dayNumber)
     if (!day) {
       day = { _key: `d${data.dayNumber}`, dayNumber: data.dayNumber, title: `Day ${data.dayNumber}`, sessions: [] }
       days.push(day)
     }
 
-    const sessions = day.sessions || []
+    if (!day.sessions) day.sessions = []
+    const sessions = day.sessions
     let session = sessions.find((s: any) => s.sessionNumber === data.sessionNumber)
     if (!session) {
       session = { _key: `s${data.sessionNumber}`, sessionNumber: data.sessionNumber, title: data.contentBlock.title || `Session ${data.sessionNumber}`, contentBlocks: [] }
@@ -255,11 +270,13 @@ export async function updateCohortCurriculum(data: {
     // Update session title from content block
     session.title = data.contentBlock.title || session.title
 
-    // Add the new content block
-    session.contentBlocks = [...(session.contentBlocks || []), { ...data.contentBlock, _key: Math.random().toString(36).substring(2) }]
+    // Replace or append? For the session-based orchestrator, we usually want to update the session.
+    // If the session was already there, we update its primary content block.
+    // In this simplified orchestrator, each session has one main content block.
+    session.contentBlocks = [{ ...data.contentBlock, _key: session.contentBlocks?.[0]?._key || Math.random().toString(36).substring(2) }]
 
     // Update journal prompt if provided
-    if (data.journalPrompt) {
+    if (data.journalPrompt !== undefined) {
       session.journalPrompt = data.journalPrompt
     }
 
@@ -267,6 +284,7 @@ export async function updateCohortCurriculum(data: {
 
     revalidatePath('/admin/content')
     revalidatePath('/dashboard/cohort')
+    revalidatePath('/mentor')
     return { success: true }
   } catch (error: any) {
     console.error('Sanity Curriculum Error:', error)
