@@ -271,7 +271,7 @@ export async function updateCohortCurriculum(data: {
   }
 }
 
-export async function deleteCurriculumSession(cohortId: string, pillarNumber: number, weekNumber: number, dayNumber: number) {
+export async function deleteCurriculumSession(cohortId: string, pillarNumber: number, weekNumber: number, dayNumber: number, sessionNumber: number) {
   if (!writeClient) return { error: 'Sanity Write Client not configured.' }
   try {
     const query = `*[_type == "curriculum" && cohortId == $cohortId][0]`
@@ -281,9 +281,10 @@ export async function deleteCurriculumSession(cohortId: string, pillarNumber: nu
     const pillars = curriculum.pillars || []
     const pillar = pillars.find((p: any) => p.number === pillarNumber)
     const module = pillar?.modules?.find((m: any) => m.weekNumber === weekNumber)
+    const day = module?.days?.find((d: any) => d.dayNumber === dayNumber)
 
-    if (module?.sessions) {
-      module.sessions = module.sessions.filter((s: any) => s.dayNumber !== dayNumber)
+    if (day?.sessions) {
+      day.sessions = day.sessions.filter((s: any) => s.sessionNumber !== sessionNumber)
       await writeClient.patch(curriculum._id).set({ pillars }).commit()
       revalidatePath('/admin/content')
       return { success: true }

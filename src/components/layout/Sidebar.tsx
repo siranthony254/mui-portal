@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn, getInitials } from '@/lib/utils'
 import type { Profile } from '@/types'
-import { LayoutDashboard, Users, BookOpen, MessageSquare, Settings, BarChart2, Flag, Award, Mic2, ClipboardList, Bell, UserCheck, Lightbulb, Calendar, FileText, CloudOff, UserPlus } from '@/components/icons'
+import { LayoutDashboard, Users, BookOpen, MessageSquare, Settings, BarChart2, Flag, Award, Mic2, ClipboardList, Bell, UserCheck, Lightbulb, Calendar, FileText, CloudOff, UserPlus, ShieldCheck } from '@/components/icons'
 
 function getNav(role: string, base: string) {
   if (role === 'admin') return [
@@ -19,6 +19,7 @@ function getNav(role: string, base: string) {
       {id:'mentors',label:'Mentors',href:`${base}/mentors`,icon:UserCheck},
       {id:'pairing',label:'Pairing & Groups',href:`${base}/pairing`,icon:UserPlus},
       {id:'ambassadors',label:'Ambassadors',href:`${base}/ambassadors`,icon:Flag},
+      {id:'roles',label:'Role Management',href:`${base}/roles`,icon:ShieldCheck},
     ]},
     { title:'Content', items:[
       {id:'content',label:'Content Manager',href:`${base}/content`,icon:BookOpen},
@@ -29,6 +30,9 @@ function getNav(role: string, base: string) {
       {id:'messages',label:'Messages',href:`${base}/messages`,icon:MessageSquare},
       {id:'announcements',label:'Announcements',href:`${base}/announcements`,icon:Bell},
       {id:'settings',label:'Settings',href:`${base}/settings`,icon:Settings},
+    ]},
+    { title:'Switch View', items:[
+      {id:'mentor-view',label:'Mentor Dashboard',href:'/mentor',icon:UserCheck},
     ]},
   ]
   if (role === 'mentor') return [

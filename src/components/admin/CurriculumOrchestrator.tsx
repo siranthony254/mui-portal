@@ -63,10 +63,10 @@ export function CurriculumOrchestrator({ cohorts, onCohortSelect }: { cohorts: C
         await fetchCurriculum()
     }
 
-    const handleDeleteSession = async (pillarNum: number, weekNum: number, dayNum: number) => {
-        if (!confirm(`Delete Session for Day ${dayNum}?`)) return
+    const handleDeleteSession = async (pillarNum: number, weekNum: number, dayNum: number, sessionNum: number) => {
+        if (!confirm(`Delete Session ${sessionNum} for Day ${dayNum}?`)) return
         setLoading(true)
-        await deleteCurriculumSession(selectedCohortId, pillarNum, weekNum, dayNum)
+        await deleteCurriculumSession(selectedCohortId, pillarNum, weekNum, dayNum, sessionNum)
         await fetchCurriculum()
     }
 
@@ -136,6 +136,10 @@ export function CurriculumOrchestrator({ cohorts, onCohortSelect }: { cohorts: C
                         setActiveSession(null)
                     }}
                     onClose={() => setActiveSession(null)}
+                    onDelete={() => {
+                        handleDeleteSession(activeSession.pillarNumber, activeSession.weekNumber, activeSession.dayNumber, activeSession.sessionNumber || 1)
+                        setActiveSession(null)
+                    }}
                 />
             ) : activePillar ? (
                 <PillarModuleView
@@ -257,7 +261,7 @@ function PillarEditor({ pillar, cohortId, onUpdate, onClose }: { pillar: Pillar,
     )
 }
 
-function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }: { pillar: any, curriculum: any, onOpenSession: (s: any) => void, onDeleteSession: (p: number, w: number, d: number) => void }) {
+function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }: { pillar: any, curriculum: any, onOpenSession: (s: any) => void, onDeleteSession: (p: number, w: number, d: number, s: number) => void }) {
     const weeks = [(pillar.number * 2) - 1, (pillar.number * 2)]
     const sanityPillar = curriculum?.pillars?.find((p: any) => p.number === pillar.number)
 
@@ -300,58 +304,87 @@ function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {weeks.map(week => {
                     const module = sanityPillar?.modules?.find((m: any) => m.weekNumber === week)
+                    const days = module?.days || []
                     return (
                         <div key={week} className="space-y-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-xs font-black shadow-lg">
                                     W{week}
                                 </div>
-                                <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Module One: Week {week}</h4>
+                                <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Module: Week {week}</h4>
                             </div>
 
-                            <div className="space-y-3">
-                                {[1, 2, 3, 4, 5, 6].map(day => {
-                                    const session = module?.sessions?.find((s: any) => s.dayNumber === day)
+                            <div className="space-y-4">
+                                {[1, 2, 3, 4, 5, 6, 7].map(day => {
+                                    const dayData = days.find((d: any) => d.dayNumber === day)
+                                    const sessions = dayData?.sessions || []
                                     return (
-                                        <div key={day} className="relative group">
-                                            <button
-                                                onClick={() => onOpenSession({ ...session, dayNumber: day, weekNumber: week, pillarNumber: pillar.number })}
-                                                className={cn(
-                                                    "w-full flex items-center justify-between p-5 rounded-[1.5rem] border-2 transition-all group",
-                                                    session
-                                                        ? "bg-white border-emerald-100 hover:border-emerald-600 hover:shadow-xl"
-                                                        : "bg-gray-50 border-gray-100 border-dashed hover:border-gray-300"
+                                        <div key={day} className="space-y-2">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Day {day}</span>
+                                                {sessions.length > 0 && (
+                                                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                        {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+                                                    </span>
                                                 )}
-                                            >
-                                                <div className="flex items-center gap-4 text-left">
-                                                    <div className={cn(
-                                                        "w-10 h-10 rounded-2xl flex items-center justify-center transition-colors font-black text-sm",
-                                                        session ? "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white" : "bg-white text-gray-300 shadow-sm"
-                                                    )}>
-                                                        {day}
-                                                    </div>
-                                                    <div>
-                                                        <p className={cn("text-[10px] font-black uppercase tracking-widest", session ? "text-emerald-600" : "text-gray-400")}>Day {day} Session</p>
-                                                        <p className="text-sm font-bold text-gray-900">{session?.title || 'Not yet designed'}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    {session?.journalPrompt && <span title="Journal prompt included"><MessageSquare className="w-4 h-4 text-blue-400" /></span>}
-                                                    {session?.contentBlocks?.length > 0 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
-                                                    <div className="p-2 rounded-lg bg-gray-50 text-gray-400 group-hover:text-emerald-700 transition-colors">
-                                                        <Edit3 className="w-3.5 h-3.5" />
-                                                    </div>
-                                                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
-                                                </div>
-                                            </button>
-                                            {session && (
+                                            </div>
+                                            <div className="space-y-2">
+                                                {sessions.length === 0 ? (
+                                                    <button
+                                                        onClick={() => onOpenSession({ dayNumber: day, weekNumber: week, pillarNumber: pillar.number, sessionNumber: 1 })}
+                                                        className="w-full flex items-center justify-between p-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-gray-300 transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-white text-gray-300 flex items-center justify-center text-xs font-black shadow-sm">
+                                                                +
+                                                            </div>
+                                                            <span className="text-xs text-gray-400">Add first session</span>
+                                                        </div>
+                                                    </button>
+                                                ) : (
+                                                    sessions.map((session: any) => (
+                                                        <div key={session.sessionNumber} className="relative group">
+                                                            <button
+                                                                onClick={() => onOpenSession({ ...session, dayNumber: day, weekNumber: week, pillarNumber: pillar.number })}
+                                                                className={cn(
+                                                                    "w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all group",
+                                                                    "bg-white border-emerald-100 hover:border-emerald-600 hover:shadow-xl"
+                                                                )}
+                                                            >
+                                                                <div className="flex items-center gap-3 text-left">
+                                                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-black group-hover:bg-emerald-700 group-hover:text-white transition-colors">
+                                                                        S{session.sessionNumber}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Session {session.sessionNumber}</p>
+                                                                        <p className="text-sm font-bold text-gray-900">{session.title || 'Untitled'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    {session.journalPrompt && <MessageSquare className="w-4 h-4 text-blue-400" />}
+                                                                    {session.contentBlocks?.length > 0 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                                                                    <div className="p-2 rounded-lg bg-gray-50 text-gray-400 group-hover:text-emerald-700 transition-colors">
+                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                    </div>
+                                                                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
+                                                                </div>
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); onDeleteSession(pillar.number, week, day, session.sessionNumber) }}
+                                                                className="absolute -top-2 -right-2 z-20 p-2 bg-white rounded-full text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all shadow-md border border-gray-100"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    ))
+                                                )}
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); onDeleteSession(pillar.number, week, day) }}
-                                                    className="absolute -top-2 -right-2 z-20 p-2 bg-white rounded-full text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all shadow-md border border-gray-100"
+                                                    onClick={() => onOpenSession({ dayNumber: day, weekNumber: week, pillarNumber: pillar.number, sessionNumber: sessions.length + 1 })}
+                                                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-xs text-gray-400 hover:text-emerald-600 font-black uppercase tracking-widest"
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    <Plus className="w-4 h-4" /> Add Session
                                                 </button>
-                                            )}
+                                            </div>
                                         </div>
                                     )
                                 })}
@@ -364,28 +397,44 @@ function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }
     )
 }
 
-function SessionEditor({ session, cohortId, onUpdate, onClose }: { session: any, cohortId: string, onUpdate: () => void, onClose: () => void }) {
+function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { session: any, cohortId: string, onUpdate: () => void, onClose: () => void, onDelete?: () => void }) {
     const [loading, setLoading] = useState(false)
     const [title, setTitle] = useState(session?.title || '')
     const [journalPrompt, setJournalPrompt] = useState(session?.journalPrompt || '')
-    const [contentType, setContentType] = useState('video')
-    const [youtubeInput, setYoutubeInput] = useState('')
+    const [contentType, setContentType] = useState(session?.contentBlocks?.[0]?._type === 'videoBlock' ? 'video' : session?.contentBlocks?.[0]?._type === 'textBlock' ? 'article' : session?.contentBlocks?.[0]?._type === 'audioBlock' ? 'audio' : session?.contentBlocks?.[0]?._type === 'fileBlock' ? 'pdf' : 'image')
+    const [videoSource, setVideoSource] = useState<'youtube' | 'upload'>(session?.contentBlocks?.[0]?.videoType === 'youtube' ? 'youtube' : 'upload')
+    const [youtubeInput, setYoutubeInput] = useState(session?.contentBlocks?.[0]?.youtubeEmbed || session?.contentBlocks?.[0]?.url?.includes('youtube') ? session.contentBlocks[0].url : '')
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [articleBody, setArticleBody] = useState(session?.contentBlocks?.[0]?.body || '')
 
     async function handleSave() {
         if (!title) return
         setLoading(true)
 
         let contentBlock: any = {
-            _type: contentType === 'video' ? 'videoBlock' : contentType === 'article' ? 'textBlock' : 'fileBlock',
-            title: title // Using session title as default for content block
+            _type: contentType === 'video' ? 'videoBlock' : contentType === 'article' ? 'textBlock' : contentType === 'audio' ? 'audioBlock' : contentType === 'pdf' ? 'fileBlock' : 'imageBlock',
+            title: title
         }
 
         if (contentType === 'video') {
-            const videoId = parseYouTubeEmbed(youtubeInput)
-            if (videoId) {
-                contentBlock.videoType = 'youtube'
-                contentBlock.youtubeEmbed = youtubeInput
-                contentBlock.url = `https://www.youtube.com/watch?v=${videoId}`
+            if (videoSource === 'youtube') {
+                const videoId = parseYouTubeEmbed(youtubeInput)
+                if (videoId) {
+                    contentBlock.videoType = 'youtube'
+                    contentBlock.youtubeEmbed = youtubeInput
+                    contentBlock.url = `https://www.youtube.com/watch?v=${videoId}`
+                }
+            } else if (selectedFile) {
+                contentBlock.videoType = 'upload'
+                contentBlock.url = URL.createObjectURL(selectedFile)
+            }
+        } else if (contentType === 'article') {
+            contentBlock.body = articleBody
+        } else if (contentType === 'audio' || contentType === 'pdf' || contentType === 'image') {
+            if (selectedFile) {
+                contentBlock.url = selectedFile.name
+            } else if (session?.contentBlocks?.[0]?.url) {
+                contentBlock.url = session.contentBlocks[0].url
             }
         }
 
@@ -396,7 +445,8 @@ function SessionEditor({ session, cohortId, onUpdate, onClose }: { session: any,
             dayNumber: session.dayNumber,
             sessionNumber: session.sessionNumber || 1,
             contentBlock,
-            journalPrompt: journalPrompt || undefined
+            journalPrompt: journalPrompt || undefined,
+            file: selectedFile
         })
 
         if (res.success) {
@@ -405,110 +455,190 @@ function SessionEditor({ session, cohortId, onUpdate, onClose }: { session: any,
         setLoading(false)
     }
 
+    async function handleDelete() {
+        if (!confirm(`Permanently delete this session and all its content? This action cannot be undone.`)) return
+        if (onDelete) {
+            onDelete()
+        }
+    }
+
     return (
-        <div className="card p-10 bg-white border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] animate-reveal">
-            <div className="flex items-center justify-between mb-10">
+        <div className="card p-10 bg-white border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] animate-reveal max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8 sticky top-0 bg-white pb-4 border-b border-gray-100 z-10">
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-emerald-700/20">
-                        {session.dayNumber}
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black text-lg shadow-xl shadow-emerald-700/20">
+                        D{session.dayNumber}S{session.sessionNumber || 1}
                     </div>
                     <div>
-                        <h3 className="text-xl font-black text-gray-900 leading-tight">Session Orchestrator</h3>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Week {session.weekNumber} · Day {session.dayNumber}</p>
+                        <h3 className="text-lg font-black text-gray-900 leading-tight">Session Editor</h3>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Week {session.weekNumber} · Day {session.dayNumber} · Session {session.sessionNumber || 1}</p>
                     </div>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
-                    <X className="w-6 h-6 text-gray-400" />
-                </button>
+                <div className="flex items-center gap-2">
+                    {session?.contentBlocks?.length > 0 && (
+                        <button
+                            onClick={handleDelete}
+                            className="p-2 hover:bg-red-50 rounded-xl transition-colors text-red-400 hover:text-red-600"
+                            title="Delete Session"
+                        >
+                            <Trash2 className="w-6 h-6" />
+                        </button>
+                    )}
+                    <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                        <X className="w-6 h-6 text-gray-400" />
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Session Title</label>
-                        <input
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            required
-                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 font-bold"
-                            placeholder="e.g. Identity and the Inner Voice"
-                        />
-                    </div>
+            <div className="space-y-6">
+                <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Session Title</label>
+                    <input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                        className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 font-bold"
+                        placeholder="e.g. Identity and the Inner Voice"
+                    />
+                </div>
 
-                    <div className="space-y-4">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Initial Content Format</p>
-                        <div className="flex gap-2">
-                            {['video', 'article'].map(type => (
+                <div className="space-y-4">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Content Type</p>
+                    <div className="grid grid-cols-5 gap-2">
+                        {[
+                            { id: 'video', icon: Video, label: 'Video' },
+                            { id: 'article', icon: FileText, label: 'Article' },
+                            { id: 'audio', icon: Headphones, label: 'Audio' },
+                            { id: 'pdf', icon: FileDown, label: 'PDF' },
+                            { id: 'image', icon: FileDown, label: 'Image' }
+                        ].map(type => {
+                            const Icon = type.icon
+                            return (
                                 <button
-                                    key={type}
+                                    key={type.id}
                                     type="button"
-                                    onClick={() => setContentType(type)}
+                                    onClick={() => setContentType(type.id)}
                                     className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border-2 transition-all font-black text-[10px] uppercase tracking-widest",
-                                        contentType === type ? "border-emerald-700 bg-emerald-50 text-emerald-900" : "border-gray-100 text-gray-400"
+                                        "flex flex-col items-center justify-center gap-2 py-3 rounded-2xl border-2 transition-all font-black text-[10px] uppercase tracking-widest",
+                                        contentType === type.id ? "border-emerald-700 bg-emerald-50 text-emerald-900" : "border-gray-100 text-gray-400"
                                     )}
                                 >
-                                    {type === 'video' ? <Video className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
-                                    {type}
+                                    <Icon className="w-4 h-4" />
+                                    {type.label}
                                 </button>
-                            ))}
-                        </div>
+                            )
+                        })}
                     </div>
-
-                    {contentType === 'video' && (
-                        <div className="animate-reveal space-y-4">
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">YouTube Embed Code</label>
-                            <textarea
-                                value={youtubeInput}
-                                onChange={(e) => setYoutubeInput(e.target.value)}
-                                rows={4}
-                                className="w-full px-5 py-4 bg-gray-900 text-emerald-400 border-none rounded-2xl focus:ring-1 focus:ring-emerald-500 font-mono text-xs"
-                                placeholder='Paste <iframe...> from YouTube here'
-                            />
-                        </div>
-                    )}
                 </div>
 
-                <div className="space-y-6">
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Reflection Prompt</label>
-                        <textarea
-                            value={journalPrompt}
-                            onChange={(e) => setJournalPrompt(e.target.value)}
-                            rows={4}
-                            className="w-full px-5 py-4 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:border-blue-500 focus:ring-0 text-sm font-medium italic text-blue-900"
-                            placeholder="What is one thing that stood out to you today?"
-                        />
-                        <p className="mt-2 text-[9px] text-gray-400 font-bold uppercase tracking-widest">This prompt is revealed after session content.</p>
-                    </div>
-
-                    <div className="p-6 bg-gray-50 rounded-[2rem] border-2 border-gray-100">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Plus className="w-4 h-4 text-emerald-600" />
-                            <h4 className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Planned: Subsessions</h4>
+                {contentType === 'video' && (
+                    <div className="space-y-4">
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setVideoSource('youtube')}
+                                className={cn("flex-1 py-3 rounded-xl border-2 font-black text-xs uppercase tracking-widest transition-all", videoSource === 'youtube' ? "border-emerald-700 bg-emerald-50 text-emerald-900" : "border-gray-100 text-gray-400")}
+                            >
+                                YouTube
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setVideoSource('upload')}
+                                className={cn("flex-1 py-3 rounded-xl border-2 font-black text-xs uppercase tracking-widest transition-all", videoSource === 'upload' ? "border-emerald-700 bg-emerald-50 text-emerald-900" : "border-gray-100 text-gray-400")}
+                            >
+                                Upload
+                            </button>
                         </div>
-                        <p className="text-[10px] text-gray-400 leading-relaxed font-medium">
-                            Adding multiple content blocks and sub-daily tasks to a single session is currently being optimized for this drill-down UI.
-                        </p>
+                        {videoSource === 'youtube' ? (
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">YouTube Embed Code</label>
+                                <textarea
+                                    value={youtubeInput}
+                                    onChange={(e) => setYoutubeInput(e.target.value)}
+                                    rows={4}
+                                    className="w-full px-5 py-4 bg-gray-900 text-emerald-400 border-none rounded-2xl focus:ring-1 focus:ring-emerald-500 font-mono text-xs"
+                                    placeholder='Paste <iframe...> from YouTube here'
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Upload Video</label>
+                                <input
+                                    type="file"
+                                    accept="video/*"
+                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm"
+                                />
+                            </div>
+                        )}
                     </div>
+                )}
+
+                {contentType === 'article' && (
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Article Body</label>
+                        <textarea
+                            value={articleBody}
+                            onChange={(e) => setArticleBody(e.target.value)}
+                            rows={6}
+                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm font-medium"
+                            placeholder="Write your article content here..."
+                        />
+                    </div>
+                )}
+
+                {(contentType === 'audio' || contentType === 'pdf' || contentType === 'image') && (
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Upload {contentType === 'audio' ? 'Audio' : contentType === 'pdf' ? 'PDF' : 'Image'}</label>
+                        <input
+                            type="file"
+                            accept={contentType === 'audio' ? 'audio/*' : contentType === 'pdf' ? 'application/pdf' : 'image/*'}
+                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm"
+                        />
+                        {session?.contentBlocks?.[0]?.url && (
+                            <p className="text-xs text-gray-500">Current file: {session.contentBlocks[0].url}</p>
+                        )}
+                    </div>
+                )}
+
+                <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Journal Prompt</label>
+                    <textarea
+                        value={journalPrompt}
+                        onChange={(e) => setJournalPrompt(e.target.value)}
+                        rows={4}
+                        className="w-full px-5 py-4 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:border-blue-500 focus:ring-0 text-sm font-medium italic text-blue-900"
+                        placeholder="What is one thing that stood out to you today?"
+                    />
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">This prompt is revealed after session content.</p>
                 </div>
             </div>
 
-            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-end gap-3">
-                <button
-                    onClick={onClose}
-                    className="px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={handleSave}
-                    disabled={loading || !title}
-                    className="bg-emerald-700 text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-xl shadow-emerald-700/20 active:scale-95 disabled:opacity-50"
-                >
-                    {loading ? 'Orchestrating...' : 'Push Update'}
-                    <Zap className="w-4 h-4 fill-white" />
-                </button>
+            <div className="mt-8 pt-6 border-t border-gray-50 flex justify-between gap-3 sticky bottom-0 bg-white pb-4">
+                {session?.contentBlocks?.length > 0 && (
+                    <button
+                        onClick={handleDelete}
+                        className="px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                    >
+                        Delete Session
+                    </button>
+                )}
+                <div className="flex gap-3 ml-auto">
+                    <button
+                        onClick={onClose}
+                        className="px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={loading || !title}
+                        className="bg-emerald-700 text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-xl shadow-emerald-700/20 active:scale-95 disabled:opacity-50"
+                    >
+                        {loading ? 'Saving...' : 'Save Session'} <Zap className="w-4 h-4 fill-white" />
+                    </button>
+                </div>
             </div>
         </div>
     )
