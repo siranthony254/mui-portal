@@ -171,6 +171,7 @@ export async function updateCohortCurriculum(data: {
   pillarNumber: number
   weekNumber: number
   dayNumber: number
+  sessionNumber: number
   contentBlock: any
   journalPrompt?: string
   file?: File | null
@@ -222,7 +223,7 @@ export async function updateCohortCurriculum(data: {
       })
     }
 
-    // 2. Prepare the hierarchy locally
+    // 2. Prepare the hierarchy locally: Pillar -> Module (Week) -> Day -> Sessions
     const pillars = curriculum.pillars || []
     let pillar = pillars.find((p: any) => p.number === data.pillarNumber)
     if (!pillar) {
@@ -233,14 +234,21 @@ export async function updateCohortCurriculum(data: {
     const modules = pillar.modules || []
     let module = modules.find((m: any) => m.weekNumber === data.weekNumber)
     if (!module) {
-      module = { _key: `w${data.weekNumber}`, weekNumber: data.weekNumber, sessions: [] }
+      module = { _key: `w${data.weekNumber}`, weekNumber: data.weekNumber, days: [] }
       modules.push(module)
     }
 
-    const sessions = module.sessions || []
-    let session = sessions.find((s: any) => s.dayNumber === data.dayNumber)
+    const days = module.days || []
+    let day = days.find((d: any) => d.dayNumber === data.dayNumber)
+    if (!day) {
+      day = { _key: `d${data.dayNumber}`, dayNumber: data.dayNumber, title: `Day ${data.dayNumber}`, sessions: [] }
+      days.push(day)
+    }
+
+    const sessions = day.sessions || []
+    let session = sessions.find((s: any) => s.sessionNumber === data.sessionNumber)
     if (!session) {
-      session = { _key: `d${data.dayNumber}`, dayNumber: data.dayNumber, title: `Day ${data.dayNumber}`, contentBlocks: [], subsessions: [] }
+      session = { _key: `s${data.sessionNumber}`, sessionNumber: data.sessionNumber, title: `Session ${data.sessionNumber}`, contentBlocks: [] }
       sessions.push(session)
     }
 

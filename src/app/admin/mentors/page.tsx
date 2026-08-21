@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { getInitials, formatDate, cn, timeAgo } from '@/lib/utils'
@@ -16,8 +16,10 @@ export default async function MentorsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: mentors } = await supabase.from('profiles')
-    .select('*, enrollments:enrollments(id)')
+  // Use admin client to bypass RLS and see all mentors
+  const admin = await createAdminClient()
+  const { data: mentors } = await admin.from('profiles')
+    .select('*, enrollments:enrollments!enrollments_mentor_id_fkey(id)')
     .eq('role', 'mentor')
     .order('created_at', { ascending: false })
 

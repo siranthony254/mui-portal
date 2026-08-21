@@ -290,3 +290,62 @@ export async function removePeerPartnership(partnershipId: string) {
     return { success: true }
 }
 
+export async function createWeeklyTask(data: {
+    cohortId: string
+    pillarNumber: number
+    weekNumber: number
+    title: string
+    prompt: string
+}) {
+    const admin = await createAdminClient()
+
+    try {
+        // Get all enrolled students in this cohort
+        const { data: enrollments, error: enrollmentsError } = await admin
+            .from('enrollments')
+            .select('id, student_id')
+            .eq('cohort_id', data.cohortId)
+            .in('status', ['enrolled', 'active'])
+
+        if (enrollmentsError) {
+            console.error('Error fetching enrollments:', enrollmentsError)
+            return { error: 'Failed to fetch enrolled students' }
+        }
+
+        if (!enrollments || enrollments.length === 0) {
+            return { error: 'No enrolled students found in this cohort' }
+        }
+
+        // Create tasks for all enrolled students
+        const tasks = enrollments.map(enrollment => ({
+            enrollment_id: enrollment.id,
+            student_id: enrollment.student_id,
+            cohort_id: data.cohortId,
+            pillar_number: data.pillarNumber,
+            week_number: data.weekNumber,
+            title: data.title,
+            prompt: data.prompt,
+            status: 'pending'
+        }))
+
+        const { error: tasksError } = await admin.from('tasks').insert(tasks)
+
+        if (tasksError) {
+            console.error('Error creating tasks:', tasksError)
+            return { error: 'Failed to create weekly tasks' }
+        }
+
+        await logAction('create_weekly_task', data.cohortId, {
+            pillarNumber: data.pillarNumber,
+            weekNumber: data.weekNumber,
+            studentCount: enrollments.length
+        })
+
+        revalidatePath('/admin/content')
+        revalidatePath('/dashboard/tasks')
+        return { success: true, studentCount: enrollments.length }
+    } catch (error: any) {
+        console.error('Weekly task creation error:', error)
+        return { error: error.message }
+    }
+}

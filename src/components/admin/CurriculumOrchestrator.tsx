@@ -394,6 +394,7 @@ function SessionEditor({ session, cohortId, onUpdate, onClose }: { session: any,
             pillarNumber: session.pillarNumber,
             weekNumber: session.weekNumber,
             dayNumber: session.dayNumber,
+            sessionNumber: session.sessionNumber || 1,
             contentBlock,
             journalPrompt: journalPrompt || undefined
         })

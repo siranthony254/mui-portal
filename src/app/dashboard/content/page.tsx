@@ -30,18 +30,55 @@ export default async function PillarContentPage() {
 
   const curriculum = await getCohortCurriculum(enrollment.cohort_id)
 
-  // Extract content from curriculum hierarchy for the current week
+  // Extract content from curriculum hierarchy for the current week: Pillar -> Module (Week) -> Day -> Sessions
   const sanityPillar = curriculum?.pillars?.find((p: any) => p.number === pillarNum)
   const sanityModule = sanityPillar?.modules?.find((m: any) => m.weekNumber === weekNum)
-  const sessions = sanityModule?.sessions || []
+  const days = sanityModule?.days || []
+
+  // Flatten all sessions from all days, sorted by day then session number
+  const allSessions = days.flatMap((day: any) =>
+    (day.sessions || []).map((session: any) => ({
+      ...session,
+      dayNumber: day.dayNumber,
+      dayTitle: day.title
+    }))
+  ).sort((a: any, b: any) => {
+    if (a.dayNumber !== b.dayNumber) return a.dayNumber - b.dayNumber
+    return a.sessionNumber - b.sessionNumber
+  })
+
+  // Get completed sessions for this student
+  const { data: completedSessions } = await supabase.from('session_homework_completions')
+    .select('session_id')
+    .eq('student_id', user.id)
+
+  const completedSessionIds = new Set(completedSessions?.map(c => c.session_id) || [])
+
+  // Determine which sessions are unlocked based on sequential completion
+  let unlockedCount = 0
+  const sessionsWithStatus = allSessions.map((session: any) => {
+    const isCompleted = completedSessionIds.has(session._id)
+    const isUnlocked = unlockedCount === 0 || completedSessionIds.size >= unlockedCount
+    if (isCompleted) unlockedCount++
+    return {
+      ...session,
+      isCompleted,
+      isUnlocked
+    }
+  })
 
   // Transform curriculum sessions into ContentBlock format for ContentCard
-  const content = sessions.flatMap((s: any) =>
+  const content = sessionsWithStatus.flatMap((s: any) =>
     (s.contentBlocks || []).map((cb: any) => ({
         ...cb,
         weekNumber: weekNum,
         pillarNumber: pillarNum,
-        contentType: cb._type === 'videoBlock' ? 'video' : cb._type === 'textBlock' ? 'article' : 'pdf'
+        contentType: cb._type === 'videoBlock' ? 'video' : cb._type === 'textBlock' ? 'article' : 'pdf',
+        dayNumber: s.dayNumber,
+        sessionNumber: s.sessionNumber,
+        isUnlocked: s.isUnlocked,
+        isCompleted: s.isCompleted,
+        sessionId: s._id
     }))
   )
 
@@ -66,7 +103,13 @@ export default async function PillarContentPage() {
         <div className="space-y-8">
           {content.map((block: any, idx: number) => (
             <div key={idx} className="space-y-4">
-               <ContentCard content={block} />
+               <ContentCard
+                 content={block}
+                 isUnlocked={block.isUnlocked}
+                 isCompleted={block.isCompleted}
+                 dayNumber={block.dayNumber}
+                 sessionNumber={block.sessionNumber}
+               />
             </div>
           ))}
         </div>

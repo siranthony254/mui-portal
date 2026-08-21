@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { getYouTubeEmbed, getYouTubeThumbnail, cn } from '@/lib/utils'
 import type { ContentBlock } from '@/types'
-import { Play, FileText, Headphones, FileImage, ExternalLink, Clock, Star, Trash2, Edit3 } from '@/components/icons'
+import { Play, FileText, Headphones, FileImage, ExternalLink, Clock, Star, Trash2, Edit3, Lock, CheckCircle } from '@/components/icons'
 import { deleteSanityDocument } from '@/lib/actions/sanity'
 import { ContentEditor } from './ContentEditor'
 
@@ -14,7 +14,7 @@ function extractYouTubeId(url: string) {
   return m ? m[1] : null
 }
 
-export function ContentCard({ content, compact=false, isAdmin=false }: { content: ContentBlock; compact?: boolean; isAdmin?: boolean }) {
+export function ContentCard({ content, compact=false, isAdmin=false, isUnlocked=true, isCompleted=false, dayNumber, sessionNumber }: { content: ContentBlock; compact?: boolean; isAdmin?: boolean; isUnlocked?: boolean; isCompleted?: boolean; dayNumber?: number; sessionNumber?: number }) {
   const [playing, setPlaying] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -67,14 +67,30 @@ export function ContentCard({ content, compact=false, isAdmin=false }: { content
           </div>
         </div>
       ) : (
-        <div className="card overflow-hidden group">
+        <div className={cn('card overflow-hidden group transition-all', !isUnlocked && 'opacity-60 bg-gray-50')}>
+          {isCompleted && (
+            <div className="absolute top-3 right-3 z-10">
+              <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Completed
+              </div>
+            </div>
+          )}
+          {!isUnlocked && (
+            <div className="absolute inset-0 z-10 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center">
+              <div className="bg-white rounded-2xl p-4 shadow-xl text-center">
+                <Lock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-900">Locked</p>
+                <p className="text-xs text-gray-500 mt-1">Complete previous session to unlock</p>
+              </div>
+            </div>
+          )}
           {content.contentType === 'video' && youtubeId && (
             <div className="relative aspect-video bg-gray-900">
               {playing ? (
                 <iframe src={getYouTubeEmbed(youtubeId)} className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
               ) : (
-                <button onClick={() => setPlaying(true)} className="w-full h-full relative group">
+                <button onClick={() => isUnlocked && setPlaying(true)} className="w-full h-full relative group" disabled={!isUnlocked}>
                   <img src={getYouTubeThumbnail(youtubeId)} alt={content.title} className="w-full h-full object-cover" loading="lazy" />
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
                     <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform shadow-lg">
@@ -94,6 +110,7 @@ export function ContentCard({ content, compact=false, isAdmin=false }: { content
                 <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-gray-900">{content.title}</h3>
+                    {dayNumber && sessionNumber && <span className="badge badge-gray text-xs">Day {dayNumber}, Session {sessionNumber}</span>}
                     {content.isRequired && <span className="badge badge-amber text-xs">Required</span>}
                   </div>
                   {isAdmin && (
@@ -122,7 +139,7 @@ export function ContentCard({ content, compact=false, isAdmin=false }: { content
                 </div>
                 {content.contentType !== 'video' && content.url && (
                   <a href={content.url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-3 text-sm text-teal-700 hover:underline font-medium">
+                    className={cn('inline-flex items-center gap-1.5 mt-3 text-sm font-medium', isUnlocked ? 'text-teal-700 hover:underline' : 'text-gray-400 cursor-not-allowed')}>
                     Open {content.contentType}<ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}

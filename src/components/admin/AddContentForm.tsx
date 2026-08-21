@@ -19,6 +19,8 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
   const [selectedPillarNum, setSelectedPillarNum] = useState<number | null>(null)
   const [selectedWeekNum, setSelectedWeekNum] = useState<number | null>(null)
   const [selectedDayNum, setSelectedDayNum] = useState<number>(1)
+  const [selectedSessionNum, setSelectedSessionNum] = useState<number>(1)
+  const [availableSessions, setAvailableSessions] = useState<number[]>([1])
 
   // Content Block State
   const [contentType, setContentType] = useState('video')
@@ -27,6 +29,11 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
   const [articleBody, setArticleBody] = useState('')
   const [journalPrompt, setJournalPrompt] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  // Weekly Task State
+  const [isWeeklyTask, setIsWeeklyTask] = useState(false)
+  const [weeklyTaskTitle, setWeeklyTaskTitle] = useState('')
+  const [weeklyTaskPrompt, setWeeklyTaskPrompt] = useState('')
 
   const selectedCohort = cohorts.find(c => c.id === selectedCohortId)
   const pillars = selectedCohort?.pillars_config || []
@@ -96,6 +103,7 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
         pillarNumber: selectedPillarNum,
         weekNumber: selectedWeekNum,
         dayNumber: selectedDayNum,
+        sessionNumber: selectedSessionNum,
         contentBlock,
         journalPrompt: journalPrompt || undefined,
         file: selectedFile
@@ -104,6 +112,22 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
     if (res.error) {
       setError(res.error)
     } else {
+      // If weekly task is enabled, create it
+      if (isWeeklyTask && weeklyTaskTitle && weeklyTaskPrompt) {
+        const { createWeeklyTask } = await import('@/lib/actions/admin')
+        const taskRes = await createWeeklyTask({
+          cohortId: selectedCohortId,
+          pillarNumber: selectedPillarNum,
+          weekNumber: selectedWeekNum,
+          title: weeklyTaskTitle,
+          prompt: weeklyTaskPrompt
+        })
+        if (taskRes.error) {
+          setError(`Content added but task creation failed: ${taskRes.error}`)
+          setLoading(false)
+          return
+        }
+      }
       if (onClose) onClose()
     }
     setLoading(false)
@@ -176,7 +200,7 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Session (Day)</label>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Day</label>
                     <select
                         disabled={!selectedWeekNum}
                         value={selectedDayNum}
@@ -184,8 +208,37 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 font-bold text-sm disabled:opacity-50"
                         required
                     >
-                        {[1, 2, 3, 4, 5, 6].map(d => <option key={d} value={d}>Day {d}</option>)}
+                        {[1, 2, 3, 4, 5, 6, 7].map(d => <option key={d} value={d}>Day {d}</option>)}
                     </select>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Session</label>
+                    <div className="flex gap-2">
+                        <select
+                            disabled={!selectedDayNum}
+                            value={selectedSessionNum}
+                            onChange={(e) => setSelectedSessionNum(Number(e.target.value))}
+                            className="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-emerald-500 focus:ring-0 font-bold text-sm disabled:opacity-50"
+                            required
+                        >
+                            {availableSessions.map(s => <option key={s} value={s}>Session {s}</option>)}
+                        </select>
+                        <button
+                            type="button"
+                            disabled={!selectedDayNum}
+                            onClick={() => {
+                                const nextSession = Math.max(...availableSessions) + 1
+                                setAvailableSessions([...availableSessions, nextSession])
+                                setSelectedSessionNum(nextSession)
+                            }}
+                            className="px-4 py-3 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-emerald-700 hover:bg-emerald-100 transition-all disabled:opacity-50"
+                            title="Add new session"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <p className="text-[9px] text-gray-400 font-medium">Add multiple sessions per day</p>
                 </div>
             </div>
         </section>
@@ -336,6 +389,52 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
                     </div>
                 </div>
             </div>
+        </section>
+
+        {/* 3. Weekly Task Configuration */}
+        <section className="space-y-6 pt-6 border-t border-gray-50">
+            <div className="flex items-center justify-between">
+                <h3 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <Award className="w-4 h-4" /> Step 3: Weekly Task
+                </h3>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={isWeeklyTask}
+                        onChange={(e) => setIsWeeklyTask(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="text-xs font-bold text-gray-600">Add Weekly Task</span>
+                </label>
+            </div>
+
+            {isWeeklyTask && (
+                <div className="space-y-4 animate-reveal p-4 bg-amber-50 rounded-2xl border-2 border-amber-100">
+                    <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Task Title</label>
+                        <input
+                            value={weeklyTaskTitle}
+                            onChange={(e) => setWeeklyTaskTitle(e.target.value)}
+                            className="w-full px-5 py-4 bg-white border-2 border-amber-200 rounded-2xl focus:border-amber-500 focus:ring-0 font-bold"
+                            placeholder="e.g. Weekly Reflection - Identity"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Task Prompt</label>
+                        <textarea
+                            value={weeklyTaskPrompt}
+                            onChange={(e) => setWeeklyTaskPrompt(e.target.value)}
+                            rows={4}
+                            className="w-full px-5 py-4 bg-white border-2 border-amber-200 rounded-2xl focus:border-amber-500 focus:ring-0 text-sm font-medium"
+                            placeholder="Describe the weekly task students need to complete..."
+                        />
+                    </div>
+                    <div className="flex items-center gap-2 text-amber-800/70 text-[10px] font-medium">
+                        <Calendar className="w-3 h-3" />
+                        <span>This task will be synchronized to all students' weekly tasks tab for this week</span>
+                    </div>
+                </div>
+            )}
         </section>
 
         {error && <p className="text-xs font-bold text-red-600 bg-red-50 p-4 rounded-2xl border border-red-100">{error}</p>}

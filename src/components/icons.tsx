@@ -99,7 +99,6 @@ export function Image(props: IconProps) { return <LucideImage {...props} /> }
 export function Headphones(props: IconProps) { return <LucideHeadphones {...props} /> }
 export function LayoutDashboard(props: IconProps) { return <LucideLayoutDashboard {...props} /> }
 export function Lightbulb(props: IconProps) { return <LucideLightbulb {...props} /> }
-export function Lock(props: IconProps) { return <LucideLock {...props} /> }
 export function LogOut(props: IconProps) { return <LucideLogOut {...props} /> }
 export function Menu(props: IconProps) { return <LucideMenu {...props} /> }
 export function MessageSquare(props: IconProps) { return <LucideMessageSquare {...props} /> }
@@ -139,6 +138,7 @@ export function Mail(props: IconProps) { return <LucideMail {...props} /> }
 export function Moon(props: IconProps) { return <LucideMoon {...props} /> }
 export function Sun(props: IconProps) { return <LucideSun {...props} /> }
 export function MoreVertical(props: IconProps) { return <LucideMoreVertical {...props} /> }
+export function Lock(props: IconProps) { return <LucideLock {...props} /> }
 
 
 
