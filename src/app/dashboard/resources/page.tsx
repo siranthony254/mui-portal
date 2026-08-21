@@ -25,14 +25,14 @@ export default async function ResourcesPage() {
     // If not enrolled, they might still see global resources
     const globalResources = await getSupplementaryResources()
     return (
-        <div className="max-w-4xl mx-auto space-y-8 pb-20">
+        <div className="max-w-4xl mx-auto space-y-8 pb-20 px-4">
             <div className="page-header">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Public Resources</h1>
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Public Resources</h1>
                     <p className="text-sm text-gray-500 font-medium">Supplementary materials for the MUI community.</p>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
                 {globalResources.map(r => (
                     <ResourceCard key={r._id} resource={r} />
                 ))}
@@ -58,10 +58,10 @@ export default async function ResourcesPage() {
   ])
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-20">
+    <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12 pb-20 px-4">
       <div className="page-header">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Learning Hub</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Learning Hub</h1>
           <p className="text-sm text-gray-500 font-medium">{cohort?.name} · Formation Resources</p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export default async function ResourcesPage() {
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No supplementary materials sent for this cohort yet.</p>
             </div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
                 {supplementaryResources.map(r => (
                     <ResourceCard key={r._id} resource={r} />
                 ))}
@@ -101,16 +101,16 @@ export default async function ResourcesPage() {
 
             return (
                 <div key={pillar.number} className={cn('card overflow-hidden transition-all', isFuture && 'opacity-60 grayscale')}>
-                <div className={cn('px-6 py-4 border-b border-gray-100 flex items-center justify-between', isCurrentPillar ? 'bg-teal-50/50' : 'bg-gray-50/50')}>
-                    <div className="flex items-center gap-4">
+                <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3', isCurrentPillar ? 'bg-teal-50/50' : 'bg-gray-50/50')}>
+                    <div className="flex items-center gap-3 sm:gap-4">
                     <div className={cn(
-                        'w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shadow-sm transition-transform group-hover:scale-105',
+                        'w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shadow-sm transition-transform group-hover:scale-105 flex-shrink-0',
                         isCurrentPillar ? 'bg-teal-700 text-white' : pillar.number < currentPillar ? 'bg-teal-100 text-teal-700' : 'bg-white text-gray-300'
                     )}>
                         {pillar.number < currentPillar ? '✓' : pillar.number}
                     </div>
-                    <div>
-                        <p className={cn('text-sm font-black uppercase tracking-tight', isCurrentPillar ? 'text-teal-900' : 'text-gray-900')}>
+                    <div className="flex-1 min-w-0">
+                        <p className={cn('text-sm font-black uppercase tracking-tight truncate', isCurrentPillar ? 'text-teal-900' : 'text-gray-900')}>
                             Pillar {pillar.number}: {pillar.name}
                         </p>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{pillar.weeks}</p>
@@ -121,11 +121,11 @@ export default async function ResourcesPage() {
                     <span className="badge badge-gray text-[10px] font-black uppercase tracking-widest">{content.length} Assets</span>
                     </div>
                 </div>
-                <div className="p-4">
+                <div className="p-3 sm:p-4">
                     {content.length === 0 ? (
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest py-4 text-center italic">No archived content for this pillar yet.</p>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3">
                             {content.map((b: any) => <ContentCard key={b._id} content={b} compact />)}
                         </div>
                     )}
@@ -154,15 +154,15 @@ function ResourceCard({ resource }: { resource: any }) {
             href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="card p-5 hover:border-blue-500 hover:shadow-xl transition-all group flex items-start gap-4"
+            className="card p-4 sm:p-5 hover:border-blue-500 hover:shadow-xl transition-all group flex items-start gap-3 sm:gap-4"
         >
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
-                <Icon className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1">
                     <h3 className="text-sm font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors">{resource.title}</h3>
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{resource.contentType}</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded border border-gray-100 flex-shrink-0">{resource.contentType}</span>
                 </div>
                 <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">{resource.description}</p>
                 <div className="flex flex-wrap gap-1.5">

@@ -28,9 +28,9 @@ export default async function JournalPage() {
   const voiceJournals = await getVoiceJournals(user.id)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4">
       <div className="page-header">
-        <h1 className="page-title">Personal Journal</h1>
+        <h1 className="page-title text-lg sm:text-xl">Personal Journal</h1>
         <p className="text-sm text-gray-500">A private space for your ongoing formation and reflections.</p>
       </div>
 

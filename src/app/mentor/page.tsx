@@ -99,120 +99,114 @@ export default async function MentorDashboardPage() {
   ]
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-6 pb-20 px-4">
       <div className="page-header">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Mentor Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Mentor Dashboard</h1>
           <p className="text-sm text-gray-500 font-medium">Accompanying {enrollments?.length||0} emerging leaders</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {stats.map(s=>{ const Icon=s.icon; return (
-          <Link key={s.label} href={s.href} className="card p-5 hover:shadow-card-hover transition-all group">
+          <Link key={s.label} href={s.href} className="card p-4 sm:p-5 hover:shadow-card-hover transition-all group">
             <div className="w-10 h-10 bg-teal-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-teal-700 transition-colors">
               <Icon className="w-5 h-5 text-teal-700 group-hover:text-white transition-colors" />
             </div>
-            <p className="text-3xl font-black text-gray-900 tracking-tighter">
+            <p className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">
                 <AnimatedNumber value={s.value} />
             </p>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{s.label}</p>
+            <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{s.label}</p>
           </Link>
         )})}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Mentee Overview</h2>
-            <Link href="/mentor/students" className="text-[10px] font-black text-gray-400 hover:text-emerald-700 uppercase tracking-widest">See all students</Link>
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Mentee Overview</h2>
+          <Link href="/mentor/students" className="text-[10px] font-black text-gray-400 hover:text-emerald-700 uppercase tracking-widest">See all students</Link>
+        </div>
 
-          {!enrollments?.length ? (
-            <div className="card p-10 text-center">
-              <Users className="w-10 h-10 text-gray-200 mx-auto mb-4" />
-              <p className="text-sm text-gray-500 font-medium">No mentees assigned to you yet.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {enrollments.map(enrollment => {
-                const studentId = (enrollment.student as any).id
-                return (
-                  <MenteeOverview
-                    key={enrollment.id}
-                    enrollment={enrollment}
-                    overdueTasks={overdueTasksByStudent[studentId] || 0}
-                    sessionsCompleted={completionsMap[studentId] || 0}
-                    progress={progressMap[studentId] || 0}
-                  />
-                )
-              })}
+        {!enrollments?.length ? (
+          <div className="card p-10 text-center">
+            <Users className="w-10 h-10 text-gray-200 mx-auto mb-4" />
+            <p className="text-sm text-gray-500 font-medium">No mentees assigned to you yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {enrollments.map(enrollment => {
+              const studentId = (enrollment.student as any).id
+              return (
+                <MenteeOverview
+                  key={enrollment.id}
+                  enrollment={enrollment}
+                  overdueTasks={overdueTasksByStudent[studentId] || 0}
+                  sessionsCompleted={completionsMap[studentId] || 0}
+                  progress={progressMap[studentId] || 0}
+                />
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <section className="space-y-4">
+        <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Pending Actions</h2>
+        <div className="card divide-y divide-gray-50">
+          {pendingTasks?.length === 0 && sharedJournals?.length === 0 && (
+            <div className="p-10 text-center">
+              <CheckCircle className="w-8 h-8 text-emerald-100 mx-auto mb-2" />
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">All caught up!</p>
             </div>
           )}
+
+          {pendingTasks?.map(task => (
+            <Link key={task.id} href="/mentor/tasks" className="flex items-start gap-3 p-4 hover:bg-gray-50 group">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-black text-amber-600 uppercase tracking-[0.1em] mb-0.5">Task Review</p>
+                <p className="text-sm font-bold text-gray-900 leading-tight">{(task.student as any).full_name} submitted "{task.title}"</p>
+                <p className="text-[10px] text-gray-400 mt-1 font-medium">{task.submitted_at && formatDate(task.submitted_at)}</p>
+              </div>
+            </Link>
+          ))}
+
+          {sharedJournals?.map(journal => (
+            <Link key={journal.id} href="/mentor/tasks" className="flex items-start gap-3 p-4 hover:bg-gray-50 group">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.1em] mb-0.5">Journal Shared</p>
+                <p className="text-sm font-bold text-gray-900 leading-tight">{(journal.student as any).full_name} shared a Week {journal.week_number} entry</p>
+                <p className="text-[10px] text-gray-400 mt-1 font-medium">{formatDate(journal.updated_at)}</p>
+              </div>
+            </Link>
+          ))}
         </div>
+      </section>
 
-        <div className="lg:col-span-8 space-y-6">
-           <ProgrammeExplorer cohorts={allActiveCohorts || []} />
-        </div>
+      <ProgrammeExplorer cohorts={allActiveCohorts || []} />
 
-        <div className="lg:col-span-4 space-y-8">
-          <section className="space-y-4">
-            <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Pending Actions</h2>
-            <div className="card divide-y divide-gray-50">
-              {pendingTasks?.length === 0 && sharedJournals?.length === 0 && (
-                <div className="p-10 text-center">
-                  <CheckCircle className="w-8 h-8 text-emerald-100 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">All caught up!</p>
-                </div>
-              )}
-
-              {pendingTasks?.map(task => (
-                <Link key={task.id} href="/mentor/tasks" className="flex items-start gap-3 p-4 hover:bg-gray-50 group">
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-[0.1em] mb-0.5">Task Review</p>
-                    <p className="text-sm font-bold text-gray-900 leading-tight">{(task.student as any).full_name} submitted "{task.title}"</p>
-                    <p className="text-[10px] text-gray-400 mt-1 font-medium">{task.submitted_at && formatDate(task.submitted_at)}</p>
-                  </div>
-                </Link>
-              ))}
-
-              {sharedJournals?.map(journal => (
-                <Link key={journal.id} href="/mentor/tasks" className="flex items-start gap-3 p-4 hover:bg-gray-50 group">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <BookOpen className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.1em] mb-0.5">Journal Shared</p>
-                    <p className="text-sm font-bold text-gray-900 leading-tight">{(journal.student as any).full_name} shared a Week {journal.week_number} entry</p>
-                    <p className="text-[10px] text-gray-400 mt-1 font-medium">{formatDate(journal.updated_at)}</p>
-                  </div>
-                </Link>
-              ))}
+      <section className="space-y-4">
+         <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Group Activity</h2>
+         <div className="card p-6 bg-emerald-900 text-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-6 opacity-10">
+              <MessageSquare className="w-24 h-24" />
             </div>
-          </section>
-
-          <section className="space-y-4">
-             <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em]">Group Activity</h2>
-             <div className="card p-6 bg-emerald-900 text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-6 opacity-10">
-                  <MessageSquare className="w-24 h-24" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-4">Cohort Chat</p>
-                  <p className="text-sm font-medium leading-relaxed mb-6 text-emerald-50">
-                    Stay present in the community. Your substantive presence signals that students' voices are being heard.
-                  </p>
-                  <Link href="/mentor/messages" className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-lg shadow-black/20">
-                    Open Group Chat <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-             </div>
-          </section>
-        </div>
-      </div>
+            <div className="relative z-10">
+              <p className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-4">Cohort Chat</p>
+              <p className="text-sm font-medium leading-relaxed mb-6 text-emerald-50">
+                Stay present in the community. Your substantive presence signals that students' voices are being heard.
+              </p>
+              <Link href="/mentor/messages" className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-lg shadow-black/20">
+                Open Group Chat <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+         </div>
+      </section>
     </div>
   )
 }

@@ -91,10 +91,10 @@ export default async function PillarContentPage() {
   const activeTask = tasks?.[0]
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
+    <div className="max-w-3xl mx-auto space-y-6 pb-12 px-4">
       <div className="page-header">
         <div>
-          <h1 className="page-title uppercase tracking-tighter">Pillar {pillarNum}: {pillar?.name}</h1>
+          <h1 className="page-title uppercase tracking-tighter text-lg sm:text-xl">Pillar {pillarNum}: {pillar?.name}</h1>
           <p className="text-sm text-gray-500 mt-1">Week {weekNum} of 12 — Formation Content</p>
         </div>
       </div>
@@ -125,14 +125,14 @@ export default async function PillarContentPage() {
 
       {activeTask && (
         <div className="mt-12 pt-8 border-t border-gray-100">
-          <div className="bg-teal-50 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="bg-teal-50 rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-4 text-center">
             <div>
               <h3 className="font-semibold text-teal-900">Finished the reading?</h3>
               <p className="text-sm text-teal-700 mt-1">Move to this week's formation task to capture your reflections.</p>
             </div>
             <Link
               href={`/dashboard/tasks/${activeTask.id}`}
-              className="btn-primary whitespace-nowrap flex items-center gap-2"
+              className="btn-primary w-full sm:w-auto justify-center whitespace-nowrap flex items-center gap-2"
             >
               Go to Task <ArrowRight className="w-4 h-4" />
             </Link>

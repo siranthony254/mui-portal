@@ -22,9 +22,9 @@ export default async function SessionsPage() {
   const { data: sessions } = await supabase.from('cohort_sessions').select('*, completions:session_homework_completions(student_id)').eq('cohort_id', enrollment.cohort_id).order('date', { ascending: false })
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 px-4">
       <div className="page-header">
-        <h1 className="page-title">Monthly Sessions</h1>
+        <h1 className="page-title text-lg sm:text-xl">Monthly Sessions</h1>
         <p className="text-sm text-gray-500">{cohort?.name} · Closed Cohort Sessions</p>
       </div>
 
@@ -35,7 +35,7 @@ export default async function SessionsPage() {
             const isCompleted = session.completions?.some((c: any) => c.student_id === user.id) || false
             return (
               <div key={session.id} className="card overflow-hidden">
-                <div className={`px-5 py-4 border-b border-gray-100 flex items-center justify-between ${!isPast ? 'bg-teal-50' : 'bg-gray-50'}`}>
+                <div className={`px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${!isPast ? 'bg-teal-50' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${!isPast ? 'bg-teal-700 text-white' : 'bg-gray-200 text-gray-500'}`}>
                       <Calendar className="w-5 h-5" />
@@ -45,10 +45,10 @@ export default async function SessionsPage() {
                       <p className="text-xs text-gray-500">{formatDate(session.date)} · {session.time}</p>
                     </div>
                   </div>
-                  {!isPast && <span className="badge badge-teal">Upcoming</span>}
+                  {!isPast && <span className="badge badge-teal self-start sm:self-auto">Upcoming</span>}
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-4 sm:p-5 space-y-4">
                   {session.theme && (
                     <div>
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Theme</p>
@@ -71,7 +71,7 @@ export default async function SessionsPage() {
                   <div className="flex flex-wrap gap-3 pt-2">
                     {session.join_url && !isPast && (
                       <a href={session.join_url} target="_blank" rel="noopener noreferrer"
-                        className="btn-primary flex items-center gap-2 text-sm py-2">
+                        className="btn-primary flex items-center gap-2 text-sm py-2 w-full sm:w-auto justify-center">
                         <Video className="w-4 h-4" /> Join Session
                       </a>
                     )}
@@ -100,7 +100,7 @@ export default async function SessionsPage() {
       )}
 
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
-        <div className="mt-0.5"><FileText className="w-5 h-5 text-blue-600" /></div>
+        <div className="mt-0.5 flex-shrink-0"><FileText className="w-5 h-5 text-blue-600" /></div>
         <div>
           <p className="text-sm font-semibold text-blue-900">About Monthly Sessions</p>
           <p className="text-xs text-blue-700 leading-relaxed mt-1">

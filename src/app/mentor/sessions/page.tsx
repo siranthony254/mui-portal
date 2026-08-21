@@ -23,9 +23,11 @@ export default async function MentorSessionsPage() {
 
   if (!enrollments || !enrollments.cohort) {
     return (
-      <div className="max-w-4xl mx-auto space-y-8 pb-20">
+      <div className="max-w-4xl mx-auto space-y-8 pb-20 px-4">
         <div className="page-header">
-          <h1 className="page-title uppercase tracking-tighter">Cohort Materials</h1>
+          <div>
+            <h1 className="page-title uppercase tracking-tighter text-lg sm:text-xl">Cohort Materials</h1>
+          </div>
         </div>
         <div className="card p-12 text-center">
           <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
@@ -85,10 +87,10 @@ export default async function MentorSessionsPage() {
   }, [])
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
+    <div className="max-w-4xl mx-auto space-y-8 pb-20 px-4">
       <div className="page-header">
         <div>
-          <h1 className="page-title uppercase tracking-tighter">Cohort Materials Review</h1>
+          <h1 className="page-title uppercase tracking-tighter text-lg sm:text-xl">Cohort Materials Review</h1>
           <p className="text-sm text-gray-500 mt-1">{cohort.name} — {sessions.length} sessions</p>
         </div>
       </div>
@@ -102,16 +104,16 @@ export default async function MentorSessionsPage() {
         <div className="space-y-12" id="sessions-container">
           {sessions.map((session: any, idx: number) => (
             <div key={session.key} id={`session-${idx}`} className="scroll-mt-24">
-              <div className="flex items-center justify-between mb-6 sticky top-0 bg-gray-50 py-4 z-10 border-b border-gray-200">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sticky top-0 bg-gray-50 py-3 sm:py-4 px-4 z-10 border-b border-gray-200">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                     Pillar {session.pillarNumber}: {session.pillarName}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
                     Week {session.weekNumber} · Day {session.dayNumber} · Session {session.sessionNumber}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {idx > 0 && (
                     <a
                       href={`#session-${idx - 1}`}
@@ -134,10 +136,10 @@ export default async function MentorSessionsPage() {
               </div>
 
               {session.journalPrompt && (
-                <div className="card bg-blue-50 border-blue-100 p-6 mb-6">
+                <div className="card bg-blue-50 border-blue-100 p-4 sm:p-6 mb-6">
                   <div className="flex items-start gap-3">
-                    <BookOpen className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div>
+                    <BookOpen className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-bold text-blue-900 mb-2">Journal Prompt</h3>
                       <p className="text-sm text-blue-800 leading-relaxed">{session.journalPrompt}</p>
                     </div>
@@ -171,7 +173,7 @@ export default async function MentorSessionsPage() {
 
       {/* Quick Navigation */}
       {sessions.length > 1 && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
           <div className="card p-4 shadow-2xl">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Quick Jump</p>
             <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">

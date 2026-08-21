@@ -37,15 +37,15 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
   const hasMultimedia = session.contentBlocks?.some((b: any) => ['videoBlock', 'imageBlock', 'audioBlock'].includes(b._type))
 
   return (
-    <div className="fixed inset-0 z-[110] bg-gray-900/90 backdrop-blur-xl flex flex-col md:flex-row overflow-hidden">
-        {/* Left Side: Video / Primary Content */}
+    <div className="fixed inset-0 z-[110] bg-gray-900/90 backdrop-blur-xl flex flex-col overflow-hidden">
+        {/* Video / Primary Content - Full Screen on Mobile */}
         {hasMultimedia && (
-            <div className="w-full md:flex-1 bg-black flex flex-col items-center justify-center relative overflow-hidden aspect-video md:aspect-auto md:p-8 lg:p-12">
-                <button onClick={onClose} className="absolute top-4 left-4 z-50 p-2.5 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors md:hidden border border-white/10 shadow-lg">
+            <div className="w-full flex-1 bg-black flex flex-col items-center justify-center relative overflow-hidden aspect-video sm:aspect-auto">
+                <button onClick={onClose} className="absolute top-4 left-4 z-50 p-2.5 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors border border-white/10 shadow-lg">
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="w-full h-full max-w-6xl mx-auto flex items-center justify-center bg-black rounded-lg md:rounded-2xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+                <div className="w-full h-full max-w-6xl mx-auto flex items-center justify-center bg-black rounded-lg overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)]">
                     {(() => {
                         const videoBlock = session.contentBlocks?.find((b: any) => b._type === 'videoBlock');
                         const imageBlock = session.contentBlocks?.find((b: any) => b._type === 'imageBlock');
@@ -114,12 +114,12 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
             </div>
         )}
 
-        {/* Right Side: Details & Actions */}
+        {/* Details & Actions - Below video on mobile, side on desktop */}
         <div className={cn(
             "bg-white flex flex-col shadow-2xl relative overflow-hidden transition-all",
-            hasMultimedia ? "w-full md:w-[450px] flex-1 md:h-full" : "w-full max-w-4xl mx-auto h-full md:h-[90vh] my-auto md:rounded-[3rem]"
+            hasMultimedia ? "w-full max-h-[50vh] sm:max-h-none sm:w-[450px] sm:flex-1" : "w-full max-w-4xl mx-auto h-full sm:h-[90vh] my-auto sm:rounded-[3rem]"
         )}>
-            <div className="absolute top-4 right-4 md:top-6 md:right-6 z-50 flex items-center gap-2">
+            <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
                 <div className="flex bg-gray-100/80 backdrop-blur rounded-lg p-1 border border-gray-200/50 shadow-sm">
                     <button
                         disabled={!prevSession}
@@ -141,18 +141,18 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 pt-16 md:pt-20 custom-scrollbar">
-                <div className="space-y-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pt-16 custom-scrollbar">
+                <div className="space-y-6">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">Week {session.module.weekNumber} · Day {session.dayNumber}</span>
                         </div>
-                        <h1 className="text-xl md:text-2xl font-black text-gray-900 leading-tight tracking-tight uppercase">{session.title}</h1>
-                        <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Pillar {session.pillar.number}: {session.pillar.name}</p>
+                        <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-900 leading-tight tracking-tight uppercase">{session.title}</h1>
+                        <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Pillar {session.pillar.number}: {session.pillar.name}</p>
                     </div>
 
                     {/* Content Blocks (Non-Video) */}
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         {(() => {
                             const videoBlock = session.contentBlocks?.find((b: any) => b._type === 'videoBlock');
                             const imageBlock = session.contentBlocks?.find((b: any) => b._type === 'imageBlock');
@@ -164,7 +164,7 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                             return session.contentBlocks?.filter((b: any) => b._key !== primaryKey).map((block: any) => (
                                 <div key={block._key} className="space-y-4">
                                     {block._type === 'textBlock' && (
-                                        <div className="prose prose-sm prose-emerald text-gray-600 font-medium leading-relaxed italic border-l-4 border-teal-500 pl-6 py-2">
+                                        <div className="prose prose-sm prose-emerald text-gray-600 font-medium leading-relaxed italic border-l-4 border-teal-500 pl-4 sm:pl-6 py-2">
                                             {renderArticleBody(block.body)}
                                         </div>
                                     )}
@@ -175,7 +175,7 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                                         </div>
                                     )}
                                     {block._type === 'audioBlock' && (
-                                        <div className="p-4 bg-teal-50 rounded-2xl border border-teal-100 space-y-2">
+                                        <div className="p-3 sm:p-4 bg-teal-50 rounded-xl sm:rounded-2xl border border-teal-100 space-y-2">
                                             <div className="flex items-center gap-2 text-teal-800 font-black text-[10px] uppercase tracking-widest">
                                                 <Headphones className="w-3.5 h-3.5" /> Audio Insight
                                             </div>
@@ -183,7 +183,7 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                                         </div>
                                     )}
                                     {block._type === 'fileBlock' && (
-                                        <a href={block.fileUrl || block.externalUrl || '#'} target="_blank" className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-emerald-500 transition-all shadow-sm">
+                                        <a href={block.fileUrl || block.externalUrl || '#'} target="_blank" className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100 group hover:border-emerald-500 transition-all shadow-sm">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
                                                     <FileDown className="w-4 h-4 text-emerald-600" />
@@ -218,9 +218,9 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
 
                     {/* Journal Prompt */}
                     {session.journalPrompt && (
-                        <div className="p-6 bg-blue-50 rounded-[2rem] border-2 border-blue-100 space-y-3 relative overflow-hidden">
+                        <div className="p-4 sm:p-6 bg-blue-50 rounded-xl sm:rounded-[2rem] border-2 border-blue-100 space-y-3 relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <MessageSquare className="w-12 h-12 text-blue-900" />
+                                <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-blue-900" />
                             </div>
                             <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-widest flex items-center gap-2">
                                 <Zap className="w-3 h-3 fill-blue-900" /> Daily Reflection
@@ -233,26 +233,26 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                 </div>
             </div>
 
-            <div className="p-8 border-t border-gray-100 bg-gray-50/50">
+            <div className="p-4 sm:p-6 sm:p-8 border-t border-gray-100 bg-gray-50/50">
                 {!isCompleted ? (
                     <button
                         onClick={markComplete}
                         disabled={loading}
-                        className="w-full bg-emerald-700 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-2xl shadow-emerald-700/40 active:scale-95 disabled:opacity-50"
+                        className="w-full bg-emerald-700 text-white py-4 sm:py-5 rounded-xl sm:rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-2xl shadow-emerald-700/40 active:scale-95 disabled:opacity-50 text-sm sm:text-base"
                     >
                         {loading ? 'Processing...' : 'Mark Session as Complete'}
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 ) : (
                     <div className="space-y-3">
-                        <div className="w-full bg-emerald-50 text-emerald-700 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 border-2 border-emerald-100">
-                            <CheckCircle className="w-5 h-5" />
+                        <div className="w-full bg-emerald-50 text-emerald-700 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 border-2 border-emerald-100 text-sm sm:text-base">
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                             Session Completed
                         </div>
                         {nextSession && (
                             <button
                                 onClick={() => onSwitch(nextSession)}
-                                className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95"
+                                className="w-full bg-gray-900 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95 text-sm sm:text-base"
                             >
                                 Continue to Next Session
                                 <ChevronRight className="w-4 h-4" />
@@ -260,7 +260,7 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                         )}
                     </div>
                 )}
-                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest text-center mt-4">
+                <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center mt-3 sm:mt-4">
                     {nextSession ? `Next: ${nextSession.title}` : 'End of current path'}
                 </p>
             </div>

@@ -26,15 +26,15 @@ export default async function MentorTasksPage({ searchParams }: { searchParams: 
   const reviewed = tasks?.filter(t=>t.status==='reviewed'||t.status==='approved')||[]
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 px-4">
       <div className="page-header">
-        <h1 className="page-title">Task Reviews</h1>
+        <h1 className="page-title text-lg sm:text-xl">Task Reviews</h1>
         {pending.length>0 && <span className="badge badge-amber">{pending.length} awaiting review</span>}
       </div>
 
-      <div className="card p-4 flex items-center gap-3">
+      <div className="card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
         <label className="text-sm text-gray-600">Student:</label>
-        <QueryParamSelect name="student" defaultValue={studentFilter||''} className="select w-auto text-sm">
+        <QueryParamSelect name="student" defaultValue={studentFilter||''} className="select w-full sm:w-auto text-sm">
           <option value="">All students</option>
           {enrollments?.map(e=>{const s=e.student as any;return s?<option key={s.id} value={s.id}>{s.full_name}</option>:null})}
         </QueryParamSelect>
@@ -47,14 +47,14 @@ export default async function MentorTasksPage({ searchParams }: { searchParams: 
             const s = task.student as any
             return (
               <div key={task.id} className="card overflow-hidden border-l-4 border-l-amber-400">
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
+                <div className="p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className={cn('badge text-xs',getPillarColor(task.pillar_number))}>Pillar {task.pillar_number} · Week {task.week_number}</span>
                         <span className="badge badge-amber text-xs">Needs review</span>
                       </div>
-                      <h3 className="font-semibold text-gray-900">{task.title}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">{task.title}</h3>
                       <p className="text-xs text-gray-400 mt-0.5">{s?.full_name} · {s?.institution}{task.submitted_at&&` · ${formatDate(task.submitted_at)}`}</p>
                     </div>
                   </div>

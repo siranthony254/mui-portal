@@ -16,14 +16,14 @@ export default async function CohortsPage() {
   const countMap = (enrollmentCounts||[]).reduce<Record<string,number>>((acc,e) => { acc[e.cohort_id]=(acc[e.cohort_id]||0)+1; return acc }, {})
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="page-header"><h1 className="page-title">Cohorts</h1></div>
-      <div className="card p-5">
-        <p className="section-title">Create new cohort</p>
+    <div className="max-w-4xl mx-auto space-y-6 px-4">
+      <div className="page-header"><h1 className="page-title text-lg sm:text-xl">Cohorts</h1></div>
+      <div className="card p-4 sm:p-5">
+        <p className="section-title text-sm">Create new cohort</p>
         <CreateCohortForm />
       </div>
       <div className="space-y-4">
-        <p className="section-title">All cohorts ({cohorts?.length||0})</p>
+        <p className="section-title text-sm">All cohorts ({cohorts?.length||0})</p>
         {cohorts?.length === 0 ? (
           <div className="card p-8 text-center"><p className="text-sm text-gray-400">No cohorts yet. Create one above.</p></div>
         ) : cohorts?.map(cohort => (

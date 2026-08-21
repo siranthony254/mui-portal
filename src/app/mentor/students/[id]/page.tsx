@@ -49,34 +49,34 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
   const progress = Math.round(((enrollment.current_week - 1) / 12) * 100)
 
   return (
-    <div className="max-w-6xl mx-auto pb-20">
-      <div className="mb-8 flex items-center gap-4">
-        <Link href="/mentor" className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center hover:bg-gray-50 transition-colors">
+    <div className="max-w-6xl mx-auto pb-20 px-4">
+      <div className="mb-6 sm:mb-8 flex items-center gap-4">
+        <Link href="/mentor" className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center hover:bg-gray-50 transition-colors flex-shrink-0">
           <ArrowLeft className="w-5 h-5 text-gray-400" />
         </Link>
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Mentee Profile</h1>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight truncate">Mentee Profile</h1>
           <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Cohort: {cohort.name}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         {/* Left Column: Summary & Notes */}
-        <div className="lg:col-span-4 space-y-8">
+        <div className="lg:col-span-4 space-y-6 sm:space-y-8">
           {/* Student Summary Card */}
           <section className="card overflow-hidden">
-            <div className="h-24 bg-teal-700 relative">
-              <div className="absolute -bottom-10 left-6">
-                <div className="w-20 h-20 rounded-3xl bg-white p-1 shadow-xl">
-                  <div className="w-full h-full rounded-[1.2rem] bg-teal-100 text-teal-700 flex items-center justify-center text-2xl font-black">
+            <div className="h-20 sm:h-24 bg-teal-700 relative">
+              <div className="absolute -bottom-8 sm:-bottom-10 left-4 sm:left-6">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white p-1 shadow-xl">
+                  <div className="w-full h-full rounded-[1.2rem] bg-teal-100 text-teal-700 flex items-center justify-center text-xl sm:text-2xl font-black">
                     {getInitials(student.full_name)}
                   </div>
                 </div>
               </div>
             </div>
-            <div className="pt-14 p-6 pb-6">
-              <h2 className="text-xl font-black text-gray-900">{student.full_name}</h2>
-              <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mb-4">{student.institution} · {student.institution_type}</p>
+            <div className="pt-12 sm:pt-14 p-4 sm:p-6 pb-6">
+              <h2 className="text-lg sm:text-xl font-black text-gray-900 truncate">{student.full_name}</h2>
+              <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mb-4 truncate">{student.institution} · {student.institution_type}</p>
 
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="p-3 bg-gray-50 rounded-2xl">
@@ -116,10 +116,10 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
         </div>
 
         {/* Right Column: Tasks & Journals */}
-        <div className="lg:col-span-8 space-y-8">
-          <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl w-fit">
-             <button className="px-6 py-2 bg-white rounded-xl text-xs font-black uppercase tracking-widest shadow-sm">Submissions</button>
-             <button className="px-6 py-2 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600">Communication</button>
+        <div className="lg:col-span-8 space-y-6 sm:space-y-8">
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl w-fit overflow-x-auto">
+             <button className="px-4 sm:px-6 py-2 bg-white rounded-xl text-xs font-black uppercase tracking-widest shadow-sm whitespace-nowrap">Submissions</button>
+             <button className="px-4 sm:px-6 py-2 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 whitespace-nowrap">Communication</button>
           </div>
 
           {/* Task Submissions */}
@@ -134,19 +134,19 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
               <div className="space-y-4">
                 {tasks.map(task => (
                   <div key={task.id} className="card overflow-hidden">
-                    <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900">{task.title}</h3>
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50/50 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-gray-900 truncate">{task.title}</h3>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Pillar {task.pillar_number} · Week {task.week_number}</p>
                       </div>
                       <span className={cn(
-                        "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
+                        "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex-shrink-0",
                         task.status === 'reviewed' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                       )}>
                         {task.status}
                       </span>
                     </div>
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                       <div className="prose prose-sm max-w-none text-gray-600 italic">
                         "{task.submission}"
                       </div>
@@ -179,9 +179,9 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
              </div>
 
              {voiceJournals?.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     {voiceJournals.map((v: any) => (
-                        <div key={v._id} className="card p-5 bg-teal-50 border-teal-100">
+                        <div key={v._id} className="card p-4 sm:p-5 bg-teal-50 border-teal-100">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                     <Mic2 className="w-4 h-4 text-teal-600" />
@@ -204,7 +204,7 @@ export default async function MenteeDetailPage({ params }: { params: { id: strin
              ) : (
                 <div className="space-y-4">
                   {journals?.map(entry => (
-                    <div key={entry.id} className="card p-6 border-l-4 border-l-blue-500">
+                    <div key={entry.id} className="card p-4 sm:p-6 border-l-4 border-l-blue-500">
                       <div className="flex items-center justify-between mb-4">
                          <div className="flex items-center gap-2">
                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded-lg">Week {entry.week_number}</span>

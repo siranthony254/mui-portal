@@ -95,9 +95,10 @@ export function MessagesClient({ currentUser, conversations: initial, participan
   const filteredContacts = contactableUsers.filter((u:any) => u.full_name?.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div className={cn("flex gap-4", compact ? "h-full w-full" : "h-[calc(100vh-8rem)]")}>
-      <div className={cn("flex-shrink-0 card flex flex-col overflow-hidden", compact ? "w-48" : "w-72")}>
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+    <div className={cn("flex gap-4 flex-col sm:flex-row", compact ? "h-full w-full" : "h-[calc(100vh-8rem)]")}>
+      {/* Conversation List - Full width on mobile when no active convo */}
+      <div className={cn("flex-shrink-0 card flex flex-col overflow-hidden", compact ? "w-48" : activeConvoId ? "hidden sm:flex sm:w-72 w-full" : "w-full sm:w-72")}>
+        <div className="p-3 sm:p-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">Messages</h2>
           {!readOnly && (
             <button onClick={() => setShowNew(!showNew)} className="w-7 h-7 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg flex items-center justify-center transition-colors">
@@ -131,7 +132,7 @@ export function MessagesClient({ currentUser, conversations: initial, participan
             const isActive = convo.id === activeConvoId
             return (
               <button key={convo.id} onClick={() => setActiveConvoId(convo.id)}
-                className={cn('w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 text-left', isActive && 'bg-teal-50 hover:bg-teal-50')}>
+                className={cn('w-full flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-gray-50 border-b border-gray-50 text-left', isActive && 'bg-teal-50 hover:bg-teal-50')}>
                 <div className={cn('w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0',
                   other.role==='mentor'?'bg-blue-100 text-blue-700':other.role==='admin'?'bg-purple-100 text-purple-700':'bg-teal-100 text-teal-700')}>
                   {getInitials((other as any).full_name||'U')}
@@ -152,17 +153,20 @@ export function MessagesClient({ currentUser, conversations: initial, participan
       <div className="flex-1 card flex flex-col overflow-hidden">
         {activeConvoId && otherParticipant ? (
           <>
-            <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-3">
+            <div className="px-3 sm:px-5 py-3.5 border-b border-gray-100 flex items-center gap-3">
+              <button onClick={() => setActiveConvoId(null)} className="sm:hidden p-1 hover:bg-gray-100 rounded-lg">
+                <Send className="w-4 h-4 text-gray-400 rotate-180" />
+              </button>
               <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0',
                 (otherParticipant as any).role==='mentor'?'bg-blue-100 text-blue-700':(otherParticipant as any).role==='group'?'bg-emerald-100 text-emerald-700':'bg-teal-100 text-teal-700')}>
                 {getInitials((otherParticipant as any).full_name||'U')}
               </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">{(otherParticipant as any).full_name}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{(otherParticipant as any).full_name}</p>
                 <p className="text-xs text-gray-400 capitalize">{(otherParticipant as any).role}</p>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3">
               {messages.length === 0 && <p className="text-sm text-gray-400 text-center py-8">No messages yet. Say hello!</p>}
               {messages.map(msg => {
                 const isMe = msg.sender_id === currentUser.id
@@ -198,7 +202,7 @@ export function MessagesClient({ currentUser, conversations: initial, participan
               <div ref={bottomRef} />
             </div>
             {!readOnly && (
-              <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex items-center gap-2">
+              <form onSubmit={handleSend} className="p-3 sm:p-4 border-t border-gray-100 flex items-center gap-2">
                 <VoiceRecorder onUpload={handleVoiceUpload} compact label="Record message" />
                 <input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="input flex-1" disabled={sending} />
                 <button type="submit" disabled={sending || !newMessage.trim()} className="btn-primary px-3 py-2 transition-all active:scale-95"><Send className="w-4 h-4" /></button>

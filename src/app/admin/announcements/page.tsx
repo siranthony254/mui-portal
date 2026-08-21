@@ -20,32 +20,32 @@ export default async function AnnouncementsPage() {
   ])
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-20 px-4">
       <div className="page-header">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">The Megaphone</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">The Megaphone</h1>
           <p className="text-sm text-gray-500 font-medium">Platform-wide broadcasts and targeted alerts.</p>
         </div>
         <AdminNotificationActions cohorts={cohorts || []} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-emerald-900 rounded-[2rem] p-8 text-white relative overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-emerald-900 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 text-white relative overflow-hidden">
            <div className="absolute top-0 right-0 p-6 opacity-10">
-             <Bell className="w-32 h-32" />
+             <Bell className="w-24 h-24 sm:w-32 sm:h-32" />
            </div>
            <div className="relative z-10">
               <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-4">Live Alerts</p>
-              <h3 className="text-2xl font-black mb-4 tracking-tight">Direct-to-Dash</h3>
-              <p className="text-sm text-emerald-100/70 leading-relaxed font-medium mb-6">
+              <h3 className="text-xl sm:text-2xl font-black mb-4 tracking-tight">Direct-to-Dash</h3>
+              <p className="text-sm text-emerald-100/70 leading-relaxed font-medium mb-4 sm:mb-6">
                 Push instant alerts to student and mentor dashboards. These are ideal for session reminders and immediate action items.
               </p>
            </div>
         </div>
 
-        <div className="lg:col-span-2 card p-8 flex flex-col justify-center bg-gray-50 border-dashed border-gray-200">
-           <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-gray-100">
+        <div className="lg:col-span-2 card p-6 sm:p-8 flex flex-col justify-center bg-gray-50 border-dashed border-gray-200">
+           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0">
                  <Globe className="w-8 h-8 text-emerald-600" />
               </div>
               <div className="space-y-1">
@@ -61,12 +61,12 @@ export default async function AnnouncementsPage() {
         {announcements.length === 0 ? (
           <div className="card p-12 text-center text-gray-400 italic text-sm">No active banners currently live.</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {announcements.map((ann: any) => (
-              <div key={ann._id} className="card p-6 hover:bg-gray-50/50 transition-all border-l-4 border-l-emerald-700">
-                <div className="flex justify-between items-start mb-4">
+              <div key={ann._id} className="card p-4 sm:p-6 hover:bg-gray-50/50 transition-all border-l-4 border-l-emerald-700">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
                    <h3 className="font-bold text-gray-900 pr-4">{ann.title}</h3>
-                   <div className="flex gap-1">
+                   <div className="flex gap-1 flex-wrap">
                       {ann.targetRoles?.map((role: string) => (
                         <span key={role} className="text-[9px] font-black uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded-md text-gray-500">{role}</span>
                       ))}

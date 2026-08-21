@@ -40,10 +40,10 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const instColors: Record<string,string> = { university:'bg-teal-500', tvet:'bg-blue-500', college:'bg-amber-500', kmtc:'bg-purple-500', unknown:'bg-gray-300' }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-4">
       <div className="page-header">
-        <h1 className="page-title">Analytics</h1>
-        <QueryParamSelect name="cohort" defaultValue={activeCohortId||''} className="select w-auto text-sm">
+        <h1 className="page-title text-lg sm:text-xl">Analytics</h1>
+        <QueryParamSelect name="cohort" defaultValue={activeCohortId||''} className="select w-full sm:w-auto text-sm">
           <option value="">Select cohort</option>
           {cohorts?.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
         </QueryParamSelect>
@@ -51,14 +51,14 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
       {selectedCohort ? (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[{label:'Enrolled',value:stats.enrolled,sub:`of ${selectedCohort.max_participants} max`},{label:'Tasks approved',value:stats.approved_tasks,sub:'fully reviewed'},{label:'Awaiting review',value:stats.submitted_tasks,sub:'submitted'},{label:'Pending',value:stats.pending_tasks,sub:'not submitted'}].map(s=>(
-              <div key={s.label} className="card p-4"><p className="text-2xl font-bold text-gray-900">{s.value}</p><p className="text-sm font-medium text-gray-600 mt-0.5">{s.label}</p><p className="text-xs text-gray-400 mt-0.5">{s.sub}</p></div>
+              <div key={s.label} className="card p-3 sm:p-4"><p className="text-xl sm:text-2xl font-bold text-gray-900">{s.value}</p><p className="text-sm font-medium text-gray-600 mt-0.5">{s.label}</p><p className="text-xs text-gray-400 mt-0.5">{s.sub}</p></div>
             ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="card p-5">
-              <p className="section-title">Pillar task completion</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="card p-4 sm:p-5">
+              <p className="section-title text-sm">Pillar task completion</p>
               <div className="space-y-3">
                 {PILLARS.map(pillar=>{
                   const pct=stats.pillar_completion[pillar.number]||0
@@ -75,8 +75,8 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                 })}
               </div>
             </div>
-            <div className="card p-5">
-              <p className="section-title">Institution types</p>
+            <div className="card p-4 sm:p-5">
+              <p className="section-title text-sm">Institution types</p>
               {Object.keys(stats.inst_breakdown).length===0 ? <p className="text-sm text-gray-400">No data yet.</p> : (
                 <div className="space-y-3">
                   {Object.entries(stats.inst_breakdown).sort(([,a],[,b])=>b-a).map(([type,count])=>{
@@ -92,15 +92,15 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
               )}
             </div>
           </div>
-          <div className="card p-5">
-            <p className="section-title">Cohort timeline</p>
-            <div className="flex items-center gap-1">
+          <div className="card p-4 sm:p-5">
+            <p className="section-title text-sm">Cohort timeline</p>
+            <div className="flex items-center gap-0.5 sm:gap-1">
               {Array.from({length:12},(_,i)=>{
                 const week=i+1; const isPast=week<selectedCohort.current_week; const isCurrent=week===selectedCohort.current_week
-                return <div key={week} className={`flex-1 h-8 rounded flex items-center justify-center text-xs font-medium ${isCurrent?'bg-teal-700 text-white':isPast?'bg-teal-100 text-teal-700':'bg-gray-100 text-gray-400'}`}>{week}</div>
+                return <div key={week} className={`flex-1 h-8 rounded flex items-center justify-center text-[10px] sm:text-xs font-medium ${isCurrent?'bg-teal-700 text-white':isPast?'bg-teal-100 text-teal-700':'bg-gray-100 text-gray-400'}`}>{week}</div>
               })}
             </div>
-            <div className="flex items-center justify-between text-xs text-gray-400 mt-1"><span>Week 1</span><span>Week {selectedCohort.current_week} (current)</span><span>Week 12</span></div>
+            <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-400 mt-1"><span>Week 1</span><span>Week {selectedCohort.current_week} (current)</span><span>Week 12</span></div>
           </div>
         </>
       ) : <div className="card p-10 text-center"><p className="text-sm text-gray-400">Select a cohort to view analytics.</p></div>}
