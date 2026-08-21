@@ -98,6 +98,17 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
         }
     }
 
+    console.log('Deploying content:', {
+        cohortId: selectedCohortId,
+        pillarNumber: selectedPillarNum,
+        weekNumber: selectedWeekNum,
+        dayNumber: selectedDayNum,
+        sessionNumber: selectedSessionNum,
+        contentType,
+        hasFile: !!selectedFile,
+        hasJournal: !!journalPrompt
+    })
+
     const res = await updateCohortCurriculum({
         cohortId: selectedCohortId,
         pillarNumber: selectedPillarNum,
@@ -108,6 +119,8 @@ export function AddContentForm({ cohorts, onClose }: { cohorts: any[], onClose?:
         journalPrompt: journalPrompt || undefined,
         file: selectedFile
     })
+
+    console.log('Deploy response:', res)
 
     if (res.error) {
       setError(res.error)

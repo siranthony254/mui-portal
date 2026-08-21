@@ -52,6 +52,7 @@ export function CurriculumOrchestrator({ cohorts, onCohortSelect }: { cohorts: C
     async function fetchCurriculum() {
         setLoading(true)
         const data = await getCohortCurriculum(selectedCohortId)
+        console.log('Fetched curriculum:', data)
         setCurriculum(data)
         setLoading(false)
     }
@@ -166,7 +167,10 @@ function PillarSelectionGrid({ pillars, curriculum, onSelect, onEditPillar, onDe
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pillars.map(p => {
                 const sanityPillar = curriculum?.pillars?.find((sp: any) => sp.number === p.number)
-                const sessionCount = sanityPillar?.modules?.reduce((acc: number, m: any) => acc + (m.sessions?.length || 0), 0) || 0
+                const sessionCount = sanityPillar?.modules?.reduce((acc: number, m: any) => {
+                    const daySessions = m.days?.reduce((dayAcc: number, d: any) => dayAcc + (d.sessions?.length || 0), 0) || 0
+                    return acc + daySessions
+                }, 0) || 0
 
                 return (
                     <div key={p.number} className="relative group">
@@ -264,6 +268,8 @@ function PillarEditor({ pillar, cohortId, onUpdate, onClose }: { pillar: Pillar,
 function PillarModuleView({ pillar, curriculum, onOpenSession, onDeleteSession }: { pillar: any, curriculum: any, onOpenSession: (s: any) => void, onDeleteSession: (p: number, w: number, d: number, s: number) => void }) {
     const weeks = [(pillar.number * 2) - 1, (pillar.number * 2)]
     const sanityPillar = curriculum?.pillars?.find((p: any) => p.number === pillar.number)
+
+    console.log('PillarModuleView:', { pillarNumber: pillar.number, sanityPillar, weeks })
 
     return (
         <div className="space-y-10 animate-reveal">
@@ -408,7 +414,10 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
     const [articleBody, setArticleBody] = useState(session?.contentBlocks?.[0]?.body || '')
 
     async function handleSave() {
-        if (!title) return
+        if (!title) {
+            alert('Please enter a session title')
+            return
+        }
         setLoading(true)
 
         let contentBlock: any = {
@@ -438,6 +447,17 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
             }
         }
 
+        console.log('Saving session:', {
+            cohortId,
+            pillarNumber: session.pillarNumber,
+            weekNumber: session.weekNumber,
+            dayNumber: session.dayNumber,
+            sessionNumber: session.sessionNumber || 1,
+            contentBlock,
+            journalPrompt: journalPrompt || undefined,
+            hasFile: !!selectedFile
+        })
+
         const res = await updateCohortCurriculum({
             cohortId,
             pillarNumber: session.pillarNumber,
@@ -449,7 +469,11 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
             file: selectedFile
         })
 
-        if (res.success) {
+        console.log('Save response:', res)
+
+        if (res.error) {
+            alert(`Error saving session: ${res.error}`)
+        } else {
             onUpdate()
         }
         setLoading(false)

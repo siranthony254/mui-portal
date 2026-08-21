@@ -68,31 +68,30 @@ export async function getCohortCurriculum(cohortId: string): Promise<any | null>
         modules[]{
             _key,
             weekNumber,
-            title,
-            introduction,
-            sessions[]{
+            days[]{
                 _key,
                 dayNumber,
                 title,
-                journalPrompt,
-                contentBlocks[]{
+                sessions[]{
                     _key,
-                    _type,
+                    sessionNumber,
                     title,
-                    videoType,
-                    youtubeEmbed,
-                    videoFile,
-                    description,
-                    body,
-                    image,
-                    caption,
-                    file,
-                    externalUrl
-                },
-                subsessions[]{
-                    _key,
-                    title,
-                    content
+                    journalPrompt,
+                    contentBlocks[]{
+                        _key,
+                        _type,
+                        title,
+                        videoType,
+                        youtubeEmbed,
+                        videoFile,
+                        description,
+                        body,
+                        image,
+                        caption,
+                        file,
+                        externalUrl,
+                        url
+                    }
                 }
             }
         }

@@ -248,9 +248,12 @@ export async function updateCohortCurriculum(data: {
     const sessions = day.sessions || []
     let session = sessions.find((s: any) => s.sessionNumber === data.sessionNumber)
     if (!session) {
-      session = { _key: `s${data.sessionNumber}`, sessionNumber: data.sessionNumber, title: `Session ${data.sessionNumber}`, contentBlocks: [] }
+      session = { _key: `s${data.sessionNumber}`, sessionNumber: data.sessionNumber, title: data.contentBlock.title || `Session ${data.sessionNumber}`, contentBlocks: [] }
       sessions.push(session)
     }
+
+    // Update session title from content block
+    session.title = data.contentBlock.title || session.title
 
     // Add the new content block
     session.contentBlocks = [...(session.contentBlocks || []), { ...data.contentBlock, _key: Math.random().toString(36).substring(2) }]
