@@ -17,6 +17,7 @@ import {
 import { cn, parseYouTubeEmbed } from '@/lib/utils'
 import { CohortCurriculumHub } from '@/components/cohort/hub/CohortCurriculumHub'
 import { MediaPicker } from '@/components/ui/MediaPicker'
+import { RichTextEditor } from '@/components/ui/RichTextEditor'
 
 interface Pillar {
     number: number
@@ -461,7 +462,7 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
     })
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     
-    // Extract text from Sanity block array for article body
+    // Extract HTML from Sanity block array for article body
     const extractBodyText = (body: any) => {
         if (!body) return ''
         if (typeof body === 'string') return body
@@ -476,7 +477,15 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
         return ''
     }
     
-    const [articleBody, setArticleBody] = useState(extractBodyText(session?.contentBlocks?.[0]?.body))
+    const [articleBody, setArticleBody] = useState(() => {
+        const body = session?.contentBlocks?.[0]?.body
+        // If body is already HTML string, use it directly
+        if (typeof body === 'string' && body.includes('<')) {
+            return body
+        }
+        // Otherwise extract from Sanity blocks
+        return extractBodyText(body)
+    })
 
     async function handleSave() {
         if (!title) {
@@ -503,26 +512,8 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                 contentBlock.url = URL.createObjectURL(selectedFile)
             }
         } else if (contentType === 'article') {
-            // Split article body by newlines and create Sanity blocks for each paragraph
-            const paragraphs = articleBody.split(/\n+/).filter(p => p.trim().length > 0);
-            contentBlock.body = paragraphs.map(p => ({
-                _type: 'block',
-                _key: Math.random().toString(36).substring(2),
-                children: [{ _type: 'span', text: p.trim(), marks: [] }],
-                markDefs: [],
-                style: 'normal'
-            }));
-
-            // If empty, provide at least one empty block
-            if (contentBlock.body.length === 0) {
-                contentBlock.body = [{
-                    _type: 'block',
-                    _key: Math.random().toString(36).substring(2),
-                    children: [{ _type: 'span', text: '', marks: [] }],
-                    markDefs: [],
-                    style: 'normal'
-                }];
-            }
+            // Save HTML from rich text editor
+            contentBlock.body = articleBody || '';
         } else if (contentType === 'audio' || contentType === 'pdf' || contentType === 'image') {
             if (selectedFile) {
                 contentBlock.url = selectedFile.name
@@ -688,11 +679,9 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                 {contentType === 'article' && (
                     <div className="space-y-2">
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Article Body</label>
-                        <textarea
+                        <RichTextEditor
                             value={articleBody}
-                            onChange={(e) => setArticleBody(e.target.value)}
-                            rows={8}
-                            className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm font-medium leading-relaxed"
+                            onChange={setArticleBody}
                             placeholder="Write your article content here..."
                         />
                     </div>
@@ -714,11 +703,9 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
 
                 <div className="space-y-2">
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Journal Prompt</label>
-                    <textarea
+                    <RichTextEditor
                         value={journalPrompt}
-                        onChange={(e) => setJournalPrompt(e.target.value)}
-                        rows={4}
-                        className="w-full px-5 py-4 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:border-blue-500 focus:ring-0 text-sm font-medium italic text-blue-900"
+                        onChange={setJournalPrompt}
                         placeholder="What is one thing that stood out to you today?"
                     />
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">This prompt is revealed after session content.</p>
