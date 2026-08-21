@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getCohortCurriculum } from '@/lib/sanity/queries'
+import { getCohortCurriculum, getAllCurricula } from '@/lib/sanity/queries'
 import { CohortCurriculumHub } from '@/components/cohort/hub/CohortCurriculumHub'
 import { BookOpen, X, ChevronRight, Layers } from '@/components/icons'
 import { cn } from '@/lib/utils'
@@ -9,8 +9,18 @@ import { cn } from '@/lib/utils'
 export function ProgrammeExplorer({ cohorts }: { cohorts: any[] }) {
     const [selectedCohortId, setSelectedCohortId] = useState('')
     const [curriculum, setCurriculum] = useState<any>(null)
+    const [allCurricula, setAllCurricula] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
     const [showFull, setShowFull] = useState(false)
+
+    useEffect(() => {
+        // Fetch all curricula on mount
+        async function fetchAllCurricula() {
+            const data = await getAllCurricula()
+            setAllCurricula(data || [])
+        }
+        fetchAllCurricula()
+    }, [])
 
     useEffect(() => {
         if (selectedCohortId) {
@@ -22,6 +32,14 @@ export function ProgrammeExplorer({ cohorts }: { cohorts: any[] }) {
 
     async function fetchCurriculum() {
         setLoading(true)
+        // First try to find in already fetched curricula
+        const existingCurriculum = allCurricula.find((c: any) => c.cohortId === selectedCohortId)
+        if (existingCurriculum) {
+            setCurriculum(existingCurriculum)
+            setLoading(false)
+            return
+        }
+        // If not found, fetch individually
         const data = await getCohortCurriculum(selectedCohortId)
         setCurriculum(data)
         setLoading(false)

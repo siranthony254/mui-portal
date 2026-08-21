@@ -43,33 +43,33 @@ export function AdminContentActions({ cohorts }: { cohorts: any[] }) {
   }
 
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-wrap gap-2 sm:gap-3">
         <button
             onClick={() => setShowShowForm('manage')}
-            className="bg-white text-gray-500 border-2 border-gray-100 px-4 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
+            className="bg-white text-gray-500 border-2 border-gray-100 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-all active:scale-95 shadow-sm text-xs sm:text-sm"
             title="Manage Library"
         >
             <Settings className="w-4 h-4" />
         </button>
         <button
             onClick={() => setShowShowForm('resource')}
-            className="bg-white text-blue-700 border-2 border-blue-100 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-50 transition-all active:scale-95 shadow-sm"
+            className="bg-white text-blue-700 border-2 border-blue-100 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-50 transition-all active:scale-95 shadow-sm text-xs sm:text-sm"
         >
             <BookOpen className="w-4 h-4" />
-            Send Resource
+            <span className="hidden sm:inline">Send Resource</span>
         </button>
         <button
             onClick={() => setShowShowForm('orchestrate')}
-            className="bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/20 active:scale-95"
+            className="bg-emerald-700 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/20 active:scale-95 text-xs sm:text-sm"
         >
             <Edit3 className="w-4 h-4" />
-            Write & Orchestrate
+            <span className="hidden sm:inline">Write & Orchestrate</span>
         </button>
         <a
             href="https://sanity.io/manage"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-white text-emerald-700 border-2 border-emerald-100 px-4 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-50 transition-all active:scale-95 shadow-sm"
+            className="bg-white text-emerald-700 border-2 border-emerald-100 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-50 transition-all active:scale-95 shadow-sm text-xs sm:text-sm"
             title="Edit Task Prompts in Sanity"
         >
             <FileText className="w-4 h-4" />

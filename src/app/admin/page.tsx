@@ -105,8 +105,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4">
-      <div className="page-header">
-        <div>
+      <div className="page-header flex-col sm:flex-row">
+        <div className="mb-4 sm:mb-0">
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Operational Overview</h1>
           <p className="text-sm text-gray-500 font-medium">Programme-wide visibility and health metrics</p>
         </div>

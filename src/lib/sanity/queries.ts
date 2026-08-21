@@ -99,3 +99,47 @@ export async function getCohortCurriculum(cohortId: string): Promise<any | null>
     }
   }`, { cohortId })
 }
+
+export async function getAllCurricula(): Promise<any[]> {
+  return sanityFetch(`*[_type=="curriculum"]{
+    _id,
+    cohortId,
+    pillars[]{
+        _key,
+        number,
+        name,
+        description,
+        modules[]{
+            _key,
+            weekNumber,
+            days[]{
+                _key,
+                dayNumber,
+                title,
+                sessions[]{
+                    _key,
+                    sessionNumber,
+                    title,
+                    journalPrompt,
+                    contentBlocks[]{
+                        _key,
+                        _type,
+                        title,
+                        videoType,
+                        youtubeEmbed,
+                        "videoUrl": videoFile.asset->url,
+                        description,
+                        body,
+                        "imageUrl": image.asset->url,
+                        caption,
+                        "fileUrl": file.asset->url,
+                        "audioUrl": audioFile.asset->url,
+                        externalUrl,
+                        url
+                    }
+                }
+            }
+        }
+    }
+  }`)
+}

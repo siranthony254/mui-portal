@@ -32,7 +32,7 @@ export default async function MentorDashboardPage() {
 
   const { data: enrollments } = await supabase.from('enrollments').select('*,student:profiles!student_id(id,full_name,institution,institution_type,year_of_study),cohort:cohorts(id,name,current_week)').eq('mentor_id',user.id).in('status',['enrolled','active']).order('enrolled_at',{ascending:false})
 
-  const { data: allActiveCohorts } = await supabase.from('cohorts').select('id, name, current_week').eq('applications_open', false).order('created_at', { ascending: false })
+  const { data: allActiveCohorts } = await supabase.from('cohorts').select('id, name, current_week, pillars_config').eq('applications_open', false).order('created_at', { ascending: false })
 
   const studentIds = enrollments?.map(e=>(e.student as any)?.id).filter(Boolean)||[]
 
