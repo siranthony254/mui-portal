@@ -16,6 +16,11 @@ interface Props {
 
 export function CohortCurriculumHub({ curriculum, completions, enrollment }: Props) {
   const [activeSession, setActiveSession] = useState<any>(null)
+  const [localCompletions, setLocalCompletions] = useState<string[]>(completions)
+
+  const handleSessionComplete = (sessionKey: string) => {
+    setLocalCompletions(prev => [...prev, sessionKey])
+  }
 
   if (!curriculum) {
     return (
@@ -40,7 +45,7 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
     })
   })
 
-  const progress = Math.round((completions.length / (allSessions.length || 1)) * 100)
+  const progress = Math.round((localCompletions.length / (allSessions.length || 1)) * 100)
 
   return (
     <div className="space-y-10 pb-20">
@@ -49,9 +54,10 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
             session={activeSession}
             onClose={() => setActiveSession(null)}
             onSwitch={(s: any) => setActiveSession(s)}
-            isCompleted={completions.includes(activeSession._key)}
+            isCompleted={localCompletions.includes(activeSession._key)}
             cohortId={enrollment.cohort_id}
             allSessions={allSessions}
+            onSessionComplete={handleSessionComplete}
           />
       )}
 
@@ -76,7 +82,7 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
                     <div className="progress-fill bg-emerald-400" style={{ width: `${progress}%` }} />
                 </div>
                 <p className="text-[9px] font-bold text-emerald-100/50 uppercase tracking-widest text-center">
-                    {completions.length} of {allSessions.length} Sessions Complete
+                    {localCompletions.length} of {allSessions.length} Sessions Complete
                 </p>
             </div>
          </div>
@@ -111,8 +117,8 @@ export function CohortCurriculumHub({ curriculum, completions, enrollment }: Pro
                                         <div className="space-y-2">
                                             {day.sessions?.sort((a: any, b: any) => a.sessionNumber - b.sessionNumber).map((session: any) => {
                                                 const sessionIndex = allSessions.findIndex(as => as._key === session._key)
-                                                const isCompleted = completions.includes(session._key)
-                                                const isLocked = sessionIndex > 0 && !completions.includes(allSessions[sessionIndex - 1]._key)
+                                                const isCompleted = localCompletions.includes(session._key)
+                                                const isLocked = sessionIndex > 0 && !localCompletions.includes(allSessions[sessionIndex - 1]._key)
 
                                                 return (
                                                     <button

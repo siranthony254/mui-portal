@@ -138,8 +138,13 @@ export function ContentCard({ content, compact=false, isAdmin=false, isUnlocked=
                   {content.tags?.map(tag => <span key={tag} className="badge badge-gray text-xs">{tag}</span>)}
                 </div>
                 {content.contentType !== 'video' && content.url && (
-                  <a href={content.url} target="_blank" rel="noopener noreferrer"
-                    className={cn('inline-flex items-center gap-1.5 mt-3 text-sm font-medium', isUnlocked ? 'text-teal-700 hover:underline' : 'text-gray-400 cursor-not-allowed')}>
+                  <a
+                    href={isUnlocked ? content.url : undefined}
+                    target={isUnlocked ? "_blank" : undefined}
+                    rel={isUnlocked ? "noopener noreferrer" : undefined}
+                    onClick={(e) => !isUnlocked && e.preventDefault()}
+                    className={cn('inline-flex items-center gap-1.5 mt-3 text-sm font-medium', isUnlocked ? 'text-teal-700 hover:underline' : 'text-gray-400 cursor-not-allowed')}
+                  >
                     Open {content.contentType}<ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}

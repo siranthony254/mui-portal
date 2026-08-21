@@ -1,23 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, CheckCircle, Zap, Play, FileText, FileDown, Globe, MessageSquare, ChevronLeft, ChevronRight, Headphones } from '@/components/icons'
 import { cn, getYouTubeEmbed } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
-export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortId, allSessions = [] }: { session: any, onClose: () => void, onSwitch: (s: any) => void, isCompleted: boolean, cohortId: string, allSessions?: any[] }) {
+export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortId, allSessions = [], onSessionComplete }: { session: any, onClose: () => void, onSwitch: (s: any) => void, isCompleted: boolean, cohortId: string, allSessions?: any[], onSessionComplete?: (sessionKey: string) => void }) {
   const [loading, setLoading] = useState(false)
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const sessionIndex = allSessions.findIndex(s => s._key === session._key)
   const nextSession = sessionIndex < allSessions.length - 1 ? allSessions[sessionIndex + 1] : null
   const prevSession = sessionIndex > 0 ? allSessions[sessionIndex - 1] : null
 
+  // Scroll detection for journal prompt
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!contentRef.current) return
+      const { scrollTop, scrollHeight, clientHeight } = contentRef.current
+      const scrollPercentage = (scrollTop + clientHeight) / scrollHeight
+      // Show journal prompt when user has scrolled to 90% of content
+      if (scrollPercentage >= 0.9) {
+        setHasScrolledToBottom(true)
+      }
+    }
+
+    const scrollContainer = contentRef.current
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll)
+      return () => scrollContainer.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
   const renderArticleBody = (body: any) => {
     if (!body) return null
-    if (typeof body === 'string') return <p className="whitespace-pre-wrap mb-4">{body}</p>
+    if (typeof body === 'string') {
+      // Check if it's HTML (contains tags)
+      if (body.includes('<')) {
+        return <div className="prose prose-sm prose-emerald max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
+      }
+      return <p className="whitespace-pre-wrap mb-4">{body}</p>
+    }
     if (Array.isArray(body)) {
       return body.map((block: any, idx: number) => {
         if (block._type === 'block') {
@@ -31,7 +58,86 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
   }
 
   const markComplete = async () => {
-    // ... logic ...
+    console.log('markComplete called')
+    setLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        console.log('No user found')
+        setLoading(false)
+        return
+      }
+
+      console.log('User found:', user.id)
+      console.log('Session key:', session._key)
+      console.log('Cohort ID:', cohortId)
+
+      // Check if already completed
+      const { data: existing, error: checkError } = await supabase
+        .from('session_completions')
+        .select('*')
+        .eq('student_id', user.id)
+        .eq('session_id', session._key)
+        .single()
+
+      if (checkError) {
+        console.log('Check error (expected if not completed):', checkError)
+      }
+
+      if (existing) {
+        console.log('Session already completed:', existing)
+        // Even if already completed, still allow navigation to next session
+        if (onSessionComplete) {
+          console.log('Calling onSessionComplete callback for existing completion')
+          onSessionComplete(session._key)
+        }
+      } else {
+        console.log('Marking session as complete...')
+
+        // Mark as complete
+        const { data: insertData, error: insertError } = await supabase.from('session_completions').insert({
+          student_id: user.id,
+          session_id: session._key,
+          cohort_id: cohortId
+        }).select()
+
+        if (insertError) {
+          console.error('Error inserting completion:', insertError)
+          console.error('Error details:', JSON.stringify(insertError, null, 2))
+          setLoading(false)
+          return
+        }
+
+        console.log('Insert successful:', insertData)
+
+        // Notify parent component
+        if (onSessionComplete) {
+          console.log('Calling onSessionComplete callback')
+          onSessionComplete(session._key)
+        }
+      }
+
+      // Auto-switch to next session if available
+      if (nextSession) {
+        console.log('Switching to next session:', nextSession._key)
+        setTimeout(() => {
+          onSwitch({ ...nextSession, pillar: session.pillar, module: nextSession.module || session.module, day: nextSession.day || session.day })
+        }, 500)
+      } else {
+        console.log('No next session, closing player')
+        setTimeout(() => {
+          onClose()
+        }, 500)
+      }
+
+      // Refresh the page to show updated state
+      console.log('Refreshing page')
+      router.refresh()
+    } catch (error) {
+      console.error('Error marking session as complete:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const hasMultimedia = session.contentBlocks?.some((b: any) => ['videoBlock', 'imageBlock', 'audioBlock'].includes(b._type))
@@ -141,7 +247,7 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pt-16 custom-scrollbar">
+            <div ref={contentRef} className="flex-1 overflow-y-auto p-4 sm:p-6 pt-16 custom-scrollbar">
                 <div className="space-y-6">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
@@ -216,17 +322,30 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                         </div>
                     )}
 
-                    {/* Journal Prompt */}
-                    {session.journalPrompt && (
-                        <div className="p-4 sm:p-6 bg-blue-50 rounded-xl sm:rounded-[2rem] border-2 border-blue-100 space-y-3 relative overflow-hidden">
+                    {/* Journal Prompt - Only show after scrolling to bottom */}
+                    {session.journalPrompt && hasScrolledToBottom && (
+                        <div className="p-4 sm:p-6 bg-blue-50 rounded-xl sm:rounded-[2rem] border-2 border-blue-100 space-y-3 relative overflow-hidden animate-reveal">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                 <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-blue-900" />
                             </div>
                             <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-widest flex items-center gap-2">
                                 <Zap className="w-3 h-3 fill-blue-900" /> Daily Reflection
                             </h4>
-                            <p className="text-sm text-blue-800 leading-relaxed font-medium italic">
-                                "{session.journalPrompt}"
+                            <div className="text-sm text-blue-800 leading-relaxed font-medium italic">
+                                {typeof session.journalPrompt === 'string' && session.journalPrompt.includes('<') ? (
+                                    <div className="prose prose-sm prose-blue max-w-none" dangerouslySetInnerHTML={{ __html: session.journalPrompt }} />
+                                ) : (
+                                    <>"{session.journalPrompt}"</>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Scroll indicator for journal prompt */}
+                    {session.journalPrompt && !hasScrolledToBottom && (
+                        <div className="text-center py-4">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                Scroll to bottom to reveal journal prompt
                             </p>
                         </div>
                     )}
