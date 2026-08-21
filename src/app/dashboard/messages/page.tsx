@@ -17,6 +17,9 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   const { data: conversations } = await supabase.from('conversations').select('*')
     .contains('participant_ids', [user.id]).order('last_message_at', { ascending: false }).limit(20)
 
+  // Auto-select the first conversation if no ID provided (Group Chat or latest)
+  const resolvedConvoId = initialConvoId || (conversations && conversations.length > 0 ? conversations[0].id : null)
+
   const allIds = [...new Set((conversations||[]).flatMap((c:any) => c.participant_ids).filter((id:string) => id !== user.id))]
   const { data: participantProfiles } = allIds.length
     ? await supabase.from('profiles').select('id,full_name,avatar_url,role,institution').in('id', allIds)
@@ -40,7 +43,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
       conversations={conversations || []}
       participantProfiles={participantProfiles || []}
       contactableUsers={contactableUsers}
-      initialConvoId={initialConvoId}
+      initialConvoId={resolvedConvoId}
       initialUserId={initialUserId}
     />
   )

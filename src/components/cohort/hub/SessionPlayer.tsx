@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, CheckCircle, Zap, Play, FileText, FileDown, Globe, MessageSquare, ChevronLeft, ChevronRight } from '@/components/icons'
+import { X, CheckCircle, Zap, Play, FileText, FileDown, Globe, MessageSquare, ChevronLeft, ChevronRight, Headphones } from '@/components/icons'
 import { cn, getYouTubeEmbed } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'

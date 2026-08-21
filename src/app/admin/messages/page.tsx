@@ -18,6 +18,12 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
+  const { data: conversations } = await supabase.from('conversations').select('*')
+    .contains('participant_ids', [user.id]).order('last_message_at', { ascending: false }).limit(20)
+
+  // Auto-select the first conversation if no ID provided
+  const resolvedConvoId = activeConvoId || (conversations && conversations.length > 0 ? conversations[0].id : null)
+
   // ADMIN OVERVIEW: Fetch ALL conversations for oversight
   const { data: allConversations } = await supabase.from('conversations')
     .select('*')
@@ -100,9 +106,10 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
            <div className="card h-[600px] overflow-hidden">
                 <MessagesClient
                     currentUser={profile}
-                    conversations={myConversations || []}
+                    conversations={conversations || []}
                     participantProfiles={myParticipants || []}
                     contactableUsers={contactableUsers || []}
+                    initialConvoId={resolvedConvoId}
                     compact
                 />
            </div>
