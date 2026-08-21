@@ -55,16 +55,21 @@ export default async function AdminDashboardPage() {
     supabase.from('cohorts').select('id, name, pillars_config').order('created_at', { ascending: false })
   ])
 
-  // Mock enrollment trends data
-  const trendData = [
-    { date: 'Mon', count: 12 },
-    { date: 'Tue', count: 19 },
-    { date: 'Wed', count: 15 },
-    { date: 'Thu', count: 22 },
-    { date: 'Fri', count: 30 },
-    { date: 'Sat', count: 28 },
-    { date: 'Sun', count: 34 },
-  ]
+  // Fetch enrollment trends data from database
+  const { data: enrollmentTrends } = await supabase
+    .from('enrollments')
+    .select('enrolled_at')
+    .gte('enrolled_at', new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString())
+    .order('enrolled_at', { ascending: true })
+
+  // Group by day of week
+  const trendData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+    const count = enrollmentTrends?.filter(e => {
+      const date = new Date(e.enrolled_at)
+      return date.toLocaleDateString('en-US', { weekday: 'short' }) === day
+    }).length || 0
+    return { date: day, count }
+  })
 
   // Task distribution data
   const statusCounts = (taskStatusData || []).reduce<Record<string, number>>((acc, t) => {

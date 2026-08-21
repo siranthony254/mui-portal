@@ -409,9 +409,30 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
     const [journalPrompt, setJournalPrompt] = useState(session?.journalPrompt || '')
     const [contentType, setContentType] = useState(session?.contentBlocks?.[0]?._type === 'videoBlock' ? 'video' : session?.contentBlocks?.[0]?._type === 'textBlock' ? 'article' : session?.contentBlocks?.[0]?._type === 'audioBlock' ? 'audio' : session?.contentBlocks?.[0]?._type === 'fileBlock' ? 'pdf' : 'image')
     const [videoSource, setVideoSource] = useState<'youtube' | 'upload'>(session?.contentBlocks?.[0]?.videoType === 'youtube' ? 'youtube' : 'upload')
-    const [youtubeInput, setYoutubeInput] = useState(session?.contentBlocks?.[0]?.youtubeEmbed || session?.contentBlocks?.[0]?.url?.includes('youtube') ? session.contentBlocks[0].url : '')
+    const [youtubeInput, setYoutubeInput] = useState(() => {
+        const block = session?.contentBlocks?.[0]
+        if (block?.youtubeEmbed) return block.youtubeEmbed
+        if (block?.url && typeof block.url === 'string' && block.url.includes('youtube')) return block.url
+        return ''
+    })
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
-    const [articleBody, setArticleBody] = useState(session?.contentBlocks?.[0]?.body || '')
+    
+    // Extract text from Sanity block array for article body
+    const extractBodyText = (body: any) => {
+        if (!body) return ''
+        if (typeof body === 'string') return body
+        if (Array.isArray(body)) {
+            return body.map((block: any) => {
+                if (block.children && Array.isArray(block.children)) {
+                    return block.children.map((child: any) => child.text || '').join('')
+                }
+                return ''
+            }).join('\n')
+        }
+        return ''
+    }
+    
+    const [articleBody, setArticleBody] = useState(extractBodyText(session?.contentBlocks?.[0]?.body))
 
     async function handleSave() {
         if (!title) {
@@ -438,7 +459,14 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                 contentBlock.url = URL.createObjectURL(selectedFile)
             }
         } else if (contentType === 'article') {
-            contentBlock.body = articleBody
+            // Wrap article body in Sanity block structure
+            contentBlock.body = [{
+                _type: 'block',
+                _key: Math.random().toString(36).substring(2),
+                children: [{ _type: 'span', text: articleBody, marks: [] }],
+                markDefs: [],
+                style: 'normal'
+            }]
         } else if (contentType === 'audio' || contentType === 'pdf' || contentType === 'image') {
             if (selectedFile) {
                 contentBlock.url = selectedFile.name
@@ -593,6 +621,9 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                                     className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm"
                                 />
+                                {session?.contentBlocks?.[0]?.url && (
+                                    <p className="text-xs text-gray-500">Current video: {typeof session.contentBlocks[0].url === 'string' ? session.contentBlocks[0].url : 'Video uploaded'}</p>
+                                )}
                             </div>
                         )}
                     </div>
@@ -621,7 +652,7 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                             className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-emerald-500 focus:ring-0 text-sm"
                         />
                         {session?.contentBlocks?.[0]?.url && (
-                            <p className="text-xs text-gray-500">Current file: {session.contentBlocks[0].url}</p>
+                            <p className="text-xs text-gray-500">Current file: {typeof session.contentBlocks[0].url === 'string' ? session.contentBlocks[0].url : 'File uploaded'}</p>
                         )}
                     </div>
                 )}
@@ -657,7 +688,7 @@ function SessionEditor({ session, cohortId, onUpdate, onClose, onDelete }: { ses
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={loading || !title}
+                        disabled={loading}
                         className="bg-emerald-700 text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-xl shadow-emerald-700/20 active:scale-95 disabled:opacity-50"
                     >
                         {loading ? 'Saving...' : 'Save Session'} <Zap className="w-4 h-4 fill-white" />

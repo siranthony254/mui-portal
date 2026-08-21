@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { getAllContent } from '@/lib/sanity/queries'
+import { getCohortCurriculum } from '@/lib/sanity/queries'
 import { AdminContentActions } from '@/components/admin/AdminContentActions'
 import { ContentHubManager } from '@/components/admin/ContentHubManager'
 import { Metadata } from 'next'
@@ -12,10 +12,7 @@ export default async function ContentManagerPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const [content, { data: cohorts }] = await Promise.all([
-    getAllContent().catch(() => []),
-    supabase.from('cohorts').select('id, name, pillars_config').order('created_at', { ascending: false })
-  ])
+  const { data: cohorts } = await supabase.from('cohorts').select('id, name, pillars_config').order('created_at', { ascending: false })
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20">
@@ -27,7 +24,7 @@ export default async function ContentManagerPage() {
         <AdminContentActions cohorts={cohorts || []} />
       </div>
 
-      <ContentHubManager cohorts={cohorts || []} content={content} />
+      <ContentHubManager cohorts={cohorts || []} />
     </div>
   )
 }
