@@ -9,13 +9,157 @@ import { useRouter } from 'next/navigation'
 export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortId, allSessions = [], onSessionComplete }: { session: any, onClose: () => void, onSwitch: (s: any) => void, isCompleted: boolean, cohortId: string, allSessions?: any[], onSessionComplete?: (sessionKey: string) => void }) {
   const [loading, setLoading] = useState(false)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
+  const [elapsedTime, setElapsedTime] = useState(0)
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null)
+  const [journalContent, setJournalContent] = useState('')
+  const [journalSubmitted, setJournalSubmitted] = useState(false)
+  const [showNextSessionInvite, setShowNextSessionInvite] = useState(false)
   const router = useRouter()
   const supabase = createClient()
   const contentRef = useRef<HTMLDivElement>(null)
+  const MINIMUM_READ_TIME = 5 * 60 // 5 minutes in seconds
 
   const sessionIndex = allSessions.findIndex(s => s._key === session._key)
   const nextSession = sessionIndex < allSessions.length - 1 ? allSessions[sessionIndex + 1] : null
   const prevSession = sessionIndex > 0 ? allSessions[sessionIndex - 1] : null
+
+  // Time tracking - resume timer on mount
+  useEffect(() => {
+    const storageKey = `session_start_${session._key}`
+    const storedStartTime = localStorage.getItem(storageKey)
+
+    if (storedStartTime) {
+      const startTime = parseInt(storedStartTime, 10)
+      const elapsed = Math.floor((Date.now() - startTime) / 1000)
+      setSessionStartTime(startTime)
+      setElapsedTime(elapsed)
+    } else {
+      const now = Date.now()
+      localStorage.setItem(storageKey, now.toString())
+      setSessionStartTime(now)
+      setElapsedTime(0)
+    }
+
+    // Timer interval
+    const timer = setInterval(() => {
+      setElapsedTime(prev => prev + 1)
+    }, 1000)
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [session._key])
+
+  // Clear stored time when session closes
+  useEffect(() => {
+    return () => {
+      const storageKey = `session_start_${session._key}`
+      localStorage.removeItem(storageKey)
+    }
+  }, [session._key, onClose])
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Calculate remaining time
+  const remainingTime = Math.max(0, MINIMUM_READ_TIME - elapsedTime)
+  const timeMet = elapsedTime >= MINIMUM_READ_TIME
+  const journalType = session.journalType || 'private'
+  const journalUnlocked = timeMet && hasScrolledToBottom
+
+  // Auto-save journal content to localStorage
+  useEffect(() => {
+    const storageKey = `journal_draft_${session._key}`
+    if (journalContent) {
+      localStorage.setItem(storageKey, journalContent)
+    } else {
+      const saved = localStorage.getItem(storageKey)
+      if (saved) setJournalContent(saved)
+    }
+  }, [session._key, journalContent])
+
+  // Clear draft on successful submission
+  useEffect(() => {
+    if (journalSubmitted) {
+      const storageKey = `journal_draft_${session._key}`
+      localStorage.removeItem(storageKey)
+    }
+  }, [journalSubmitted, session._key])
+
+  const submitJournal = async (action: 'save' | 'send') => {
+    if (!journalContent.trim()) return
+
+    setLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: existing } = await supabase
+        .from('journal_submissions')
+        .select('*')
+        .eq('student_id', user.id)
+        .eq('session_id', session._key)
+        .single()
+
+      if (existing) {
+        // Update existing journal
+        await supabase.from('journal_submissions').update({
+          content: journalContent,
+          sent_to_mentor: action === 'send' && journalType === 'mentor',
+          posted_to_group: action === 'send' && journalType === 'group',
+          updated_at: new Date().toISOString()
+        }).eq('id', existing.id)
+      } else {
+        // Insert new journal
+        await supabase.from('journal_submissions').insert({
+          student_id: user.id,
+          session_id: session._key,
+          cohort_id: cohortId,
+          journal_type: journalType,
+          content: journalContent,
+          sent_to_mentor: action === 'send' && journalType === 'mentor',
+          posted_to_group: action === 'send' && journalType === 'group',
+          is_private: journalType === 'private'
+        })
+      }
+
+      // Mark session as complete
+      await supabase.from('session_completions').insert({
+        student_id: user.id,
+        session_id: session._key,
+        cohort_id: cohortId
+      })
+
+      setJournalSubmitted(true)
+
+      // Notify parent component
+      if (onSessionComplete) {
+        onSessionComplete(session._key)
+      }
+
+      // Show next session invitation
+      setShowNextSessionInvite(true)
+
+      router.refresh()
+    } catch (error) {
+      console.error('Error submitting journal:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleNextSession = () => {
+    if (nextSession) {
+      onSwitch({ ...nextSession, pillar: session.pillar, module: nextSession.module || session.module, day: nextSession.day || session.day })
+      setShowNextSessionInvite(false)
+    } else {
+      onClose()
+    }
+  }
 
   // Scroll detection for journal prompt
   useEffect(() => {
@@ -322,67 +466,185 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                         </div>
                     )}
 
-                    {/* Journal Prompt - Only show after scrolling to bottom */}
-                    {session.journalPrompt && hasScrolledToBottom && (
-                        <div className="p-4 sm:p-6 bg-blue-50 rounded-xl sm:rounded-[2rem] border-2 border-blue-100 space-y-3 relative overflow-hidden animate-reveal">
+                    {/* Timer and Scroll Indicator */}
+                    {session.journalPrompt && (
+                        <div className="text-center py-4 space-y-2">
+                            {!timeMet && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-1">
+                                    <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">
+                                        Minimum reading time required
+                                    </p>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="w-32 h-2 bg-amber-200 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-amber-500 transition-all duration-1000"
+                                                style={{ width: `${(elapsedTime / MINIMUM_READ_TIME) * 100}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs font-mono font-bold text-amber-700">
+                                            {formatTime(remainingTime)} remaining
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            {timeMet && !hasScrolledToBottom && (
+                                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
+                                    ✓ Time met · Scroll to bottom to reveal journal
+                                </p>
+                            )}
+                            {!timeMet && !hasScrolledToBottom && (
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                    Scroll to bottom after timer completes
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Journal Prompt - Only show when BOTH time met AND scrolled to bottom */}
+                    {session.journalPrompt && journalUnlocked && !journalSubmitted && (
+                        <div className="p-4 sm:p-6 bg-blue-50 rounded-xl sm:rounded-[2rem] border-2 border-blue-100 space-y-4 relative overflow-hidden animate-reveal">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                 <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-blue-900" />
                             </div>
                             <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-widest flex items-center gap-2">
                                 <Zap className="w-3 h-3 fill-blue-900" /> Daily Reflection
                             </h4>
-                            <div className="text-sm text-blue-800 leading-relaxed font-medium italic">
+                            <div className="text-sm text-blue-800 leading-relaxed font-medium italic mb-3">
                                 {typeof session.journalPrompt === 'string' && session.journalPrompt.includes('<') ? (
                                     <div className="prose prose-sm prose-blue max-w-none" dangerouslySetInnerHTML={{ __html: session.journalPrompt }} />
                                 ) : (
                                     <>"{session.journalPrompt}"</>
                                 )}
                             </div>
+                            <textarea
+                                value={journalContent}
+                                onChange={(e) => setJournalContent(e.target.value)}
+                                placeholder="Write your reflection here..."
+                                className="w-full p-4 rounded-xl border-2 border-blue-200 bg-white text-sm text-gray-700 focus:outline-none focus:border-blue-400 resize-none"
+                                rows={4}
+                            />
+                            <div className="flex items-center gap-2">
+                                {journalType === 'private' && (
+                                    <button
+                                        onClick={() => submitJournal('save')}
+                                        disabled={loading || !journalContent.trim()}
+                                        className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {loading ? 'Saving...' : 'Save Journal'}
+                                    </button>
+                                )}
+                                {journalType === 'mentor' && (
+                                    <button
+                                        onClick={() => submitJournal('send')}
+                                        disabled={loading || !journalContent.trim()}
+                                        className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {loading ? 'Sending...' : 'Send to Mentor'}
+                                    </button>
+                                )}
+                                {journalType === 'group' && (
+                                    <button
+                                        onClick={() => submitJournal('send')}
+                                        disabled={loading || !journalContent.trim()}
+                                        className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {loading ? 'Posting...' : 'Post to Group'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     )}
 
-                    {/* Scroll indicator for journal prompt */}
-                    {session.journalPrompt && !hasScrolledToBottom && (
-                        <div className="text-center py-4">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                Scroll to bottom to reveal journal prompt
+                    {/* Journal submitted confirmation */}
+                    {journalSubmitted && (
+                        <div className="p-4 sm:p-6 bg-emerald-50 rounded-xl sm:rounded-[2rem] border-2 border-emerald-100 space-y-3 text-center animate-reveal">
+                            <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto" />
+                            <h4 className="text-sm font-bold text-emerald-900 uppercase tracking-widest">
+                                Journal {journalType === 'private' ? 'Saved' : journalType === 'mentor' ? 'Sent to Mentor' : 'Posted to Group'}
+                            </h4>
+                            <p className="text-xs text-emerald-700">
+                                Session marked as complete
                             </p>
                         </div>
                     )}
-                </div>
-            </div>
 
             <div className="p-4 sm:p-6 sm:p-8 border-t border-gray-100 bg-gray-50/50">
-                {!isCompleted ? (
-                    <button
-                        onClick={markComplete}
-                        disabled={loading}
-                        className="w-full bg-emerald-700 text-white py-4 sm:py-5 rounded-xl sm:rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-2xl shadow-emerald-700/40 active:scale-95 disabled:opacity-50 text-sm sm:text-base"
-                    >
-                        {loading ? 'Processing...' : 'Mark Session as Complete'}
-                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                ) : (
-                    <div className="space-y-3">
-                        <div className="w-full bg-emerald-50 text-emerald-700 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 border-2 border-emerald-100 text-sm sm:text-base">
-                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Session Completed
-                        </div>
-                        {nextSession && (
+                {!journalSubmitted ? (
+                    <div className="text-center">
+                        {session.journalPrompt ? (
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+                                Complete the journal above to finish this session
+                            </p>
+                        ) : (
                             <button
-                                onClick={() => onSwitch(nextSession)}
-                                className="w-full bg-gray-900 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95 text-sm sm:text-base"
+                                onClick={markComplete}
+                                disabled={loading || !timeMet}
+                                className="w-full bg-emerald-700 text-white py-4 sm:py-5 rounded-xl sm:rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-2xl shadow-emerald-700/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                             >
-                                Continue to Next Session
-                                <ChevronRight className="w-4 h-4" />
+                                {loading ? 'Processing...' : timeMet ? 'Mark Session as Complete' : `${formatTime(remainingTime)} remaining`}
                             </button>
                         )}
                     </div>
+                ) : (
+                    <button
+                        onClick={handleNextSession}
+                        className="w-full bg-emerald-700 text-white py-4 sm:py-5 rounded-xl sm:rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-800 transition-all shadow-2xl shadow-emerald-700/40 active:scale-95 text-sm sm:text-base"
+                    >
+                        {nextSession ? (
+                            <>
+                                Continue to Next Session <ChevronRight className="w-5 h-5" />
+                            </>
+                        ) : (
+                            <>
+                                Return to Curriculum <X className="w-5 h-5" />
+                            </>
+                        )}
+                    </button>
                 )}
                 <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center mt-3 sm:mt-4">
                     {nextSession ? `Next: ${nextSession.title}` : 'End of current path'}
                 </p>
             </div>
+
+            {/* Next Session Invitation Modal */}
+            {showNextSessionInvite && (
+                <div className="fixed inset-0 z-[200] bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-reveal">
+                    <div className="bg-white rounded-2xl sm:rounded-[2rem] p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl">
+                        <div className="text-center space-y-4">
+                            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                                <CheckCircle className="w-8 h-8 text-emerald-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">
+                                    Session Complete!
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    {journalType === 'private' ? 'Your journal has been saved.' : journalType === 'mentor' ? 'Your journal has been sent to your mentor.' : 'Your journal has been posted to the group.'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            {nextSession && (
+                                <button
+                                    onClick={handleNextSession}
+                                    className="w-full bg-emerald-700 text-white py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/30 active:scale-95"
+                                >
+                                    Continue to Next Session <ChevronRight className="w-5 h-5" />
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    setShowNextSessionInvite(false)
+                                    onClose()
+                                }}
+                                className="w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-200 transition-all active:scale-95"
+                            >
+                                Return to Curriculum
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     </div>
   )

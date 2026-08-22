@@ -84,7 +84,31 @@ export const curriculumSchema = defineType({
                                 ]
                               }]
                             }),
-                            defineField({ name: 'journalPrompt', title: 'Journal Prompt', type: 'text', rows: 3, description: 'Optional prompt triggered after session completion.' })
+                            defineField({
+                              name: 'journalPrompt',
+                              title: 'Journal Prompt',
+                              type: 'text',
+                              rows: 3,
+                              description: 'Optional prompt triggered after session completion.'
+                            }),
+                            defineField({
+                              name: 'journalType',
+                              title: 'Journal Type',
+                              type: 'string',
+                              options: {
+                                list: [
+                                  { title: '🔒 Private (Personal Reflection)', value: 'private' },
+                                  { title: '👨‍🏫 Mentor (Sent to Mentor)', value: 'mentor' },
+                                  { title: '👥 Group (Group Chat)', value: 'group' }
+                                ],
+                                layout: 'radio',
+                                direction: 'horizontal'
+                              },
+                              initialValue: 'private',
+                              description: 'Determines how the journal is handled after completion.',
+                              hidden: ({ parent }) => !parent?.journalPrompt,
+                              validation: r => r.required()
+                            })
                           ]
                         }]
                       })
