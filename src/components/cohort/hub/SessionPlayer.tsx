@@ -567,6 +567,8 @@ export function SessionPlayer({ session, onClose, onSwitch, isCompleted, cohortI
                             </p>
                         </div>
                     )}
+                </div>
+            </div>
 
             <div className="p-4 sm:p-6 sm:p-8 border-t border-gray-100 bg-gray-50/50">
                 {!journalSubmitted ? (
